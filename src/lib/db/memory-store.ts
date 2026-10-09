@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { InvoiceStatus } from "@prisma/client";
 
 export interface MemoryMerchant {

@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("Merchant Invoice Flow E2E Smoke Test", () => {
-  test("sign in via mock SIWE, create invoice, verify in list, download CSV, and cancel it", async ({ page, context }) => {
+  test("sign in via mock SIWE, create invoice, verify in list, download CSV, and cancel it", async ({ page }) => {
     // 1. Sign in via mock SIWE (test-mode only endpoint)
     const loginRes = await page.request.post("/api/auth/mock-test-login", {
       data: {
