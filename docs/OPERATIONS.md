@@ -1,0 +1,52 @@
+# Operations, Observability & Maintenance Guide (OPERATIONS.md)
+
+## 1. System Overview & Dependencies
+- **Application**: Next.js App Router (TypeScript, Node.js v20+)
+- **Database**: PostgreSQL (Prisma ORM, Neon or Supabase)
+- **Cache & Rate Limiting**: Upstash Redis (or in-memory sliding window fallback)
+- **Blockchain**: Avalanche C-Chain RPC nodes (Ankr, Infura, or Avalanche official RPC)
+- **Monitoring & Logging**: Sentry (error tracking), privacy-respecting analytics
+- **Cron Jobs**: Vercel Cron for payment reconciliation (`/api/cron/reconcile`)
+
+---
+
+## 2. Health Checks & Monitoring
+- **Health Endpoint**: `GET /api/health`
+  - Validates DB connectivity via `prisma.$queryRaw`
+  - Validates RPC connectivity by checking `eth_blockNumber`
+  - Returns JSON with system status, active network, and latency.
+- **Sentry Integration**:
+  - Gated by `SENTRY_DSN` and `NEXT_PUBLIC_SENTRY_DSN`.
+  - PII scrubbing: strips client emails, names, IP addresses, and authorization headers.
+
+---
+
+## 3. Database Maintenance & Backups
+- **Migrations**: Execute `npx prisma migrate deploy` in CI/CD pipeline before traffic routing.
+- **Backups**:
+  - Neon / Supabase point-in-time recovery (PITR) enabled.
+  - Nightly encrypted database snapshots exported to isolated object storage.
+- **Data Retention & Privacy**:
+  - Merchants can trigger complete deletion of their account and all invoices via `/api/app/merchant/delete`.
+  - Append-only audit logs are retained for security auditing.
+
+---
+
+## 4. Background Payment Reconciliation
+- **Route**: `POST /api/cron/reconcile` (authenticated via `CRON_SECRET` bearer header).
+- **Behavior**:
+  - Queries `PaymentRouter` contract event logs (`Paid`) for the previous 500 blocks.
+  - Looks up pending/sent invoices matching the on-chain `invoiceId`.
+  - Verifies event parameters and marks invoices `PAID` if the user's browser dropped connection before sending the verification request.
+  - Handles reorg safeguards by querying confirmed block heights.
+
+---
+
+## 5. Incident Response Playbook
+- **Suspected Contract Anomaly**:
+  - Since the contract is stateless and non-custodial, no funds are at risk of being locked or stolen from the contract itself.
+  - The frontend can be switched to maintenance mode or have specific pay links disabled via `NEXT_PUBLIC_MAINTENANCE_MODE=true`.
+- **RPC Outage**:
+  - Fallback RPC URLs configured in `src/config/network.ts`.
+- **Database Failover**:
+  - Connection pooling configured via Prisma with PgBouncer connection strings.

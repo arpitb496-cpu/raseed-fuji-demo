@@ -1,0 +1,71 @@
+{
+  "brand": {
+    "name": "Raseed",
+    "tagline": "Direct, non-custodial stablecoin payments on Avalanche.",
+    "testMode": "TESTNET MODE (Avalanche Fuji)",
+    "notConfigured": "Payment Router contract not yet configured. Please follow /docs/DEPLOY_FUJI.md."
+  },
+  "nav": {
+    "home": "Home",
+    "howItWorks": "How It Works",
+    "security": "Security",
+    "dashboard": "Dashboard",
+    "invoices": "Invoices",
+    "connectWallet": "Connect Wallet",
+    "disconnect": "Disconnect",
+    "signInWithEthereum": "Sign In with Ethereum",
+    "signedInAs": "Signed in as"
+  },
+  "status": {
+    "draft": "Draft",
+    "sent": "Awaiting Payment",
+    "partiallyPaid": "Partially Paid",
+    "paid": "Paid",
+    "expired": "Expired",
+    "cancelled": "Cancelled"
+  },
+  "auth": {
+    "signInTitle": "Merchant Authentication",
+    "signInDesc": "Sign a cryptographically secure message with your wallet to access your invoice portal. No passwords or seed phrases required.",
+    "signInButton": "Sign-In with Ethereum",
+    "signing": "Requesting signature in wallet...",
+    "verifying": "Verifying signature...",
+    "sessionExpired": "Your session has expired. Please sign in again.",
+    "signOut": "Sign Out",
+    "signOutSuccess": "Signed out successfully."
+  },
+  "common": {
+    "amount": "Amount",
+    "merchant": "Merchant",
+    "payer": "Payer",
+    "date": "Date",
+    "dueDate": "Due Date",
+    "status": "Status",
+    "actions": "Actions",
+    "copy": "Copy",
+    "copied": "Copied to clipboard",
+    "network": "Network",
+    "viewOnExplorer": "View on Snowtrace",
+    "switchNetwork": "Switch Network",
+    "wrongNetwork": "Wrong Network Detected",
+    "wrongNetworkDesc": "Please switch your wallet to Avalanche Fuji (Chain ID 43113) to continue.",
+    "language": "Language",
+    "indicativeRate": "Approximate Reference (1 USDC ≈ ₹86.50 INR)"
+  },
+  "errors": {
+    "unauthorized": "Unauthorized access. Please connect and sign in.",
+    "forbidden": "You do not have permission to view or manage this invoice.",
+    "invoiceNotFound": "Invoice not found or invalid link.",
+    "minAmount": "Invoice amount must be at least 1.00 USDC.",
+    "insufficientBalance": "Insufficient USDC balance in wallet.",
+    "insufficientGas": "Insufficient AVAX for gas fees.",
+    "walletRejected": "Transaction rejected in wallet.",
+    "serverError": "An unexpected error occurred. Please try again."
+  },
+  "footer": {
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy",
+    "risks": "Risk Disclosures",
+    "disclaimer": "Raseed is a non-custodial payment tool. We do not provide custody, banking services, or financial guarantees. Users are responsible for all applicable taxes and regulatory compliance."
+  }
+}

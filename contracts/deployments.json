@@ -1,0 +1,20 @@
+{
+  "fuji": {
+    "chainId": 43113,
+    "networkName": "Avalanche Fuji Testnet",
+    "rpcUrl": "https://api.avax-test.network/ext/bc/C/rpc",
+    "explorerUrl": "https://testnet.snowtrace.io",
+    "usdcAddress": "0x5425890298aed601595a70AB815c96711a31Bc65",
+    "usdcDecimals": 6,
+    "routerAddress": "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+  },
+  "mainnet": {
+    "chainId": 43114,
+    "networkName": "Avalanche C-Chain",
+    "rpcUrl": "https://api.avax.network/ext/bc/C/rpc",
+    "explorerUrl": "https://snowtrace.io",
+    "usdcAddress": "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E",
+    "usdcDecimals": 6,
+    "routerAddress": ""
+  }
+}

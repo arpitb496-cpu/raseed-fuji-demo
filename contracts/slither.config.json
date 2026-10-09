@@ -1,0 +1,10 @@
+{
+  "_comment_filter_paths": "Exclude external OpenZeppelin/forge-std libraries in lib/ and test harness contracts in test/ so analysis focuses exclusively on production contract bytecode in src/",
+  "filter_paths": "lib|test",
+  "_comment_detectors_to_exclude": "Exclude naming-convention because Solidity standard style uses ALL_CAPS for constants (e.g. MAX_FEE_BPS), which generates uppercase public getters, triggering an informational false positive in Slither's mixedCase detector",
+  "detectors_to_exclude": "naming-convention",
+  "solc_remaps": [
+    "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+    "forge-std/=lib/forge-std/src/"
+  ]
+}

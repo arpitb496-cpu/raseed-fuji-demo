@@ -1,0 +1,103 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PARTIALLY_PAID
+  PAID
+  EXPIRED
+  CANCELLED
+}
+
+model Merchant {
+  id                     String      @id @default(cuid())
+  walletAddress          String      @unique
+  displayName            String
+  businessName           String?
+  country                String?
+  defaultCurrencyDisplay String      @default("USD")
+  createdAt              DateTime    @default(now())
+  updatedAt              DateTime    @updatedAt
+
+  invoices               Invoice[]
+  auditLogs              AuditLog[]
+}
+
+model Invoice {
+  id                 String        @id @default(cuid())
+  publicId           String        @unique // 24+ char unguessable identifier
+  merchantId         String
+  merchant           Merchant      @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  invoiceNumber      String
+  title              String
+  notes              String?
+  clientName         String?
+  clientEmail        String?
+  currencyDisplay    String        @default("USD")
+  amountUsdc         BigInt        // Micro-USDC (integer, 6 decimals)
+  paidAmountUsdc     BigInt        @default(0) // Cumulative verified micro-USDC
+  dueDate            DateTime
+  status             InvoiceStatus @default(DRAFT)
+  onchainInvoiceId   String        // Hex string of bytes32 derived from publicId
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  items              InvoiceItem[]
+  paymentEvents      PaymentEvent[]
+  auditLogs          AuditLog[]
+
+  @@index([merchantId])
+  @@index([onchainInvoiceId])
+}
+
+model InvoiceItem {
+  id              String   @id @default(cuid())
+  invoiceId       String
+  invoice         Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  description     String
+  quantity        Int      @default(1)
+  unitAmountUsdc  BigInt   // Micro-USDC
+
+  @@index([invoiceId])
+}
+
+model PaymentEvent {
+  id            String   @id @default(cuid())
+  invoiceId     String
+  invoice       Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  txHash        String
+  logIndex      Int
+  payerAddress  String   // Explicit payer wallet, independent of optional client name
+  amountUsdc    BigInt   // Micro-USDC transferred in this event
+  blockNumber   BigInt
+  chainId       Int
+  confirmedAt   DateTime @default(now())
+
+  @@unique([chainId, txHash, logIndex])
+  @@index([invoiceId])
+  @@index([payerAddress])
+}
+
+model AuditLog {
+  id          String    @id @default(cuid())
+  merchantId  String?
+  merchant    Merchant? @relation(fields: [merchantId], references: [id], onDelete: SetNull)
+  invoiceId   String?
+  invoice     Invoice?  @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  action      String
+  details     String?
+  createdAt   DateTime  @default(now())
+
+  @@index([merchantId])
+  @@index([invoiceId])
+}

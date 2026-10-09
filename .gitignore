@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Environment Files
+.env
+.env*
+!.env.example
+
+# Python virtual environment
+.venv/
+venv/
+__pycache__/
+
+# Build artifacts
+.next/
+dist/
+out/
+contracts/out/
+cache/
+contracts/cache/
+*.tsbuildinfo
+
+# Keystores & Keys
+keystores/
+*.keystore
+*.key
+*.pem
+
+# Logs & OS
+*.log
+.DS_Store
