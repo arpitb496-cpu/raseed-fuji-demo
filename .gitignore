@@ -21,6 +21,8 @@ contracts/out/
 cache/
 contracts/cache/
 *.tsbuildinfo
+test-results/
+playwright-report/
 
 # Keystores & Keys
 keystores/

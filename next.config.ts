@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
-  serverExternalPackages: ["pino", "pino-pretty"],
+  serverExternalPackages: ["pino", "pino-pretty", "pdfkit"],
   turbopack: {
     resolveAlias: {
       "@coinbase/cdp-sdk": "./src/lib/mocks/empty.ts",

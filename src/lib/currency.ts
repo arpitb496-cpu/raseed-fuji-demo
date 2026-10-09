@@ -18,6 +18,11 @@ export function formatMicroUsdc(microAmount: bigint | number | string): string {
 }
 
 /**
+ * Direct alias for formatMicroUsdc for clean invocation
+ */
+export const formatUsdc = formatMicroUsdc;
+
+/**
  * Parses user input float or integer string into micro-USDC bigint.
  */
 export function parseUsdcToMicro(input: string | number): bigint {
