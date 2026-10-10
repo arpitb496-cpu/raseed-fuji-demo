@@ -14,7 +14,7 @@ export const FORBIDDEN_PLACEHOLDER_SECRETS = [
 ] as const;
 
 export function validateSessionSecret(
-  secret?: string,
+  secret: string = process.env.SESSION_SECRET || "",
   isProduction: boolean = process.env.NODE_ENV === "production"
 ): string {
   if (isProduction) {
