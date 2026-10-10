@@ -33,3 +33,5 @@ keystores/
 # Logs & OS
 *.log
 .DS_Store
+
+contracts/broadcast/
