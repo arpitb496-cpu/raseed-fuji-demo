@@ -6,8 +6,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 enum InvoiceStatus {
@@ -58,6 +59,7 @@ model Invoice {
 
   @@index([merchantId])
   @@index([onchainInvoiceId])
+  @@unique([merchantId, invoiceNumber])
 }
 
 model InvoiceItem {

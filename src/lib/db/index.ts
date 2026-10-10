@@ -2,72 +2,26 @@
 import { PrismaClient } from "@prisma/client";
 import { inMemoryDb } from "./memory-store";
 
-const globalForPrisma = globalThis as unknown as {
-  prismaClient: PrismaClient | undefined;
-  useMemoryFallback: boolean;
-};
-
-const rawPrisma =
-  globalForPrisma.prismaClient ??
-  new PrismaClient({
-    log: process.env.NODE_ENV === "development" ? ["warn", "error"] : ["error"],
-  });
-
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prismaClient = rawPrisma;
+// Fail-fast guard: in-memory store is strictly prohibited in production
+if (process.env.NODE_ENV === "production" && process.env.USE_IN_MEMORY_DB === "true") {
+  throw new Error(
+    "SECURITY CONFIGURATION ERROR: In-memory database store is strictly prohibited in production."
+  );
 }
 
-// Proxy that uses PrismaClient when database is available, and transparently falls back to inMemoryDb
-export const prisma = new Proxy({} as any, {
-  get(_target, prop: string) {
-    if (prop === "$transaction") {
-      return async (arg: any) => {
-        if (globalForPrisma.useMemoryFallback) {
-          return inMemoryDb.$transaction(arg);
-        }
-        try {
-          return await rawPrisma.$transaction(arg);
-        } catch (err: any) {
-          if (err?.name === "PrismaClientInitializationError" || err?.message?.includes("Can't reach database")) {
-            globalForPrisma.useMemoryFallback = true;
-            return inMemoryDb.$transaction(arg);
-          }
-          throw err;
-        }
-      };
-    }
+const isUnitTestMemory = process.env.USE_IN_MEMORY_DB === "true";
 
-    const memoryModel = (inMemoryDb as any)[prop];
-    const realModel = (rawPrisma as any)[prop];
+const globalForPrisma = globalThis as unknown as {
+  prismaClient: PrismaClient | undefined;
+};
 
-    if (!realModel) {
-      return memoryModel;
-    }
+export const prisma: PrismaClient = isUnitTestMemory
+  ? (inMemoryDb as unknown as PrismaClient)
+  : (globalForPrisma.prismaClient ??
+    new PrismaClient({
+      log: process.env.NODE_ENV === "development" ? ["warn", "error"] : ["error"],
+    }));
 
-    return new Proxy(realModel, {
-      get(targetModel, method: string) {
-        return async (...args: any[]) => {
-          if (globalForPrisma.useMemoryFallback) {
-            return (memoryModel as any)?.[method]?.(...args);
-          }
-          try {
-            return await (targetModel as any)[method](...args);
-          } catch (err: any) {
-            if (
-              err?.name === "PrismaClientInitializationError" ||
-              err?.message?.includes("Can't reach database") ||
-              err?.code === "P1001"
-            ) {
-              console.warn(
-                `[Database] PostgreSQL unavailable at ${process.env.DATABASE_URL}. Transparently activating high-fidelity in-memory storage.`
-              );
-              globalForPrisma.useMemoryFallback = true;
-              return (memoryModel as any)?.[method]?.(...args);
-            }
-            throw err;
-          }
-        };
-      },
-    });
-  },
-}) as PrismaClient;
+if (process.env.NODE_ENV !== "production" && !isUnitTestMemory) {
+  globalForPrisma.prismaClient = prisma;
+}
