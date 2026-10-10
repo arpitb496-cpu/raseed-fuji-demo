@@ -5,6 +5,7 @@ export default defineConfig({
   test: {
     environment: "node",
     globals: true,
+    fileParallelism: false,
     exclude: ["contracts/**", "node_modules/**", "e2e/**"],
   },
   resolve: {
