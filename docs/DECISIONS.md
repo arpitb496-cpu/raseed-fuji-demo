@@ -52,7 +52,13 @@ This document records the architectural, technical, product, and security decisi
   - **`PAID`**: Triggered when `cumulativePaid >= invoice.amountUsdc` after `N` block confirmations (sub-second finality on Avalanche).
   - **`PARTIALLY_PAID`**: If `0 < cumulativePaid < invoice.amountUsdc`, invoice moves to `PARTIALLY_PAID`. The payer UI displays remaining balance due (`invoice.amountUsdc - cumulativePaid`).
   - **Overpayments & Unexpected Payments**: If `cumulativePaid > invoice.amountUsdc` or if unexpected payments arrive for cancelled/expired invoices, the payment is recorded in `PaymentEvent` audit logs and flagged prominently on the merchant dashboard (never silently ignored or discarded).
-  - **Dust Threshold Protection**: Micro-dust transactions below a configurable threshold (e.g. `< 0.01 USDC` / `10_000` micro-units) do not trigger invoice status changes to prevent notification spam.
+  - **Dust Threshold Protection**: Micro-dust transactions below a threshold (`< 0.01 USDC` / `10_000` micro-units) do not trigger invoice status changes on their own to prevent griefing/notification spam.
+
+### 4.1 Dust Payment Accounting (< 0.01 USDC / 10,000 micro-USDC)
+* **Storage & Ledger**: Every verified payment event—regardless of size—is stored in `PaymentEvent` and contributes to the cumulative received total (`invoice.paidAmountUsdc`).
+* **Status Invariance**: Dust payments alone NEVER change invoice status. An invoice in `SENT` status receiving only dust remains in `SENT` status (never `PARTIALLY_PAID`).
+* **Transition Criteria**: The invoice transitions to `PARTIALLY_PAID` only when at least one non-dust payment (`>= 0.01 USDC` / `10,000` micro-units) is confirmed. It transitions to `PAID` when cumulative valid payments reach or exceed `invoice.amountUsdc`.
+* **Merchant UI & Audit**: Dust events are visibly flagged with a "Dust" badge in the invoice payments timeline and recorded in `AuditLog`.
 * **Background Reconciliation**: A scheduled cron endpoint (`/api/cron/reconcile`) queries the `PaymentRouter` event logs for recent blocks and reconciles any invoices whose payment confirmation was dropped by client connectivity issues.
 
 ---
