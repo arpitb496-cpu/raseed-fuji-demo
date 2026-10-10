@@ -56,6 +56,7 @@ export async function GET(
         paymentEvents: invoice.paymentEvents.map((pe) => ({
           ...pe,
           amountUsdc: pe.amountUsdc.toString(),
+          feeUsdc: pe.feeUsdc.toString(),
           blockNumber: pe.blockNumber.toString(),
         })),
       },

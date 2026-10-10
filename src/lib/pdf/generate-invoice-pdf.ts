@@ -427,3 +427,355 @@ export async function generateInvoicePdfBuffer(data: InvoicePdfData): Promise<Bu
     await browser.close();
   }
 }
+
+export interface ReceiptPdfData {
+  invoiceNumber: string;
+  receiptNumber: string;
+  publicId: string;
+  title: string;
+  merchantDisplayName: string;
+  merchantWallet: string;
+  totalInvoiceAmountUsdc: bigint;
+  totalPaidAmountUsdc: bigint;
+  status: string;
+  createdAt: Date | string;
+  paymentEvents: Array<{
+    txHash: string;
+    payerAddress: string;
+    amountUsdc: bigint;
+    blockNumber: bigint | string;
+    confirmedAt: Date | string;
+  }>;
+}
+
+export async function generateReceiptPdfBuffer(data: ReceiptPdfData): Promise<Buffer> {
+  const fontRegular = NOTO_SANS_DEVANAGARI_REGULAR_BASE64;
+  const fontBold = NOTO_SANS_DEVANAGARI_BOLD_BASE64;
+
+  const totalPaidFormatted = formatUsdc(data.totalPaidAmountUsdc);
+  const totalPaidInr = (
+    (Number(data.totalPaidAmountUsdc) / 1_000_000) *
+    INDICATIVE_USD_TO_INR_RATE
+  ).toLocaleString("en-IN", {
+    maximumFractionDigits: 2,
+    minimumFractionDigits: 2,
+  });
+
+  const origin = process.env.NEXT_PUBLIC_APP_URL || "https://raseed.fi";
+  const payUrl = `${origin}/pay/${data.publicId}`;
+  const qrDataUri = await QRCode.toDataURL(payUrl, { width: 140, margin: 1 });
+
+  const paymentRows = data.paymentEvents
+    .map(
+      (ev) => `
+    <tr>
+      <td style="font-family: monospace; font-size: 11px;">
+        ${escapeHtml(ev.txHash.slice(0, 10))}...${escapeHtml(ev.txHash.slice(-8))}
+      </td>
+      <td style="font-family: monospace; font-size: 11px;">
+        ${escapeHtml(ev.payerAddress.slice(0, 8))}...${escapeHtml(ev.payerAddress.slice(-6))}
+      </td>
+      <td style="font-size: 11px;">
+        ${escapeHtml(new Date(ev.confirmedAt).toLocaleDateString())}
+      </td>
+      <td style="font-size: 11px; text-align: right; font-family: monospace; font-weight: bold; color: #059669;">
+        +${formatUsdc(ev.amountUsdc)} USDC
+      </td>
+    </tr>
+  `
+    )
+    .join("");
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    @font-face {
+      font-family: 'Noto Sans Devanagari';
+      src: url(data:font/truetype;charset=utf-8;base64,${fontRegular}) format('truetype');
+      font-weight: normal;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'Noto Sans Devanagari';
+      src: url(data:font/truetype;charset=utf-8;base64,${fontBold}) format('truetype');
+      font-weight: bold;
+      font-style: normal;
+    }
+    body {
+      font-family: 'Noto Sans Devanagari', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+      padding: 32px 40px;
+      color: #0f172a;
+      background: #ffffff;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 2px solid #0f172a;
+      padding-bottom: 20px;
+      margin-bottom: 24px;
+    }
+    .brand {
+      font-size: 24px;
+      font-weight: bold;
+      color: #0f172a;
+      letter-spacing: -0.5px;
+    }
+    .brand-sub {
+      font-size: 11px;
+      color: #059669;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 2px;
+    }
+    .receipt-badge {
+      text-align: right;
+    }
+    .receipt-title {
+      font-size: 20px;
+      font-weight: bold;
+      color: #0f172a;
+    }
+    .receipt-hi {
+      font-size: 13px;
+      color: #64748b;
+    }
+    .ref-number {
+      font-family: monospace;
+      font-size: 13px;
+      color: #0f172a;
+      font-weight: bold;
+      margin-top: 4px;
+    }
+    .meta-grid {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 28px;
+      gap: 20px;
+    }
+    .meta-card {
+      flex: 1;
+      padding: 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: #f8fafc;
+    }
+    .meta-title {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #64748b;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+    .meta-name {
+      font-size: 14px;
+      font-weight: bold;
+      color: #0f172a;
+    }
+    .meta-detail {
+      font-family: monospace;
+      font-size: 11px;
+      color: #475569;
+      margin-top: 3px;
+      word-break: break-all;
+    }
+    .qr-container {
+      width: 140px;
+      text-align: center;
+    }
+    .qr-container img {
+      width: 120px;
+      height: 120px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 4px;
+      background: white;
+    }
+    .qr-label {
+      font-size: 9px;
+      color: #64748b;
+      margin-top: 4px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 28px;
+    }
+    th {
+      background: #f1f5f9;
+      text-align: left;
+      padding: 10px 14px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #475569;
+      border-top: 1px solid #cbd5e1;
+      border-bottom: 1px solid #cbd5e1;
+    }
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid #e2e8f0;
+      font-size: 12px;
+    }
+    .summary-box {
+      margin-left: auto;
+      width: 280px;
+      padding: 16px;
+      border-radius: 8px;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      margin-bottom: 30px;
+    }
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 12px;
+      color: #64748b;
+    }
+    .summary-row.total {
+      border-top: 2px solid #0f172a;
+      padding-top: 8px;
+      margin-top: 8px;
+      margin-bottom: 0;
+      font-size: 15px;
+      font-weight: bold;
+      color: #0f172a;
+    }
+    .inr-equiv {
+      font-size: 11px;
+      color: #64748b;
+      text-align: right;
+      margin-top: 4px;
+    }
+    .verified-seal {
+      display: inline-block;
+      padding: 6px 12px;
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      border-radius: 6px;
+      color: #065f46;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .footer {
+      border-top: 1px solid #e2e8f0;
+      padding-top: 16px;
+      margin-top: 40px;
+      text-align: center;
+      font-size: 10px;
+      color: #94a3b8;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <div class="brand">Raseed Protocol</div>
+      <div class="brand-sub">Verified Payment Receipt / भुगतान रसीद</div>
+    </div>
+    <div class="receipt-badge">
+      <div class="receipt-title">RECEIPT</div>
+      <div class="receipt-hi">आधिकारिक रसीद</div>
+      <div class="ref-number">REF: ${escapeHtml(data.receiptNumber)}</div>
+    </div>
+  </div>
+
+  <div class="meta-grid">
+    <div class="meta-card">
+      <div class="meta-title">MERCHANT / व्यापारी</div>
+      <div class="meta-name">${escapeHtml(data.merchantDisplayName)}</div>
+      <div class="meta-detail">${escapeHtml(data.merchantWallet)}</div>
+    </div>
+
+    <div class="meta-card">
+      <div class="meta-title">INVOICE DETAILS / चालान विवरण</div>
+      <div class="meta-name">${escapeHtml(data.title)}</div>
+      <div class="meta-detail">Invoice: ${escapeHtml(data.invoiceNumber)}</div>
+      <div class="meta-detail">Status: ${escapeHtml(data.status)}</div>
+    </div>
+
+    <div class="qr-container">
+      <img src="${qrDataUri}" alt="Verification QR" />
+      <div class="qr-label">Scan to verify on-chain</div>
+    </div>
+  </div>
+
+  <div style="margin-bottom: 12px; font-weight: bold; font-size: 13px;">
+    SETTLED PAYMENTS / निपटान भुगतान इतिहास
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Tx Hash / लेनदेन</th>
+        <th>Payer / भुगतानकर्ता</th>
+        <th>Date / दिनांक</th>
+        <th style="text-align: right;">Amount Paid / राशि</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${paymentRows}
+    </tbody>
+  </table>
+
+  <div class="summary-box">
+    <div class="summary-row">
+      <span>Invoice Amount:</span>
+      <span style="font-family: monospace;">${formatUsdc(data.totalInvoiceAmountUsdc)} USDC</span>
+    </div>
+    <div class="summary-row total">
+      <span>Total Paid:</span>
+      <span style="font-family: monospace; color: #059669;">${totalPaidFormatted} USDC</span>
+    </div>
+    <div class="inr-equiv">≈ ₹${totalPaidInr} INR (Indicative)</div>
+  </div>
+
+  <div style="margin-top: 16px;">
+    <div class="verified-seal">
+      ✓ Verified on Avalanche Fuji Testnet — Settled directly via PaymentRouter
+    </div>
+  </div>
+
+  <div class="footer">
+    Generated by Raseed Protocol (raseed.fi) — Non-custodial, direct merchant settlement on Avalanche C-Chain.
+  </div>
+</body>
+</html>`;
+
+  const browser = await launchChromium();
+  try {
+    const context = await browser.newContext({
+      javaScriptEnabled: false,
+    });
+    const page = await context.newPage();
+
+    await page.route("**/*", (route) => {
+      const url = route.request().url();
+      if (url.startsWith("data:") || url.startsWith("about:")) {
+        route.continue();
+      } else {
+        route.abort("blockedbyclient");
+      }
+    });
+
+    await page.setContent(html, { waitUntil: "domcontentloaded" });
+    const pdfBuffer = await page.pdf({
+      format: "A4",
+      printBackground: true,
+      margin: { top: "0mm", right: "0mm", bottom: "0mm", left: "0mm" },
+    });
+
+    return Buffer.from(pdfBuffer);
+  } finally {
+    await browser.close();
+  }
+}
+
