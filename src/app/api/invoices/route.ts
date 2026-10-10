@@ -10,7 +10,7 @@ import {
   evaluateInvoiceStatus,
 } from "@/lib/invoice-utils";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { InvoiceStatus } from "@prisma/client";
+import { InvoiceStatus, type Invoice, type InvoiceItem } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 
@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
     const { merchantId } = requireAuthenticatedMerchant(session);
 
     // Rate Limit: 30 invoice creations per 5 minutes per merchant
-    const rateLimit = checkRateLimit(`create_invoice_${merchantId}`, 30, 300);
+    const rateLimit = await checkRateLimit(`create_invoice_${merchantId}`, 30, 300);
     if (!rateLimit.success) {
       return NextResponse.json(
         { error: "Too many invoice creation requests. Please slow down." },
@@ -114,16 +114,6 @@ export async function POST(req: NextRequest) {
 
     const data = parseResult.data;
 
-    // Sequential invoice count for this merchant
-    const merchantInvoiceCount = await prisma.invoice.count({
-      where: { merchantId },
-    });
-    const invoiceNumber = formatInvoiceNumber(merchantInvoiceCount + 1);
-
-    // Unguessable publicId and deterministic onchain bytes32 invoiceId
-    const publicId = generateUnguessablePublicId();
-    const onchainInvoiceId = deriveOnchainInvoiceId(publicId);
-
     // Calculate micro-USDC total strictly in integer BigInt
     let totalMicroUsdc = 0n;
     const itemsData = data.items.map((item) => {
@@ -138,46 +128,93 @@ export async function POST(req: NextRequest) {
       };
     });
 
-    const newInvoice = await prisma.$transaction(async (tx) => {
-      const created = await tx.invoice.create({
-        data: {
-          publicId,
-          merchantId,
-          invoiceNumber,
-          title: data.title,
-          notes: data.notes || null,
-          clientName: data.clientName || null,
-          clientEmail: data.clientEmail || null,
-          dueDate: new Date(data.dueDate),
-          status: InvoiceStatus.DRAFT,
-          amountUsdc: totalMicroUsdc,
-          paidAmountUsdc: 0n,
-          onchainInvoiceId,
-          items: {
-            create: itemsData,
-          },
-        },
-        include: {
-          items: true,
-        },
-      });
+    const publicId = generateUnguessablePublicId();
+    const onchainInvoiceId = deriveOnchainInvoiceId(publicId);
 
-      // Audit log entry
-      await tx.auditLog.create({
-        data: {
-          merchantId,
-          invoiceId: created.id,
-          action: "INVOICE_CREATED",
-          details: JSON.stringify({
-            invoiceNumber,
-            publicId,
-            amountUsdc: totalMicroUsdc.toString(),
-          }),
-        },
-      });
+    type CreatedInvoiceWithItems = Invoice & { items: InvoiceItem[] };
+    let newInvoice: CreatedInvoiceWithItems | null = null;
+    let attempts = 0;
+    while (attempts < 5) {
+      attempts++;
+      try {
+        newInvoice = await prisma.$transaction(
+          async (tx) => {
+            // Find the latest invoice number for this merchant to ensure monotonicity
+            const lastInvoice = await tx.invoice.findFirst({
+              where: { merchantId },
+              orderBy: { createdAt: "desc" },
+              select: { invoiceNumber: true },
+            });
 
-      return created;
-    });
+          let nextSeq = 1;
+          if (lastInvoice?.invoiceNumber) {
+            const match = lastInvoice.invoiceNumber.match(/INV-(\d+)/);
+            if (match) {
+              nextSeq = parseInt(match[1], 10) + 1;
+            }
+          }
+
+          const invoiceNumber = formatInvoiceNumber(nextSeq);
+
+          const created = await tx.invoice.create({
+            data: {
+              publicId,
+              merchantId,
+              invoiceNumber,
+              title: data.title,
+              notes: data.notes || null,
+              clientName: data.clientName || null,
+              clientEmail: data.clientEmail || null,
+              dueDate: new Date(data.dueDate),
+              status: InvoiceStatus.DRAFT,
+              amountUsdc: totalMicroUsdc,
+              paidAmountUsdc: 0n,
+              onchainInvoiceId,
+              items: {
+                create: itemsData,
+              },
+            },
+            include: {
+              items: true,
+            },
+          });
+
+          // Audit log entry
+          await tx.auditLog.create({
+            data: {
+              merchantId,
+              invoiceId: created.id,
+              action: "INVOICE_CREATED",
+              details: JSON.stringify({
+                invoiceNumber,
+                publicId,
+                amountUsdc: totalMicroUsdc.toString(),
+              }),
+            },
+          });
+
+          return created;
+        },
+        {
+          maxWait: 10000,
+          timeout: 20000,
+        }
+      );
+      break;
+      } catch (err: unknown) {
+        const errCode = (err as { code?: string })?.code;
+        if (errCode === "P2002" && attempts < 5) {
+          // Unique constraint collision under concurrent creation: backoff and retry
+          await new Promise((r) => setTimeout(r, 25 * attempts));
+          continue;
+        }
+        throw err;
+      }
+    }
+
+    if (!newInvoice) {
+      throw new Error("Failed to create invoice after max attempts");
+    }
 
     return NextResponse.json({
       success: true,

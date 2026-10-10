@@ -9,8 +9,9 @@ export const dynamic = "force-dynamic";
  * Strictly disabled in production.
  */
 export async function POST(req: NextRequest) {
-  if (process.env.NODE_ENV === "production") {
-    return NextResponse.json({ error: "Forbidden in production" }, { status: 403 });
+  // Exists strictly only in non-production environments with explicit ENABLE_TEST_LOGIN=true flag
+  if (process.env.NODE_ENV === "production" || process.env.ENABLE_TEST_LOGIN !== "true") {
+    return NextResponse.json({ error: "Not Found" }, { status: 404 });
   }
 
   try {

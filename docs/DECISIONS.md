@@ -69,15 +69,29 @@ This document records the architectural, technical, product, and security decisi
 ---
 
 ## 6. Data Model & Privacy
-* **Numeric Accuracy**: All financial amounts are stored as integer micro-USDC (6 decimals: 1 USDC = 1,000,000 units), completely avoiding floating-point rounding issues.
-* **Public Identifiers**: Invoices have a public unguessable NanoID/CUID2 (`publicId`, 24+ alphanumeric characters). Guessing or enumerating invoices is mathematically infeasible.
+* **Numeric Accuracy**: All financial amounts are stored as integer micro-USDC (6 decimals: 1 USDC = 1,000,000 units, `BigInt` in schema/DB), completely avoiding floating-point rounding issues.
+* **Public Identifiers**: Invoices have a public unguessable identifier (`publicId`, 24+ base64url characters with 18 bytes of entropy). Guessing or enumerating invoices is mathematically infeasible.
 * **PII Minimization**: Client name and client email are purely optional fields.
-* **Merchant Privacy Rights**: Built-in "Delete My Account & Data" action, and "Export All Invoices (CSV)" action.
+* **Merchant Privacy Rights & "Delete My Data" Specification**:
+  - **Zero Financial History**: If a merchant has only unpaid drafts or zero payment records, a hard delete cascades and removes the merchant and invoices.
+  - **Merchants with PAID / PARTIALLY_PAID Invoices**: When a merchant with paid invoices or confirmed `PaymentEvent` rows exercises their right to be forgotten:
+    1. **Personal Identity Anonymized**: `displayName` is replaced with `"Anonymized Merchant"`, `businessName` and `country` are set to `null`.
+    2. **Counterparty PII Anonymized**: On all associated invoices, `clientName` is replaced with `"Anonymized Client"`, `clientEmail` and `notes` are set to `null`.
+    3. **Draft Cleanup**: Unpaid draft or cancelled invoices with zero payments are deleted.
+    4. **Financial Ledger Preservation**: Immutable on-chain settlement records (`PaymentEvent`), transaction hashes, chain IDs, block numbers, micro-USDC amounts, and invoice amounts are strictly retained to satisfy statutory accounting, tax, anti-fraud, and payer proof-of-payment requirements.
 * **Display Currency**: Approximate INR and USD reference rates fetched periodically, clearly labeled as indicative with timestamp disclaimer.
 
 ---
 
-## 7. Internationalization (i18n)
+## 7. Wallet Connectors & Security Policy
+* **Explicit Connector Governance**: Wagmi / RainbowKit configuration strictly specifies supported Avalanche wallets: Core, MetaMask, Rabby, Injected, and WalletConnect.
+* **No Coinbase / Base Wallet Connectors**: Coinbase and Base wallet connectors are explicitly excluded from the application connector list to guarantee clean, deterministic Avalanche C-Chain settlement without non-Avalanche SDK interference.
+* **Submodule & Vendoring Proof**: Core dependencies such as `contracts/lib/openzeppelin-contracts` are tracked directly in git with 544 files vendored to guarantee repeatable fresh-clone builds (`forge build && forge test`).
+
+---
+
+## 8. Internationalization (i18n)
 * **Supported Languages**: English (`en`) and Hindi (`hi`).
 * **Implementation**: Structured JSON dictionaries (`src/locales/en.json`, `src/locales/hi.json`) covering 100% of UI strings, validation errors, and legal disclaimers.
+* **PDF Rendering**: Server-side PDF generation utilizes Chromium rendering engine with Noto Sans Devanagari to guarantee 100% native HarfBuzz OpenType complex text shaping for Hindi conjuncts (e.g. "श्रीमान", "क्षत्रिय", "द्वारा भुगतान").
 * **Accessibility**: Dynamically updates `<html lang="en">` or `<html lang="hi">` and respects font stack (Inter + Noto Sans Devanagari).

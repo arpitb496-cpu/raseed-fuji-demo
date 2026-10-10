@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect } from "vitest";
 import { generateNonce, SiweMessage } from "siwe";
 import { privateKeyToAccount } from "viem/accounts";
@@ -134,6 +135,54 @@ describe("SIWE Authentication & Session Security", () => {
       const { validateSessionSecret } = await import("@/lib/auth/session");
       const validSecret = "a_very_secure_and_random_production_secret_32_bytes_long";
       expect(validateSessionSecret(validSecret, true)).toBe(validSecret);
+    });
+  });
+
+  describe("mock-test-login Production & Flag Guard", () => {
+    it("returns 404 in production mode even if ENABLE_TEST_LOGIN=true", async () => {
+      const origNodeEnv = process.env.NODE_ENV;
+      const origFlag = process.env.ENABLE_TEST_LOGIN;
+      try {
+        (process.env as any).NODE_ENV = "production";
+        process.env.ENABLE_TEST_LOGIN = "true";
+
+        const { POST } = await import("@/app/api/auth/mock-test-login/route");
+        const req = new Request("http://localhost:3000/api/auth/mock-test-login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ address: "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC" }),
+        });
+
+        const res = await POST(req as any);
+        expect(res.status).toBe(404);
+        const data = await res.json();
+        expect(data.error).toBe("Not Found");
+      } finally {
+        (process.env as any).NODE_ENV = origNodeEnv;
+        process.env.ENABLE_TEST_LOGIN = origFlag;
+      }
+    });
+
+    it("returns 404 in development/test if ENABLE_TEST_LOGIN is false or unset", async () => {
+      const origNodeEnv = process.env.NODE_ENV;
+      const origFlag = process.env.ENABLE_TEST_LOGIN;
+      try {
+        (process.env as any).NODE_ENV = "development";
+        delete process.env.ENABLE_TEST_LOGIN;
+
+        const { POST } = await import("@/app/api/auth/mock-test-login/route");
+        const req = new Request("http://localhost:3000/api/auth/mock-test-login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ address: "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC" }),
+        });
+
+        const res = await POST(req as any);
+        expect(res.status).toBe(404);
+      } finally {
+        (process.env as any).NODE_ENV = origNodeEnv;
+        process.env.ENABLE_TEST_LOGIN = origFlag;
+      }
     });
   });
 });

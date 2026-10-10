@@ -3,8 +3,19 @@ import { SiweMessage } from "siwe";
 import { getServerSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 
+import { checkRateLimit } from "@/lib/rate-limit";
+
 export async function POST(req: NextRequest) {
   try {
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "anonymous";
+    const rl = await checkRateLimit(`auth_verify_${ip}`, 15, 60);
+    if (!rl.success) {
+      return NextResponse.json(
+        { error: "Too many authentication attempts. Please wait." },
+        { status: 429 }
+      );
+    }
+
     const session = await getServerSession();
     const body = await req.json();
     const { message, signature } = body;

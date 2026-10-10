@@ -147,3 +147,27 @@ When a transaction hash is submitted or reconciled by the background engine:
 5. **Idempotent Record**: Upserts into `PaymentEvent` table with unique constraint `(chainId, txHash, logIndex)`. All payers are recorded (`payerAddress`).
 6. **Cumulative Summation**: Computes `SUM(amountUsdc)` for all verified events matching the invoice. If cumulative amount >= invoice target, updates status to `PAID` and timestamps `confirmedAt`.
 
+---
+
+## 6. Database Migrations & Deployment
+
+Raseed uses Prisma with PostgreSQL (e.g. Neon serverless).
+
+### Migration Commands
+- **Remote / Non-Local / Production / Staging Databases**:
+  ```bash
+  npx prisma migrate deploy
+  ```
+  > **CRITICAL RULE**: ALWAYS use `prisma migrate deploy` for any non-local or remote database (including Neon branches and production). Never run `prisma migrate dev` against staging or production databases; `migrate deploy` applies pending committed migration SQL scripts idempotently without shadow databases or interactive resets.
+
+- **Local Development (Schema Changes)**:
+  ```bash
+  npx prisma migrate dev --name <migration_name>
+  ```
+
+- **Integration Test Branch**:
+  Deploy migrations to the isolated test database:
+  ```bash
+  DATABASE_URL="$TEST_DATABASE_URL" DIRECT_URL="$TEST_DATABASE_URL" npx prisma migrate deploy
+  ```
+

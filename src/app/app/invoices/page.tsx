@@ -124,6 +124,38 @@ export default function InvoicesListPage() {
         </div>
       </div>
 
+      {/* Quick Filter Chips */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+        {[
+          { key: "ALL", label: t("invoices.allStatus") },
+          { key: "DRAFT", label: t("status.draft") },
+          { key: "SENT", label: t("status.sent") },
+          { key: "PARTIALLY_PAID", label: t("status.partiallyPaid") },
+          { key: "PAID", label: t("status.paid") },
+          { key: "EXPIRED", label: t("status.expired") },
+          { key: "CANCELLED", label: t("status.cancelled") },
+        ].map((chip) => {
+          const isActive = statusFilter === chip.key;
+          return (
+            <button
+              key={chip.key}
+              type="button"
+              onClick={() => {
+                setStatusFilter(chip.key);
+                setPage(1);
+              }}
+              className={`px-3 py-1.5 rounded-xl font-medium transition-colors shrink-0 text-xs ${
+                isActive
+                  ? "bg-teal-600 text-white shadow-xs"
+                  : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
+              }`}
+            >
+              {chip.label}
+            </button>
+          );
+        })}
+      </div>
+
       {/* Filters & Search */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
         <div className="relative flex-1">

@@ -75,14 +75,79 @@ export async function DELETE() {
     const session = await getServerSession();
     const { merchantId } = requireAuthenticatedMerchant(session);
 
-    // Delete merchant and cascading data
+    // Check if merchant has any financial records (PAID / PARTIALLY_PAID invoices or confirmed PaymentEvents)
+    const financialRecordsCount = await prisma.invoice.count({
+      where: {
+        merchantId,
+        OR: [
+          { status: "PAID" },
+          { status: "PARTIALLY_PAID" },
+          { paymentEvents: { some: {} } },
+        ],
+      },
+    });
+
+    if (financialRecordsCount > 0) {
+      // Compliance & Audit rule: Anonymize personal data, keep immutable payment events and transaction records
+      await prisma.$transaction(async (tx) => {
+        // 1. Anonymize Merchant PII
+        await tx.merchant.update({
+          where: { id: merchantId },
+          data: {
+            displayName: "Anonymized Merchant",
+            businessName: null,
+            country: null,
+          },
+        });
+
+        // 2. Anonymize Client PII on paid/partially paid invoices
+        await tx.invoice.updateMany({
+          where: { merchantId },
+          data: {
+            clientName: "Anonymized Client",
+            clientEmail: null,
+            notes: null,
+          },
+        });
+
+        // 3. Delete non-financial draft/unpaid invoices without payment events
+        await tx.invoice.deleteMany({
+          where: {
+            merchantId,
+            status: { in: ["DRAFT", "CANCELLED"] },
+            paymentEvents: { none: {} },
+          },
+        });
+
+        // 4. Log audit event
+        await tx.auditLog.create({
+          data: {
+            merchantId,
+            action: "MERCHANT_DATA_ANONYMIZED",
+            details: JSON.stringify({
+              reason: "GDPR/Privacy right to be forgotten requested. Payment records retained for regulatory compliance.",
+              financialRecordsCount,
+            }),
+          },
+        });
+      });
+
+      session.destroy();
+      return NextResponse.json({
+        success: true,
+        anonymized: true,
+        message: "Personal data anonymized. Payment and transaction records preserved for accounting and tax compliance.",
+      });
+    }
+
+    // If zero financial records exist, hard delete is safe
     await prisma.merchant.delete({
       where: { id: merchantId },
     });
 
     session.destroy();
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, deleted: true });
   } catch (err: unknown) {
     if (err && typeof err === "object" && "statusCode" in err) {
       const status = (err as { statusCode: number }).statusCode;

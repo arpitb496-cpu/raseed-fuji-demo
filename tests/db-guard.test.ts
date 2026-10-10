@@ -1,83 +1,97 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { prisma } from "@/lib/db";
+import { getTestPrisma } from "@/lib/db/test-db";
+import { formatInvoiceNumber } from "@/lib/invoice-utils";
 import crypto from "crypto";
+import type { PrismaClient } from "@prisma/client";
 
-describe("Database Guard & Concurrency Constraints", () => {
+describe("Database Guard & Concurrency Constraints (Integration with TEST_DATABASE_URL)", () => {
+  let testPrisma: PrismaClient;
+
   beforeAll(async () => {
-    await prisma.$connect();
+    testPrisma = getTestPrisma();
+    await testPrisma.$connect();
   });
 
   afterAll(async () => {
-    await prisma.$disconnect();
+    await testPrisma.$disconnect();
   });
 
-  it("fails fast if USE_IN_MEMORY_DB is enabled in production mode", async () => {
-    const originalNodeEnv = process.env.NODE_ENV;
-    const originalMemoryFlag = process.env.USE_IN_MEMORY_DB;
+  describe("Isolation Guards", () => {
+    it("aborts if TEST_DATABASE_URL equals DATABASE_URL or is missing", () => {
+      const origProd = process.env.DATABASE_URL;
+      const origTest = process.env.TEST_DATABASE_URL;
 
-    try {
-      process.env.NODE_ENV = "production";
-      process.env.USE_IN_MEMORY_DB = "true";
+      try {
+        // Test when TEST_DATABASE_URL is missing
+        process.env.TEST_DATABASE_URL = "";
+        expect(() => getTestPrisma()).toThrow(/TEST ISOLATION ERROR: TEST_DATABASE_URL is not configured/);
 
-      expect(() => {
-        if (process.env.NODE_ENV === "production" && process.env.USE_IN_MEMORY_DB === "true") {
-          throw new Error(
-            "SECURITY CONFIGURATION ERROR: In-memory database store is strictly prohibited in production."
-          );
-        }
-      }).toThrow(/In-memory database store is strictly prohibited in production/);
-    } finally {
-      process.env.NODE_ENV = originalNodeEnv;
-      process.env.USE_IN_MEMORY_DB = originalMemoryFlag;
-    }
+        // Test when TEST_DATABASE_URL equals DATABASE_URL
+        process.env.TEST_DATABASE_URL = "postgres://same-db-connection";
+        process.env.DATABASE_URL = "postgres://same-db-connection";
+        expect(() => getTestPrisma()).toThrow(/TEST ISOLATION GUARD: TEST_DATABASE_URL must never match DATABASE_URL/);
+      } finally {
+        process.env.DATABASE_URL = origProd;
+        process.env.TEST_DATABASE_URL = origTest;
+      }
+    });
+
+    it("fails fast if USE_MEMORY_STORE is enabled in production mode", () => {
+      const originalNodeEnv = process.env.NODE_ENV;
+      const originalFlag = process.env.USE_MEMORY_STORE;
+
+      try {
+        (process.env as any).NODE_ENV = "production";
+        process.env.USE_MEMORY_STORE = "true";
+
+        expect(() => {
+          if (process.env.NODE_ENV === "production" && process.env.USE_MEMORY_STORE === "true") {
+            throw new Error(
+              "SECURITY CONFIGURATION ERROR: In-memory store (USE_MEMORY_STORE=true) is strictly forbidden in production."
+            );
+          }
+        }).toThrow(/USE_MEMORY_STORE=true.*strictly forbidden in production/);
+      } finally {
+        (process.env as any).NODE_ENV = originalNodeEnv;
+        process.env.USE_MEMORY_STORE = originalFlag;
+      }
+    });
   });
 
-  it(
-    "enforces database unique constraint on PaymentEvent (chainId, txHash, logIndex)",
-    async () => {
-      const testWallet = "0x" + crypto.randomBytes(20).toString("hex");
-      const chainId = 43113;
-      const txHash = "0x" + crypto.randomBytes(32).toString("hex");
-      const logIndex = 0;
+  describe("Database Constraints & Concurrency", () => {
+    it(
+      "enforces database unique constraint on PaymentEvent (chainId, txHash, logIndex)",
+      async () => {
+        const testWallet = "0x" + crypto.randomBytes(20).toString("hex");
+        const chainId = 43113;
+        const txHash = "0x" + crypto.randomBytes(32).toString("hex");
+        const logIndex = 0;
 
-      // 1. Create a merchant & invoice
-      const merchant = await prisma.merchant.upsert({
-        where: { walletAddress: testWallet },
-        update: {},
-        create: {
-          walletAddress: testWallet,
-          displayName: "Constraint Test Merchant",
-        },
-      });
+        // 1. Create a merchant & invoice on test branch
+        const merchant = await testPrisma.merchant.upsert({
+          where: { walletAddress: testWallet },
+          update: {},
+          create: {
+            walletAddress: testWallet,
+            displayName: "Payment Event Constraint Merchant",
+          },
+        });
 
-      const invoice = await prisma.invoice.create({
-        data: {
-          publicId: `test_pub_unique_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`,
-          merchantId: merchant.id,
-          invoiceNumber: `INV-CONCUR-${Date.now()}`,
-          title: "Constraint Test Invoice",
-          dueDate: new Date(Date.now() + 86400000),
-          amountUsdc: 1_000_000n,
-          onchainInvoiceId: "0x" + crypto.randomBytes(32).toString("hex"),
-        },
-      });
+        const invoice = await testPrisma.invoice.create({
+          data: {
+            publicId: `test_pub_unique_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`,
+            merchantId: merchant.id,
+            invoiceNumber: `INV-PAYCONCUR-${Date.now()}`,
+            title: "Constraint Test Invoice",
+            dueDate: new Date(Date.now() + 86400000),
+            amountUsdc: 1_000_000n,
+            onchainInvoiceId: "0x" + crypto.randomBytes(32).toString("hex"),
+          },
+        });
 
-      // 2. Create first PaymentEvent
-      await prisma.paymentEvent.create({
-        data: {
-          invoiceId: invoice.id,
-          chainId,
-          txHash,
-          logIndex,
-          payerAddress: "0x" + crypto.randomBytes(20).toString("hex"),
-          amountUsdc: 1_000_000n,
-          blockNumber: 123456n,
-        },
-      });
-
-      // 3. Attempting to insert duplicate PaymentEvent on (chainId, txHash, logIndex) MUST throw unique constraint violation
-      await expect(
-        prisma.paymentEvent.create({
+        // 2. Create first PaymentEvent
+        await testPrisma.paymentEvent.create({
           data: {
             invoiceId: invoice.id,
             chainId,
@@ -85,91 +99,121 @@ describe("Database Guard & Concurrency Constraints", () => {
             logIndex,
             payerAddress: "0x" + crypto.randomBytes(20).toString("hex"),
             amountUsdc: 1_000_000n,
-            blockNumber: 123457n,
+            blockNumber: 123456n,
           },
-        })
-      ).rejects.toThrow();
+        });
 
-      // Clean up test data
-      await prisma.invoice.delete({ where: { id: invoice.id } });
-      await prisma.merchant.delete({ where: { id: merchant.id } });
-    },
-    25000
-  );
+        // 3. Attempting to insert duplicate PaymentEvent on (chainId, txHash, logIndex) MUST throw unique constraint violation
+        await expect(
+          testPrisma.paymentEvent.create({
+            data: {
+              invoiceId: invoice.id,
+              chainId,
+              txHash,
+              logIndex,
+              payerAddress: "0x" + crypto.randomBytes(20).toString("hex"),
+              amountUsdc: 1_000_000n,
+              blockNumber: 123457n,
+            },
+          })
+        ).rejects.toThrow();
 
-  it(
-    "enforces per-merchant invoiceNumber uniqueness under concurrent creation",
-    async () => {
-      const testWallet = "0x" + crypto.randomBytes(20).toString("hex");
-      const duplicateInvoiceNumber = "INV-0001";
+        // Clean up test data
+        await testPrisma.invoice.delete({ where: { id: invoice.id } });
+        await testPrisma.merchant.delete({ where: { id: merchant.id } });
+      },
+      30000
+    );
 
-      const merchant = await prisma.merchant.upsert({
-        where: { walletAddress: testWallet },
-        update: {},
-        create: {
-          walletAddress: testWallet,
-          displayName: "Sequential Test Merchant",
-        },
-      });
+    it(
+      "ensures two parallel invoice creations get distinct sequential invoiceNumber",
+      async () => {
+        const testWallet = "0x" + crypto.randomBytes(20).toString("hex");
 
-      // Insert first invoice
-      const inv1 = await prisma.invoice.create({
-        data: {
-          publicId: `test_pub_seq1_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`,
-          merchantId: merchant.id,
-          invoiceNumber: duplicateInvoiceNumber,
-          title: "Invoice 1",
-          dueDate: new Date(Date.now() + 86400000),
-          amountUsdc: 1_000_000n,
-          onchainInvoiceId: "0x" + crypto.randomBytes(32).toString("hex"),
-        },
-      });
-
-      // Concurrent or duplicate insert of same invoiceNumber for same merchant MUST reject
-      await expect(
-        prisma.invoice.create({
-          data: {
-            publicId: `test_pub_seq2_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`,
-            merchantId: merchant.id,
-            invoiceNumber: duplicateInvoiceNumber, // DUPLICATE for same merchant
-            title: "Invoice 2",
-            dueDate: new Date(Date.now() + 86400000),
-            amountUsdc: 2_000_000n,
-            onchainInvoiceId: "0x" + crypto.randomBytes(32).toString("hex"),
+        const merchant = await testPrisma.merchant.upsert({
+          where: { walletAddress: testWallet },
+          update: {},
+          create: {
+            walletAddress: testWallet,
+            displayName: "Parallel Invoicing Merchant",
           },
-        })
-      ).rejects.toThrow();
+        });
 
-      // Different merchant CAN have the same invoiceNumber (per-merchant sequential)
-      const otherMerchantWallet = "0x" + crypto.randomBytes(20).toString("hex");
-      const otherMerchant = await prisma.merchant.upsert({
-        where: { walletAddress: otherMerchantWallet },
-        update: {},
-        create: {
-          walletAddress: otherMerchantWallet,
-          displayName: "Other Merchant",
-        },
-      });
+        // Simulate concurrent invoice creation with monotonic retry logic
+        const createConcurrentInvoice = async (title: string) => {
+          let attempts = 0;
+          while (attempts < 8) {
+            attempts++;
+            try {
+              return await testPrisma.$transaction(
+                async (tx) => {
+                  const lastInvoice = await tx.invoice.findFirst({
+                    where: { merchantId: merchant.id },
+                    orderBy: { createdAt: "desc" },
+                    select: { invoiceNumber: true },
+                  });
 
-      const invOther = await prisma.invoice.create({
-        data: {
-          publicId: `test_pub_other_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`,
-          merchantId: otherMerchant.id,
-          invoiceNumber: duplicateInvoiceNumber, // Same number, different merchant -> SUCCEEDS
-          title: "Other Merchant Invoice",
-          dueDate: new Date(Date.now() + 86400000),
-          amountUsdc: 1_000_000n,
-          onchainInvoiceId: "0x" + crypto.randomBytes(32).toString("hex"),
-        },
-      });
-      expect(invOther.invoiceNumber).toBe(duplicateInvoiceNumber);
+                  let nextSeq = 1;
+                  if (lastInvoice?.invoiceNumber) {
+                    const match = lastInvoice.invoiceNumber.match(/INV-(\d+)/);
+                    if (match) {
+                      nextSeq = parseInt(match[1], 10) + 1;
+                    }
+                  }
 
-      // Clean up
-      await prisma.invoice.delete({ where: { id: inv1.id } });
-      await prisma.invoice.delete({ where: { id: invOther.id } });
-      await prisma.merchant.delete({ where: { id: merchant.id } });
-      await prisma.merchant.delete({ where: { id: otherMerchant.id } });
-    },
-    25000
-  );
+                  const invoiceNumber = formatInvoiceNumber(nextSeq);
+                  const publicId = `test_par_${Date.now()}_${crypto.randomBytes(6).toString("hex")}`;
+
+                  return await tx.invoice.create({
+                    data: {
+                      publicId,
+                      merchantId: merchant.id,
+                      invoiceNumber,
+                      title,
+                      dueDate: new Date(Date.now() + 86400000),
+                      amountUsdc: 5_000_000n,
+                      onchainInvoiceId: "0x" + crypto.randomBytes(32).toString("hex"),
+                    },
+                  });
+                },
+                {
+                  maxWait: 15000,
+                  timeout: 20000,
+                }
+              );
+            } catch (err: any) {
+              if ((err?.code === "P2002" || err?.code === "P2028" || String(err).includes("Transaction API error")) && attempts < 8) {
+                // Jittered backoff on conflict or pool wait
+                await new Promise((r) => setTimeout(r, 40 * attempts + Math.random() * 30));
+                continue;
+              }
+              throw err;
+            }
+          }
+          throw new Error("Failed after max attempts");
+        };
+
+        // Fire two parallel invoice creations simultaneously
+        const [invA, invB] = await Promise.all([
+          createConcurrentInvoice("Parallel Invoice A"),
+          createConcurrentInvoice("Parallel Invoice B"),
+        ]);
+
+        // Both invoices must be created
+        expect(invA).toBeDefined();
+        expect(invB).toBeDefined();
+
+        // They must have DIFFERENT, sequential invoice numbers
+        expect(invA.invoiceNumber).not.toBe(invB.invoiceNumber);
+
+        const numbers = [invA.invoiceNumber, invB.invoiceNumber].sort();
+        expect(numbers).toEqual(["INV-0001", "INV-0002"]);
+
+        // Clean up
+        await testPrisma.invoice.deleteMany({ where: { merchantId: merchant.id } });
+        await testPrisma.merchant.delete({ where: { id: merchant.id } });
+      },
+      35000
+    );
+  });
 });

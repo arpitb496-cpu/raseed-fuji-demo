@@ -18,7 +18,7 @@ export async function GET(
     const { id } = await context.params;
 
     // Rate limit: 20 PDF generations per minute per merchant
-    const rateLimit = checkRateLimit(`pdf_download_${merchantId}`, 20, 60);
+    const rateLimit = await checkRateLimit(`pdf_download_${merchantId}`, 20, 60);
     if (!rateLimit.success) {
       return NextResponse.json(
         { error: "Too many PDF generation requests. Please wait a minute." },
