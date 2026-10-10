@@ -280,7 +280,7 @@ describe("Database Guard, Restrictions & Concurrency (Integration with TEST_DATA
     );
 
     it(
-      "ensures two parallel invoice creations get distinct sequential invoiceNumber",
+      "ensures two parallel invoice creations get distinct sequential invoiceNumber via atomic counter",
       async () => {
         const testWallet = ("0x" + crypto.randomBytes(20).toString("hex")).toLowerCase();
 
@@ -293,7 +293,7 @@ describe("Database Guard, Restrictions & Concurrency (Integration with TEST_DATA
           },
         });
 
-        // Simulate concurrent invoice creation with monotonic retry logic
+        // Simulate concurrent invoice creation with atomic merchant counter
         const createConcurrentInvoice = async (title: string) => {
           let attempts = 0;
           while (attempts < 8) {
@@ -301,20 +301,13 @@ describe("Database Guard, Restrictions & Concurrency (Integration with TEST_DATA
             try {
               return await testPrisma.$transaction(
                 async (tx) => {
-                  const lastInvoice = await tx.invoice.findFirst({
-                    where: { merchantId: merchant.id },
-                    orderBy: { createdAt: "desc" },
-                    select: { invoiceNumber: true },
+                  const updatedMerchant = await tx.merchant.update({
+                    where: { id: merchant.id },
+                    data: { nextInvoiceNumber: { increment: 1 } },
+                    select: { nextInvoiceNumber: true },
                   });
 
-                  let nextSeq = 1;
-                  if (lastInvoice?.invoiceNumber) {
-                    const match = lastInvoice.invoiceNumber.match(/INV-(\d+)/);
-                    if (match) {
-                      nextSeq = parseInt(match[1], 10) + 1;
-                    }
-                  }
-
+                  const nextSeq = updatedMerchant.nextInvoiceNumber - 1;
                   const invoiceNumber = formatInvoiceNumber(nextSeq);
                   const publicId = `test_par_${Date.now()}_${crypto.randomBytes(6).toString("hex")}`;
 
@@ -371,6 +364,146 @@ describe("Database Guard, Restrictions & Concurrency (Integration with TEST_DATA
         await testPrisma.merchant.delete({ where: { id: merchant.id } });
       },
       35000
+    );
+
+    it(
+      "proves invoice numbers are never reused after deletion (atomic counter monotonicity)",
+      async () => {
+        const testWallet = ("0x" + crypto.randomBytes(20).toString("hex")).toLowerCase();
+
+        const merchant = await testPrisma.merchant.create({
+          data: {
+            walletAddress: testWallet,
+            displayName: "Deletion Non-Reuse Merchant",
+          },
+        });
+
+        // Create first invoice: gets INV-0001
+        const inv1 = await testPrisma.$transaction(async (tx) => {
+          const m = await tx.merchant.update({
+            where: { id: merchant.id },
+            data: { nextInvoiceNumber: { increment: 1 } },
+            select: { nextInvoiceNumber: true },
+          });
+          return await tx.invoice.create({
+            data: {
+              publicId: `test_del_1_${Date.now()}`,
+              merchantId: merchant.id,
+              invoiceNumber: formatInvoiceNumber(m.nextInvoiceNumber - 1),
+              title: "Invoice 1 to delete",
+              dueDate: new Date(Date.now() + 86400000),
+              amountUsdc: 2_000_000n,
+              onchainInvoiceId: "0x" + crypto.randomBytes(32).toString("hex"),
+            },
+          });
+        });
+        expect(inv1.invoiceNumber).toBe("INV-0001");
+
+        // DELETE the first invoice
+        await testPrisma.invoice.delete({ where: { id: inv1.id } });
+
+        // Create next invoice: MUST get INV-0002, NEVER reusing INV-0001
+        const inv2 = await testPrisma.$transaction(async (tx) => {
+          const m = await tx.merchant.update({
+            where: { id: merchant.id },
+            data: { nextInvoiceNumber: { increment: 1 } },
+            select: { nextInvoiceNumber: true },
+          });
+          return await tx.invoice.create({
+            data: {
+              publicId: `test_del_2_${Date.now()}`,
+              merchantId: merchant.id,
+              invoiceNumber: formatInvoiceNumber(m.nextInvoiceNumber - 1),
+              title: "Invoice 2 after deletion",
+              dueDate: new Date(Date.now() + 86400000),
+              amountUsdc: 2_000_000n,
+              onchainInvoiceId: "0x" + crypto.randomBytes(32).toString("hex"),
+            },
+          });
+        });
+        expect(inv2.invoiceNumber).toBe("INV-0002");
+
+        // Clean up
+        await testPrisma.invoice.delete({ where: { id: inv2.id } });
+        await testPrisma.merchant.delete({ where: { id: merchant.id } });
+      },
+      25000
+    );
+
+    it(
+      "enforces unique constraint on Invoice.onchainInvoiceId",
+      async () => {
+        const testWallet = ("0x" + crypto.randomBytes(20).toString("hex")).toLowerCase();
+        const sharedOnchainInvoiceId = ("0x" + crypto.randomBytes(32).toString("hex")).toLowerCase();
+
+        const merchant = await testPrisma.merchant.create({
+          data: {
+            walletAddress: testWallet,
+            displayName: "Unique Onchain Id Merchant",
+          },
+        });
+
+        // 1. Insert first invoice with onchainInvoiceId
+        const inv1 = await testPrisma.invoice.create({
+          data: {
+            publicId: `test_unique_chain_1_${Date.now()}`,
+            merchantId: merchant.id,
+            invoiceNumber: "INV-0001",
+            title: "First with onchain ID",
+            dueDate: new Date(Date.now() + 86400000),
+            amountUsdc: 2_000_000n,
+            onchainInvoiceId: sharedOnchainInvoiceId,
+          },
+        });
+        expect(inv1.onchainInvoiceId).toBe(sharedOnchainInvoiceId);
+
+        // 2. Attempt to insert second invoice with identical onchainInvoiceId must reject with P2002
+        await expect(
+          testPrisma.invoice.create({
+            data: {
+              publicId: `test_unique_chain_2_${Date.now()}`,
+              merchantId: merchant.id,
+              invoiceNumber: "INV-0002",
+              title: "Duplicate onchain ID collision",
+              dueDate: new Date(Date.now() + 86400000),
+              amountUsdc: 3_000_000n,
+              onchainInvoiceId: sharedOnchainInvoiceId,
+            },
+          })
+        ).rejects.toThrow();
+
+        // Clean up
+        await testPrisma.invoice.delete({ where: { id: inv1.id } });
+        await testPrisma.merchant.delete({ where: { id: merchant.id } });
+      },
+      25000
+    );
+
+    it(
+      "verifies lowercase address normalization at write and query",
+      async () => {
+        const mixedCaseWallet = "0xAbCdEf1234567890AbCdEf1234567890AbCdEf12";
+        const normalizedWallet = mixedCaseWallet.toLowerCase();
+
+        const merchant = await testPrisma.merchant.create({
+          data: {
+            walletAddress: normalizedWallet,
+            displayName: "Mixed Case Merchant",
+          },
+        });
+
+        expect(merchant.walletAddress).toBe(normalizedWallet);
+
+        // Querying by lowercase finds it
+        const found = await testPrisma.merchant.findUnique({
+          where: { walletAddress: normalizedWallet },
+        });
+        expect(found?.id).toBe(merchant.id);
+
+        // Clean up
+        await testPrisma.merchant.delete({ where: { id: merchant.id } });
+      },
+      20000
     );
   });
 });

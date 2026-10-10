@@ -2,7 +2,16 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
-  serverExternalPackages: ["pino", "pino-pretty", "pdfkit"],
+  serverExternalPackages: [
+    "pino",
+    "pino-pretty",
+    "pdfkit",
+    "@sparticuz/chromium",
+    "playwright-core",
+  ],
+  outputFileTracingIncludes: {
+    "/api/invoices/**": ["./node_modules/@sparticuz/chromium/bin/**/*"],
+  },
   turbopack: {
     resolveAlias: {
       "@coinbase/cdp-sdk": "./src/lib/mocks/empty.ts",

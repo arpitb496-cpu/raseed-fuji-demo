@@ -27,6 +27,7 @@ model Merchant {
   businessName           String?
   country                String?
   defaultCurrencyDisplay String      @default("USD")
+  nextInvoiceNumber      Int         @default(1)
   createdAt              DateTime    @default(now())
   updatedAt              DateTime    @updatedAt
 
@@ -49,7 +50,7 @@ model Invoice {
   paidAmountUsdc     BigInt        @default(0) // Cumulative verified micro-USDC (CHECK >= 0)
   dueDate            DateTime
   status             InvoiceStatus @default(DRAFT)
-  onchainInvoiceId   String        // Hex string of bytes32 derived from publicId
+  onchainInvoiceId   String        @unique // Hex string of bytes32 derived from publicId
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
 
@@ -58,7 +59,6 @@ model Invoice {
   auditLogs          AuditLog[]
 
   @@index([merchantId])
-  @@index([onchainInvoiceId])
   @@unique([merchantId, invoiceNumber])
 }
 
@@ -89,6 +89,8 @@ model PaymentEvent {
   amountUsdc       BigInt   // Micro-USDC transferred to merchant in this event
   feeUsdc          BigInt   @default(0) // Micro-USDC fee transferred to treasury
   confirmedAt      DateTime @default(now())
+  invalidatedAt    DateTime?
+  invalidReason    String?
 
   @@unique([chainId, txHash, logIndex])
   @@index([invoiceId])

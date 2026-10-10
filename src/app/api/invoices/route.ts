@@ -139,22 +139,17 @@ export async function POST(req: NextRequest) {
       try {
         newInvoice = await prisma.$transaction(
           async (tx) => {
-            // Find the latest invoice number for this merchant to ensure monotonicity
-            const lastInvoice = await tx.invoice.findFirst({
-              where: { merchantId },
-              orderBy: { createdAt: "desc" },
-              select: { invoiceNumber: true },
+            // Atomically increment Merchant.nextInvoiceNumber to claim the next sequence number.
+            // This acquires an exclusive row-level lock on the Merchant record, guaranteeing
+            // strict monotonicity and ensuring sequence numbers are never reused even after deletion.
+            const updatedMerchant = await tx.merchant.update({
+              where: { id: merchantId },
+              data: { nextInvoiceNumber: { increment: 1 } },
+              select: { nextInvoiceNumber: true },
             });
 
-          let nextSeq = 1;
-          if (lastInvoice?.invoiceNumber) {
-            const match = lastInvoice.invoiceNumber.match(/INV-(\d+)/);
-            if (match) {
-              nextSeq = parseInt(match[1], 10) + 1;
-            }
-          }
-
-          const invoiceNumber = formatInvoiceNumber(nextSeq);
+            const nextSeq = updatedMerchant.nextInvoiceNumber - 1;
+            const invoiceNumber = formatInvoiceNumber(nextSeq);
 
           const created = await tx.invoice.create({
             data: {
