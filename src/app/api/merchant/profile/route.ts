@@ -140,9 +140,14 @@ export async function DELETE() {
       });
     }
 
-    // If zero financial records exist, hard delete is safe
-    await prisma.merchant.delete({
-      where: { id: merchantId },
+    // If zero financial records exist, delete non-financial invoices first, then delete merchant (respecting ON DELETE RESTRICT)
+    await prisma.$transaction(async (tx) => {
+      await tx.invoice.deleteMany({
+        where: { merchantId },
+      });
+      await tx.merchant.delete({
+        where: { id: merchantId },
+      });
     });
 
     session.destroy();

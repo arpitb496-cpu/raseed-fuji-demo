@@ -22,7 +22,7 @@ enum InvoiceStatus {
 
 model Merchant {
   id                     String      @id @default(cuid())
-  walletAddress          String      @unique
+  walletAddress          String      @unique // Normalized lowercase
   displayName            String
   businessName           String?
   country                String?
@@ -38,15 +38,15 @@ model Invoice {
   id                 String        @id @default(cuid())
   publicId           String        @unique // 24+ char unguessable identifier
   merchantId         String
-  merchant           Merchant      @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  merchant           Merchant      @relation(fields: [merchantId], references: [id], onDelete: Restrict)
   invoiceNumber      String
   title              String
   notes              String?
   clientName         String?
   clientEmail        String?
   currencyDisplay    String        @default("USD")
-  amountUsdc         BigInt        // Micro-USDC (integer, 6 decimals)
-  paidAmountUsdc     BigInt        @default(0) // Cumulative verified micro-USDC
+  amountUsdc         BigInt        // Micro-USDC (integer, 6 decimals; CHECK >= 1,000,000)
+  paidAmountUsdc     BigInt        @default(0) // Cumulative verified micro-USDC (CHECK >= 0)
   dueDate            DateTime
   status             InvoiceStatus @default(DRAFT)
   onchainInvoiceId   String        // Hex string of bytes32 derived from publicId
@@ -74,20 +74,37 @@ model InvoiceItem {
 }
 
 model PaymentEvent {
-  id            String   @id @default(cuid())
-  invoiceId     String
-  invoice       Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-  txHash        String
-  logIndex      Int
-  payerAddress  String   // Explicit payer wallet, independent of optional client name
-  amountUsdc    BigInt   // Micro-USDC transferred in this event
-  blockNumber   BigInt
-  chainId       Int
-  confirmedAt   DateTime @default(now())
+  id               String   @id @default(cuid())
+  invoiceId        String
+  invoice          Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
+  txHash           String
+  logIndex         Int
+  blockHash        String
+  blockNumber      BigInt
+  chainId          Int
+  routerAddress    String   // Normalized lowercase
+  merchantAddress  String   // Normalized lowercase
+  payerAddress     String   // Normalized lowercase
+  onchainInvoiceId String   // Canonical bytes32 hex
+  amountUsdc       BigInt   // Micro-USDC transferred to merchant in this event
+  feeUsdc          BigInt   @default(0) // Micro-USDC fee transferred to treasury
+  confirmedAt      DateTime @default(now())
 
   @@unique([chainId, txHash, logIndex])
   @@index([invoiceId])
   @@index([payerAddress])
+  @@index([merchantAddress])
+  @@index([onchainInvoiceId])
+}
+
+model ReconciliationCursor {
+  id              String   @id @default(cuid())
+  chainId         Int
+  routerAddress   String   // Normalized lowercase
+  lastBlockNumber BigInt
+  updatedAt       DateTime @updatedAt
+
+  @@unique([chainId, routerAddress])
 }
 
 model AuditLog {

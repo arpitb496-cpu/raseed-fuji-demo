@@ -3,7 +3,7 @@ import { getTestPrisma } from "@/lib/db/test-db";
 import crypto from "crypto";
 import type { PrismaClient } from "@prisma/client";
 
-describe("Delete My Data & Anonymization Policy (Integration with TEST_DATABASE_URL)", () => {
+describe("Delete My Data & Anonymization Policy (Integration with TEST_DATABASE_URL under ON DELETE RESTRICT)", () => {
   let testPrisma: PrismaClient;
 
   beforeAll(async () => {
@@ -18,7 +18,8 @@ describe("Delete My Data & Anonymization Policy (Integration with TEST_DATABASE_
   it(
     "anonymizes personal fields and preserves immutable payment records when merchant has PAID invoices",
     async () => {
-      const walletAddress = "0x" + crypto.randomBytes(20).toString("hex");
+      const walletAddress = ("0x" + crypto.randomBytes(20).toString("hex")).toLowerCase();
+      const routerAddress = ("0x" + crypto.randomBytes(20).toString("hex")).toLowerCase();
 
       // 1. Create merchant with personal data
       const merchant = await testPrisma.merchant.create({
@@ -54,9 +55,14 @@ describe("Delete My Data & Anonymization Policy (Integration with TEST_DATABASE_
           chainId: 43113,
           txHash: "0x" + crypto.randomBytes(32).toString("hex"),
           logIndex: 0,
-          payerAddress: "0x" + crypto.randomBytes(20).toString("hex"),
-          amountUsdc: 500_000_000n,
+          blockHash: "0x" + crypto.randomBytes(32).toString("hex"),
           blockNumber: 998877n,
+          routerAddress,
+          merchantAddress: walletAddress,
+          payerAddress: ("0x" + crypto.randomBytes(20).toString("hex")).toLowerCase(),
+          onchainInvoiceId: paidInvoice.onchainInvoiceId,
+          amountUsdc: 500_000_000n,
+          feeUsdc: 0n,
         },
       });
 
@@ -151,11 +157,61 @@ describe("Delete My Data & Anonymization Policy (Integration with TEST_DATABASE_
       });
       expect(deletedDraft).toBeNull();
 
-      // Clean up test data
+      // Clean up test data in correct dependency order
       await testPrisma.paymentEvent.delete({ where: { id: paymentEvent.id } });
       await testPrisma.invoice.delete({ where: { id: paidInvoice.id } });
       await testPrisma.merchant.delete({ where: { id: merchant.id } });
     },
     30000
+  );
+
+  it(
+    "cleanly deletes merchant and draft invoices when zero financial records exist under ON DELETE RESTRICT",
+    async () => {
+      const walletAddress = ("0x" + crypto.randomBytes(20).toString("hex")).toLowerCase();
+
+      // 1. Create merchant with only draft invoices (zero financial records)
+      const merchant = await testPrisma.merchant.create({
+        data: {
+          walletAddress,
+          displayName: "Zero Financial History Merchant",
+        },
+      });
+
+      const draftInvoice = await testPrisma.invoice.create({
+        data: {
+          publicId: `test_zero_fin_draft_${Date.now()}`,
+          merchantId: merchant.id,
+          invoiceNumber: "INV-ZERO-001",
+          title: "Abandoned Draft",
+          amountUsdc: 1_000_000n,
+          status: "DRAFT",
+          dueDate: new Date(Date.now() + 86400000),
+          onchainInvoiceId: "0x" + crypto.randomBytes(32).toString("hex"),
+        },
+      });
+
+      // 2. Perform zero-financial-records deletion (delete child invoices first, then merchant)
+      await testPrisma.$transaction(async (tx) => {
+        await tx.invoice.deleteMany({
+          where: { merchantId: merchant.id },
+        });
+        await tx.merchant.delete({
+          where: { id: merchant.id },
+        });
+      });
+
+      // 3. Verify both draft and merchant are deleted
+      const deletedMerchant = await testPrisma.merchant.findUnique({
+        where: { id: merchant.id },
+      });
+      const deletedInvoice = await testPrisma.invoice.findUnique({
+        where: { id: draftInvoice.id },
+      });
+
+      expect(deletedMerchant).toBeNull();
+      expect(deletedInvoice).toBeNull();
+    },
+    20000
   );
 });

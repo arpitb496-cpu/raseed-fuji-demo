@@ -5,7 +5,7 @@ import { formatInvoiceNumber } from "@/lib/invoice-utils";
 import crypto from "crypto";
 import type { PrismaClient } from "@prisma/client";
 
-describe("Database Guard & Concurrency Constraints (Integration with TEST_DATABASE_URL)", () => {
+describe("Database Guard, Restrictions & Concurrency (Integration with TEST_DATABASE_URL)", () => {
   let testPrisma: PrismaClient;
 
   beforeAll(async () => {
@@ -59,11 +59,12 @@ describe("Database Guard & Concurrency Constraints (Integration with TEST_DATABA
     });
   });
 
-  describe("Database Constraints & Concurrency", () => {
+  describe("Database Constraints, CHECK Invariants & ON DELETE RESTRICT", () => {
     it(
       "enforces database unique constraint on PaymentEvent (chainId, txHash, logIndex)",
       async () => {
-        const testWallet = "0x" + crypto.randomBytes(20).toString("hex");
+        const testWallet = ("0x" + crypto.randomBytes(20).toString("hex")).toLowerCase();
+        const routerAddress = ("0x" + crypto.randomBytes(20).toString("hex")).toLowerCase();
         const chainId = 43113;
         const txHash = "0x" + crypto.randomBytes(32).toString("hex");
         const logIndex = 0;
@@ -90,16 +91,21 @@ describe("Database Guard & Concurrency Constraints (Integration with TEST_DATABA
           },
         });
 
-        // 2. Create first PaymentEvent
-        await testPrisma.paymentEvent.create({
+        // 2. Create first PaymentEvent with all hardened audit fields
+        const payment = await testPrisma.paymentEvent.create({
           data: {
             invoiceId: invoice.id,
             chainId,
             txHash,
             logIndex,
-            payerAddress: "0x" + crypto.randomBytes(20).toString("hex"),
-            amountUsdc: 1_000_000n,
+            blockHash: "0x" + crypto.randomBytes(32).toString("hex"),
             blockNumber: 123456n,
+            routerAddress,
+            merchantAddress: testWallet,
+            payerAddress: ("0x" + crypto.randomBytes(20).toString("hex")).toLowerCase(),
+            onchainInvoiceId: invoice.onchainInvoiceId,
+            amountUsdc: 1_000_000n,
+            feeUsdc: 0n,
           },
         });
 
@@ -111,14 +117,25 @@ describe("Database Guard & Concurrency Constraints (Integration with TEST_DATABA
               chainId,
               txHash,
               logIndex,
-              payerAddress: "0x" + crypto.randomBytes(20).toString("hex"),
-              amountUsdc: 1_000_000n,
+              blockHash: "0x" + crypto.randomBytes(32).toString("hex"),
               blockNumber: 123457n,
+              routerAddress,
+              merchantAddress: testWallet,
+              payerAddress: ("0x" + crypto.randomBytes(20).toString("hex")).toLowerCase(),
+              onchainInvoiceId: invoice.onchainInvoiceId,
+              amountUsdc: 1_000_000n,
+              feeUsdc: 0n,
             },
           })
         ).rejects.toThrow();
 
-        // Clean up test data
+        // 4. Verify ON DELETE RESTRICT on PaymentEvent -> Invoice: Deleting invoice with payment must reject
+        await expect(
+          testPrisma.invoice.delete({ where: { id: invoice.id } })
+        ).rejects.toThrow();
+
+        // Clean up test data in correct dependency order
+        await testPrisma.paymentEvent.delete({ where: { id: payment.id } });
         await testPrisma.invoice.delete({ where: { id: invoice.id } });
         await testPrisma.merchant.delete({ where: { id: merchant.id } });
       },
@@ -126,9 +143,146 @@ describe("Database Guard & Concurrency Constraints (Integration with TEST_DATABA
     );
 
     it(
+      "enforces ON DELETE RESTRICT on Invoice -> Merchant: Deleting merchant with active invoices is rejected",
+      async () => {
+        const testWallet = ("0x" + crypto.randomBytes(20).toString("hex")).toLowerCase();
+
+        const merchant = await testPrisma.merchant.create({
+          data: {
+            walletAddress: testWallet,
+            displayName: "Restrict Test Merchant",
+          },
+        });
+
+        const invoice = await testPrisma.invoice.create({
+          data: {
+            publicId: `test_pub_restrict_${Date.now()}`,
+            merchantId: merchant.id,
+            invoiceNumber: "INV-RESTRICT-001",
+            title: "Restrict Test Invoice",
+            dueDate: new Date(Date.now() + 86400000),
+            amountUsdc: 2_000_000n,
+            onchainInvoiceId: "0x" + crypto.randomBytes(32).toString("hex"),
+          },
+        });
+
+        // Deleting merchant while invoice exists MUST be rejected by foreign key constraint
+        await expect(
+          testPrisma.merchant.delete({ where: { id: merchant.id } })
+        ).rejects.toThrow();
+
+        // Clean up: delete invoice first, then merchant succeeds
+        await testPrisma.invoice.delete({ where: { id: invoice.id } });
+        await testPrisma.merchant.delete({ where: { id: merchant.id } });
+      },
+      20000
+    );
+
+    it(
+      "enforces database CHECK constraints: amountUsdc >= 1000000 and paidAmountUsdc >= 0",
+      async () => {
+        const testWallet = ("0x" + crypto.randomBytes(20).toString("hex")).toLowerCase();
+
+        const merchant = await testPrisma.merchant.create({
+          data: {
+            walletAddress: testWallet,
+            displayName: "Check Constraint Merchant",
+          },
+        });
+
+        // 1. Inserting amountUsdc below 1_000_000 micro-USDC (e.g. 500,000) MUST violate CHECK constraint
+        await expect(
+          testPrisma.invoice.create({
+            data: {
+              publicId: `test_pub_check_fail_${Date.now()}`,
+              merchantId: merchant.id,
+              invoiceNumber: "INV-CHECK-001",
+              title: "Sub-minimum invoice",
+              dueDate: new Date(Date.now() + 86400000),
+              amountUsdc: 500_000n, // VIOLATION: < 1_000_000
+              onchainInvoiceId: "0x" + crypto.randomBytes(32).toString("hex"),
+            },
+          })
+        ).rejects.toThrow();
+
+        // 2. Inserting valid amountUsdc >= 1_000_000 succeeds
+        const validInvoice = await testPrisma.invoice.create({
+          data: {
+            publicId: `test_pub_check_ok_${Date.now()}`,
+            merchantId: merchant.id,
+            invoiceNumber: "INV-CHECK-002",
+            title: "Valid invoice",
+            dueDate: new Date(Date.now() + 86400000),
+            amountUsdc: 1_000_000n,
+            paidAmountUsdc: 0n,
+            onchainInvoiceId: "0x" + crypto.randomBytes(32).toString("hex"),
+          },
+        });
+        expect(validInvoice.amountUsdc).toBe(1_000_000n);
+
+        // Clean up
+        await testPrisma.invoice.delete({ where: { id: validInvoice.id } });
+        await testPrisma.merchant.delete({ where: { id: merchant.id } });
+      },
+      25000
+    );
+
+    it(
+      "verifies ReconciliationCursor table functionality and unique constraint",
+      async () => {
+        const routerAddress = ("0x" + crypto.randomBytes(20).toString("hex")).toLowerCase();
+        const chainId = 43113;
+
+        const cursor = await testPrisma.reconciliationCursor.upsert({
+          where: {
+            chainId_routerAddress: {
+              chainId,
+              routerAddress,
+            },
+          },
+          update: {
+            lastBlockNumber: 250000n,
+          },
+          create: {
+            chainId,
+            routerAddress,
+            lastBlockNumber: 200000n,
+          },
+        });
+
+        expect(cursor.lastBlockNumber).toBe(200000n);
+
+        // Update cursor
+        const updated = await testPrisma.reconciliationCursor.update({
+          where: {
+            chainId_routerAddress: {
+              chainId,
+              routerAddress,
+            },
+          },
+          data: {
+            lastBlockNumber: 250000n,
+          },
+        });
+        expect(updated.lastBlockNumber).toBe(250000n);
+
+        // Clean up
+        await testPrisma.reconciliationCursor.delete({
+          where: {
+            chainId_routerAddress: {
+              chainId,
+              routerAddress,
+            },
+          },
+        });
+      },
+      20000
+    );
+
+    it(
       "ensures two parallel invoice creations get distinct sequential invoiceNumber",
       async () => {
-        const testWallet = "0x" + crypto.randomBytes(20).toString("hex");
+        const testWallet = ("0x" + crypto.randomBytes(20).toString("hex")).toLowerCase();
 
         const merchant = await testPrisma.merchant.upsert({
           where: { walletAddress: testWallet },
@@ -182,7 +336,10 @@ describe("Database Guard & Concurrency Constraints (Integration with TEST_DATABA
                 }
               );
             } catch (err: any) {
-              if ((err?.code === "P2002" || err?.code === "P2028" || String(err).includes("Transaction API error")) && attempts < 8) {
+              if (
+                (err?.code === "P2002" || err?.code === "P2028" || String(err).includes("Transaction API error")) &&
+                attempts < 8
+              ) {
                 // Jittered backoff on conflict or pool wait
                 await new Promise((r) => setTimeout(r, 40 * attempts + Math.random() * 30));
                 continue;

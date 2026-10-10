@@ -1,7 +1,11 @@
-// Server-side Invoice PDF generator using Chromium render with Noto Sans Devanagari for perfect Hindi shaping
+// Server-side Invoice PDF generator with self-hosted Noto Sans Devanagari, zero-network, no-JS security
 import QRCode from "qrcode";
 import { formatUsdc } from "@/lib/currency";
 import { INDICATIVE_USD_TO_INR_RATE } from "@/config/constants";
+import {
+  NOTO_SANS_DEVANAGARI_REGULAR_BASE64,
+  NOTO_SANS_DEVANAGARI_BOLD_BASE64,
+} from "./font-data";
 
 export interface InvoicePdfData {
   invoiceNumber: string;
@@ -23,8 +27,53 @@ export interface InvoicePdfData {
   }>;
 }
 
+/**
+ * Escapes all HTML special characters to prevent HTML/XSS injection in generated PDFs.
+ */
+export function escapeHtml(str: unknown): string {
+  if (str === null || str === undefined) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+/**
+ * Launches Chromium browser instance.
+ * On Vercel / AWS Lambda / Linux, uses @sparticuz/chromium.
+ * On local developer/testing machines (macOS/Windows), uses local Chromium binary.
+ */
+async function launchChromium() {
+  const isServerless = Boolean(
+    process.env.VERCEL ||
+    process.env.AWS_LAMBDA_FUNCTION_NAME ||
+    (process.platform === "linux" && !process.env.PLAYWRIGHT_BROWSERS_PATH)
+  );
+
+  if (isServerless) {
+    const chromium = (await import("@sparticuz/chromium")).default;
+    const { chromium: playwrightChromium } = await import("playwright-core");
+    return await playwrightChromium.launch({
+      args: [...chromium.args, "--no-sandbox", "--disable-setuid-sandbox"],
+      executablePath: await chromium.executablePath(),
+      headless: true,
+    });
+  }
+
+  // Local environments (macOS, Windows, Linux with Playwright installed)
+  try {
+    const { chromium: playwrightChromium } = await import("playwright-core");
+    return await playwrightChromium.launch({ headless: true });
+  } catch {
+    const { chromium } = await import("@playwright/test");
+    return await chromium.launch({ headless: true });
+  }
+}
+
 export async function generateInvoicePdfBuffer(data: InvoicePdfData): Promise<Buffer> {
-  const payUrl = `https://raseed.fi/pay/${data.publicId}`;
+  const payUrl = `https://raseed.fi/pay/${escapeHtml(data.publicId)}`;
   const qrDataUrl = await QRCode.toDataURL(payUrl, { width: 140, margin: 1 });
 
   const totalUsdcFormatted = formatUsdc(data.amountUsdc);
@@ -47,7 +96,7 @@ export async function generateInvoicePdfBuffer(data: InvoicePdfData): Promise<Bu
       return `
       <tr>
         <td style="padding: 10px 12px; border-bottom: 1px solid #F1F5F9; color: #1E293B;">${escapeHtml(item.description)}</td>
-        <td style="padding: 10px 12px; border-bottom: 1px solid #F1F5F9; text-align: center; color: #475569;">${item.quantity}</td>
+        <td style="padding: 10px 12px; border-bottom: 1px solid #F1F5F9; text-align: center; color: #475569;">${escapeHtml(item.quantity)}</td>
         <td style="padding: 10px 12px; border-bottom: 1px solid #F1F5F9; text-align: right; color: #475569;">${formatUsdc(item.unitAmountUsdc)}</td>
         <td style="padding: 10px 12px; border-bottom: 1px solid #F1F5F9; text-align: right; font-weight: 600; color: #0F172A;">${formatUsdc(lineTotal)}</td>
       </tr>
@@ -55,18 +104,29 @@ export async function generateInvoicePdfBuffer(data: InvoicePdfData): Promise<Bu
     })
     .join("");
 
+  // Build completely self-contained HTML with embedded self-hosted base64 font
   const html = `<!DOCTYPE html>
 <html lang="hi">
 <head>
   <meta charset="utf-8">
   <title>Invoice ${escapeHtml(data.invoiceNumber)}</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
+    @font-face {
+      font-family: 'Noto Sans Devanagari';
+      font-style: normal;
+      font-weight: 400;
+      src: url('data:font/truetype;charset=utf-8;base64,${NOTO_SANS_DEVANAGARI_REGULAR_BASE64}') format('truetype');
+    }
+    @font-face {
+      font-family: 'Noto Sans Devanagari';
+      font-style: normal;
+      font-weight: 700;
+      src: url('data:font/truetype;charset=utf-8;base64,${NOTO_SANS_DEVANAGARI_BOLD_BASE64}') format('truetype');
+    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: 'Inter', 'Noto Sans Devanagari', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: 'Noto Sans Devanagari', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       color: #0F172A;
       background: #FFFFFF;
       padding: 40px;
@@ -163,13 +223,6 @@ export async function generateInvoicePdfBuffer(data: InvoicePdfData): Promise<Bu
     .totals-box {
       width: 280px;
       text-align: right;
-    }
-    .total-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 6px 0;
-      font-size: 12px;
-      color: #475569;
     }
     .total-grand {
       display: flex;
@@ -343,28 +396,34 @@ export async function generateInvoicePdfBuffer(data: InvoicePdfData): Promise<Bu
 </body>
 </html>`;
 
-  // Render via Chromium with native HarfBuzz OpenType Devanagari text shaping
-  const { chromium } = await import("@playwright/test");
-  const browser = await chromium.launch({ headless: true });
+  const browser = await launchChromium();
   try {
-    const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: "networkidle" });
+    // Security hardened context: JavaScript strictly disabled
+    const context = await browser.newContext({
+      javaScriptEnabled: false,
+    });
+    const page = await context.newPage();
+
+    // Security hardened routing: block all external network requests strictly
+    await page.route("**/*", (route) => {
+      const url = route.request().url();
+      // Allow only internal data: URLs (such as embedded base64 fonts and images) and about:blank
+      if (url.startsWith("data:") || url.startsWith("about:")) {
+        route.continue();
+      } else {
+        route.abort("blockedbyclient");
+      }
+    });
+
+    await page.setContent(html, { waitUntil: "domcontentloaded" });
     const pdfBuffer = await page.pdf({
       format: "A4",
       printBackground: true,
       margin: { top: "0mm", right: "0mm", bottom: "0mm", left: "0mm" },
     });
+
     return Buffer.from(pdfBuffer);
   } finally {
     await browser.close();
   }
-}
-
-function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
 }
