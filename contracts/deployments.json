@@ -17,6 +17,6 @@
     "explorerUrl": "https://snowtrace.io",
     "usdcAddress": "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E",
     "usdcDecimals": 6,
-    "routerAddress": "0xb94A922261bBa2e07648520bf56125a4102eaB95"
+    "routerAddress": null
   }
 }

@@ -51,7 +51,11 @@ export function Footer() {
               </li>
               <li>
                 <a
-                  href={`${CURRENT_NETWORK.explorerUrl}/address/${CURRENT_NETWORK.routerAddress}`}
+                  href={
+                    CURRENT_NETWORK.routerAddress
+                      ? `${CURRENT_NETWORK.explorerUrl}/address/${CURRENT_NETWORK.routerAddress}`
+                      : CURRENT_NETWORK.explorerUrl
+                  }
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-teal-600 transition-colors inline-flex items-center gap-1"

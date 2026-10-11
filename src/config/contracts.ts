@@ -59,7 +59,7 @@ export const ERC20_ABI = [
 
 export function getRouterContractConfig() {
   return {
-    address: CURRENT_NETWORK.routerAddress,
+    address: (CURRENT_NETWORK.routerAddress || PLACEHOLDER_ADDRESS) as `0x${string}`,
     abi: PAYMENT_ROUTER_ABI,
   };
 }

@@ -102,4 +102,55 @@ describe("Network & Contract Configuration Tests", () => {
       }
     });
   });
+
+  describe("Network Config Safety & Router Bytecode Verification (Section B)", () => {
+    it("records mainnet.routerAddress as null in deployments.json and NETWORKS config", async () => {
+      const deployments = (await import("../contracts/deployments.json")).default;
+      expect(deployments.mainnet.routerAddress).toBeNull();
+      expect(NETWORKS.mainnet.routerAddress).toBeNull();
+      expect(NETWORKS.mainnet.isRouterConfigured).toBe(false);
+    });
+
+    it("refuses to enable network with null router address via assertNetworkRouterValid", async () => {
+      const { assertNetworkRouterValid } = await import("@/config/network");
+      expect(() => assertNetworkRouterValid("mainnet")).toThrow(
+        "NETWORK CONFIG ERROR: Cannot enable network 'mainnet': routerAddress is null or not configured."
+      );
+    });
+
+    it("refuses to enable network when eth_getCode returns empty/no bytecode", async () => {
+      const { assertNetworkRouterHasCode } = await import("@/config/network");
+      const mockPublicClient = {
+        getBytecode: async () => "0x",
+      } as any;
+
+      // Mock a network configuration with a fake router address that has no bytecode
+      const origRouter = NETWORKS.fuji.routerAddress;
+      try {
+        (NETWORKS.fuji as any).routerAddress = "0x1111111111111111111111111111111111111111";
+        await expect(
+          assertNetworkRouterHasCode("fuji", mockPublicClient)
+        ).rejects.toThrow(/has no on-chain bytecode \(eth_getCode returned empty\)/);
+      } finally {
+        (NETWORKS.fuji as any).routerAddress = origRouter;
+      }
+    });
+
+    it("succeeds assertNetworkRouterHasCode when valid contract bytecode exists", async () => {
+      const { assertNetworkRouterHasCode } = await import("@/config/network");
+      const mockPublicClient = {
+        getBytecode: async () => "0x608060405234801561001057600080fd5b50", // Non-empty bytecode
+      } as any;
+
+      const origRouter = NETWORKS.fuji.routerAddress;
+      try {
+        (NETWORKS.fuji as any).routerAddress = "0xb94A922261bBa2e07648520bf56125a4102eaB95";
+        await expect(
+          assertNetworkRouterHasCode("fuji", mockPublicClient)
+        ).resolves.not.toThrow();
+      } finally {
+        (NETWORKS.fuji as any).routerAddress = origRouter;
+      }
+    });
+  });
 });
