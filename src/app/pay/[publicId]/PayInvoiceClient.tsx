@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useAccount, useSwitchChain, useReadContract, useWriteContract, usePublicClient } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { ERC20_ABI, PAYMENT_ROUTER_ABI } from "@/config/contracts";
@@ -159,6 +159,19 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
     });
   };
 
+  const clearPendingTx = useCallback((errorMsg?: string) => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem(pendingTxStorageKey);
+    }
+    setPendingTxHash(null);
+    setTxHash(null);
+    setPaymentStep("idle");
+    setReportStatusMessage(null);
+    if (errorMsg) {
+      setErrorMessage(errorMsg);
+    }
+  }, [pendingTxStorageKey]);
+
   // Persistent Polling & Verification Effect
   useEffect(() => {
     const activeTx = txHash || pendingTxHash;
@@ -166,7 +179,32 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
 
     let cancelled = false;
     let attempts = 0;
-    const maxAttempts = 72; // 6 minutes at 5s interval
+    const maxAttempts = 36; // 3 minutes at 5s interval
+
+    // Listen to client-side receipt if publicClient is available
+    if (publicClient && activeTx.startsWith("0x")) {
+      publicClient
+        .waitForTransactionReceipt({ hash: activeTx as `0x${string}`, timeout: 180_000 })
+        .then((receipt: { status: string }) => {
+          if (receipt.status !== "success" && !cancelled) {
+            clearPendingTx(
+              lang === "en"
+                ? "Payment transaction reverted on-chain. You may try again."
+                : "भुगतान लेनदेन ब्लॉकचेन पर विफल (reverted) हो गया। आप पुनः प्रयास कर सकते हैं।"
+            );
+          }
+        })
+        .catch((receiptErr: unknown) => {
+          const msg = (receiptErr instanceof Error ? receiptErr.message : String(receiptErr)).toLowerCase();
+          if (msg.includes("revert") && !cancelled) {
+            clearPendingTx(
+              lang === "en"
+                ? "Payment transaction reverted on-chain. You may try again."
+                : "भुगतान लेनदेन ब्लॉकचेन पर विफल (reverted) हो गया। आप पुनः प्रयास कर सकते हैं।"
+            );
+          }
+        });
+    }
 
     const checkAndReport = async () => {
       attempts++;
@@ -180,7 +218,20 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
 
         if (!reportRes.ok) {
           const errData = await reportRes.json().catch(() => ({}));
-          const errMsg = errData.error || `HTTP ${reportRes.status}`;
+          const errMsg = typeof errData.error === "string" ? errData.error : `HTTP ${reportRes.status}`;
+
+          // If the server confirms transaction reverted or failed on-chain, clear pending lock immediately
+          if (errMsg.toLowerCase().includes("revert") || errMsg.toLowerCase().includes("failed on-chain")) {
+            if (!cancelled) {
+              clearPendingTx(
+                lang === "en"
+                  ? "Payment transaction reverted on-chain. You may try again."
+                  : "भुगतान लेनदेन ब्लॉकचेन पर विफल (reverted) हो गया। आप पुनः प्रयास कर सकते हैं।"
+              );
+            }
+            return true;
+          }
+
           if (!cancelled) {
             setReportStatusMessage(
               lang === "en"
@@ -243,11 +294,12 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
       }
 
       if (attempts >= maxAttempts && !cancelled) {
-        setReportStatusMessage(
+        clearPendingTx(
           lang === "en"
-            ? "Settlement confirmation is taking longer than expected. Your payment was submitted; background reconciliation will update status shortly."
-            : "सत्यापन में अपेक्षा से अधिक समय लग रहा है। आपका भुगतान प्रस्तुत किया गया है; पृष्ठभूमि मिलान द्वारा जल्द ही स्थिति अपडेट की जाएगी।"
+            ? "Transaction confirmation timed out or was dropped from the mempool. Pending state cleared; you may check your wallet and try again."
+            : "लेनदेन पुष्टि की समय सीमा समाप्त हो गई या mempool से हट गया। लंबित स्थिति हटा दी गई है; आप अपने वॉलेट की जांच कर पुनः प्रयास कर सकते हैं।"
         );
+        return true;
       }
       return false;
     };
@@ -264,7 +316,7 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
       cancelled = true;
       clearInterval(interval);
     };
-  }, [paymentStep, txHash, pendingTxHash, publicId, pendingTxStorageKey, lang, refetchBalance]);
+  }, [paymentStep, txHash, pendingTxHash, publicId, pendingTxStorageKey, lang, refetchBalance, clearPendingTx, publicClient]);
 
   const handlePay = async () => {
     if (!invoice || !address || isDraft || isCancelledOrExpired) return;
@@ -330,16 +382,11 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
           .waitForTransactionReceipt({ hash: payTx })
           .then((receipt: { status: string }) => {
             if (receipt.status !== "success") {
-              if (typeof window !== "undefined") {
-                localStorage.removeItem(pendingTxStorageKey);
-              }
-              setPendingTxHash(null);
-              setErrorMessage(
+              clearPendingTx(
                 lang === "en"
-                  ? "Payment transaction reverted on-chain."
-                  : "भुगतान लेनदेन ब्लॉकचेन पर विफल (reverted) हो गया।"
+                  ? "Payment transaction reverted on-chain. You may try again."
+                  : "भुगतान लेनदेन ब्लॉकचेन पर विफल (reverted) हो गया। आप पुनः प्रयास कर सकते हैं।"
               );
-              setPaymentStep("idle");
             }
           })
           .catch((receiptErr: unknown) => {
@@ -594,6 +641,24 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
                   </a>
                 </div>
               )}
+              <div className="pt-2 border-t border-amber-500/20">
+                <button
+                  type="button"
+                  onClick={() =>
+                    clearPendingTx(
+                      lang === "en"
+                        ? "Pending transaction state cleared. You can try paying again."
+                        : "लंबित लेनदेन स्थिति हटा दी गई। आप पुनः भुगतान का प्रयास कर सकते हैं।"
+                    )
+                  }
+                  className="text-xs text-amber-300/80 hover:text-amber-200 underline transition cursor-pointer"
+                  data-testid="clear-pending-tx-btn"
+                >
+                  {lang === "en"
+                    ? "Stuck? Clear pending status to retry"
+                    : "अटका हुआ है? पुनः प्रयास करने के लिए लंबित स्थिति हटाएं"}
+                </button>
+              </div>
             </div>
           ) : !isConnectedSim ? (
             <div className="text-center p-6 bg-slate-950/40 border border-slate-800 rounded-xl space-y-3">

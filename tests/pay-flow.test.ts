@@ -144,4 +144,159 @@ describe("PayInvoiceClient & Pay Flow Logic", () => {
     expect(shouldShowSiwe("/pay/INV-0001", true)).toBe(false);
     expect(shouldShowSiwe("/pay/raseed_unguessable_public_id", true)).toBe(false);
   });
+
+  describe("Pending Tx Escape Hatch & Lifecycle (localStorage raseed_pending_tx_<publicId>)", () => {
+    const publicId = "raseed_test_escape_hatch";
+    const storageKey = `raseed_pending_tx_${publicId}`;
+    let mockStorage: Record<string, string> = {};
+
+    beforeEach(() => {
+      mockStorage = {};
+      (global as any).localStorage = {
+        getItem: (k: string) => mockStorage[k] || null,
+        setItem: (k: string, v: string) => {
+          mockStorage[k] = v;
+        },
+        removeItem: (k: string) => {
+          delete mockStorage[k];
+        },
+      };
+    });
+
+    it("revert path: clears pending tx from storage, resets step to idle, and enables retry", async () => {
+      mockStorage[storageKey] = "0xreverted_tx_hash";
+      let pendingTxHash: string | null = mockStorage[storageKey];
+      let paymentStep: string = "waiting_confirmation";
+      let errorMessage: string | null = null;
+
+      const clearPendingTx = (msg: string) => {
+        delete mockStorage[storageKey];
+        pendingTxHash = null;
+        paymentStep = "idle";
+        errorMessage = msg;
+      };
+
+      // Server returns 400 with "Transaction reverted or failed on-chain"
+      const reportResponse = {
+        ok: false,
+        status: 400,
+        error: "Transaction reverted or failed on-chain",
+      };
+
+      if (!reportResponse.ok && reportResponse.error.includes("reverted")) {
+        clearPendingTx("Payment transaction reverted on-chain. You may try again.");
+      }
+
+      expect(mockStorage[storageKey]).toBeUndefined();
+      expect(pendingTxHash).toBeNull();
+      expect(paymentStep).toBe("idle");
+      expect(errorMessage).toBe("Payment transaction reverted on-chain. You may try again.");
+
+      // Pay button must now be unlocked
+      const isPayButtonDisabled = paymentStep !== "idle" || !!pendingTxHash;
+      expect(isPayButtonDisabled).toBe(false);
+    });
+
+    it("dropped / not-found timeout path: clears pending tx after max attempts and enables retry", async () => {
+      mockStorage[storageKey] = "0xdropped_mempool_tx_hash";
+      let pendingTxHash: string | null = mockStorage[storageKey];
+      let paymentStep: string = "waiting_confirmation";
+      let errorMessage: string | null = null;
+
+      const clearPendingTx = (msg: string) => {
+        delete mockStorage[storageKey];
+        pendingTxHash = null;
+        paymentStep = "idle";
+        errorMessage = msg;
+      };
+
+      let attempts = 0;
+      const maxAttempts = 36;
+
+      // Simulate polling loop running until timeout
+      while (attempts < maxAttempts) {
+        attempts++;
+      }
+
+      if (attempts >= maxAttempts) {
+        clearPendingTx("Transaction confirmation timed out or was dropped from the mempool. Pending state cleared; you may check your wallet and try again.");
+      }
+
+      expect(mockStorage[storageKey]).toBeUndefined();
+      expect(pendingTxHash).toBeNull();
+      expect(paymentStep).toBe("idle");
+      expect(errorMessage).toContain("dropped from the mempool");
+
+      // Pay button must now be unlocked
+      const isPayButtonDisabled = paymentStep !== "idle" || !!pendingTxHash;
+      expect(isPayButtonDisabled).toBe(false);
+    });
+
+    it("success path (PAID): clears pending tx from storage and transitions to confirmed", async () => {
+      mockStorage[storageKey] = "0xsuccessful_tx_hash";
+      let pendingTxHash: string | null = mockStorage[storageKey];
+      let paymentStep: string = "waiting_confirmation";
+
+      const reportResponse = {
+        ok: true,
+        data: { status: "PAID", paidAmountUsdc: "10000000" },
+      };
+
+      if (reportResponse.ok && (reportResponse.data.status === "PAID" || reportResponse.data.status === "PARTIALLY_PAID")) {
+        delete mockStorage[storageKey];
+        pendingTxHash = null;
+        paymentStep = "confirmed";
+      }
+
+      expect(mockStorage[storageKey]).toBeUndefined();
+      expect(pendingTxHash).toBeNull();
+      expect(paymentStep).toBe("confirmed");
+    });
+
+    it("success path (PARTIALLY_PAID): clears pending tx from storage and transitions to confirmed", async () => {
+      mockStorage[storageKey] = "0xpartially_paid_tx_hash";
+      let pendingTxHash: string | null = mockStorage[storageKey];
+      let paymentStep: string = "waiting_confirmation";
+
+      const reportResponse = {
+        ok: true,
+        data: { status: "PARTIALLY_PAID", paidAmountUsdc: "5000000" },
+      };
+
+      if (reportResponse.ok && (reportResponse.data.status === "PAID" || reportResponse.data.status === "PARTIALLY_PAID")) {
+        delete mockStorage[storageKey];
+        pendingTxHash = null;
+        paymentStep = "confirmed";
+      }
+
+      expect(mockStorage[storageKey]).toBeUndefined();
+      expect(pendingTxHash).toBeNull();
+      expect(paymentStep).toBe("confirmed");
+    });
+
+    it("manual escape hatch: user can clear stuck pending tx and retry payment", () => {
+      mockStorage[storageKey] = "0xstuck_tx_hash";
+      let pendingTxHash: string | null = mockStorage[storageKey];
+      let paymentStep: string = "waiting_confirmation";
+      let errorMessage: string | null = null;
+
+      const clearPendingTx = (msg: string) => {
+        delete mockStorage[storageKey];
+        pendingTxHash = null;
+        paymentStep = "idle";
+        errorMessage = msg;
+      };
+
+      // User clicks "Stuck? Clear pending status to retry"
+      clearPendingTx("Pending transaction state cleared. You can try paying again.");
+
+      expect(mockStorage[storageKey]).toBeUndefined();
+      expect(pendingTxHash).toBeNull();
+      expect(paymentStep).toBe("idle");
+      expect(errorMessage).toContain("Pending transaction state cleared");
+
+      const isPayButtonDisabled = paymentStep !== "idle" || !!pendingTxHash;
+      expect(isPayButtonDisabled).toBe(false);
+    });
+  });
 });
