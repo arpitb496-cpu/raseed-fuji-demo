@@ -138,7 +138,56 @@ describe("Invoice & Receipt PDF Verification (Section J & Phase 5.7 Item C)", ()
   });
 
   describe("End-to-End PDF QR Decoding and Text Extraction", () => {
-    it("generates an invoice PDF, renders to image, decodes QR code, and asserts pay URL", async () => {
+    const isDarwin = process.platform === "darwin";
+
+    it.skipIf(!isDarwin)(
+      "macOS native: decodes QR code from invoice PDF via sips and extracts text via PDFKit osascript",
+      async () => {
+        const mockInvoice = {
+          invoiceNumber: "INV-0001",
+          publicId: "raseed_invoice_test_123",
+          title: "डेमो चालान (Demo Invoice)",
+          merchantDisplayName: "Demo Merchant Ltd",
+          merchantWallet: "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
+          clientName: "Demo Client",
+          clientEmail: "client@example.com",
+          amountUsdc: 2_000_000n,
+          status: "SENT",
+          dueDate: new Date(Date.now() + 86400000 * 7),
+          createdAt: new Date(),
+          items: [
+            {
+              description: "Smart contract audit & consulting",
+              quantity: 1,
+              unitAmountUsdc: 2_000_000n,
+            },
+          ],
+        };
+
+        const pdfBuffer = await generateInvoicePdfBuffer(mockInvoice);
+        expect(pdfBuffer.length).toBeGreaterThan(1000);
+
+        const baseUrl = getAppBaseUrl();
+        const expectedPayUrl = `${baseUrl}/pay/${mockInvoice.publicId}`;
+
+        // Decode QR from actual rendered PDF via macOS sips + jsQR
+        const decodedQr = decodeQrFromPdf(pdfBuffer);
+        expect(decodedQr).toBe(expectedPayUrl);
+
+        // Extract text from actual generated PDF via macOS PDFKit
+        const extractedText = extractTextFromPdf(pdfBuffer);
+        expect(extractedText).toContain("डेमो चालान (Demo Invoice)");
+        expect(extractedText).toContain("टेस्टनेट डेमो");
+        expect(extractedText).toContain("रसीद");
+        expect(extractedText).toContain("भुगतान");
+        expect(extractedText).toContain("चालान");
+        expect(extractedText).not.toContain("official");
+        expect(extractedText).not.toContain("आधिकारिक");
+      },
+      30000
+    );
+
+    it("cross-platform: generates valid invoice PDF buffer and validates HTML template copy & pay URL", async () => {
       const mockInvoice = {
         invoiceNumber: "INV-0001",
         publicId: "raseed_invoice_test_123",
@@ -161,48 +210,79 @@ describe("Invoice & Receipt PDF Verification (Section J & Phase 5.7 Item C)", ()
       };
 
       const pdfBuffer = await generateInvoicePdfBuffer(mockInvoice);
+      expect(pdfBuffer.subarray(0, 5).toString("ascii")).toBe("%PDF-");
       expect(pdfBuffer.length).toBeGreaterThan(1000);
 
       const baseUrl = getAppBaseUrl();
       const expectedPayUrl = `${baseUrl}/pay/${mockInvoice.publicId}`;
 
-      if (process.platform === "darwin") {
+      const html = await buildInvoiceHtml(mockInvoice);
+      expect(html).toContain("डेमो चालान (Demo Invoice)");
+      expect(html).toContain("टेस्टनेट डेमो");
+      expect(html).toContain("रसीद");
+      expect(html).toContain("भुगतान");
+      expect(html).toContain("चालान");
+      expect(html).not.toContain("official");
+      expect(html).not.toContain("आधिकारिक");
+
+      // Cross-platform QR verification: decode base64 data URI directly via pngjs & jsQR
+      const qrMatch = html.match(/src="data:image\/png;base64,([^"]+)"/);
+      expect(qrMatch).not.toBeNull();
+      const qrPngBuffer = Buffer.from(qrMatch![1], "base64");
+      const png = PNG.sync.read(qrPngBuffer);
+      const decoded = jsQR(new Uint8ClampedArray(png.data), png.width, png.height);
+      expect(decoded?.data).toBe(expectedPayUrl);
+    }, 30000);
+
+    it.skipIf(!isDarwin)(
+      "macOS native: decodes QR code from receipt PDF via sips and extracts text via PDFKit osascript",
+      async () => {
+        const txHash = "0x7267ee88fff671f7ca6d78d83a134e5c9bc9b34d1d1147ea0c333919a75deaec";
+        const mockReceipt = {
+          invoiceNumber: "INV-0002",
+          receiptNumber: "RCPT-INV-0002",
+          publicId: "raseed_receipt_test_456",
+          title: "डेमो भुगतान रसीद परीक्षण",
+          merchantDisplayName: "Demo Merchant Ltd",
+          merchantWallet: "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
+          totalInvoiceAmountUsdc: 2_000_000n,
+          totalPaidAmountUsdc: 2_000_000n,
+          status: "PAID",
+          createdAt: new Date(),
+          paymentEvents: [
+            {
+              txHash,
+              payerAddress: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+              amountUsdc: 2_000_000n,
+              blockNumber: 12345678n,
+              confirmedAt: new Date(),
+            },
+          ],
+        };
+
+        const pdfBuffer = await generateReceiptPdfBuffer(mockReceipt);
+        expect(pdfBuffer.length).toBeGreaterThan(1000);
+
+        const expectedTxUrl = `${CURRENT_NETWORK.explorerUrl}/tx/${txHash}`;
+
         // Decode QR from actual rendered PDF via macOS sips + jsQR
         const decodedQr = decodeQrFromPdf(pdfBuffer);
-        expect(decodedQr).toBe(expectedPayUrl);
+        expect(decodedQr).toBe(expectedTxUrl);
 
         // Extract text from actual generated PDF via macOS PDFKit
         const extractedText = extractTextFromPdf(pdfBuffer);
-        expect(extractedText).toContain("डेमो चालान (Demo Invoice)");
-        expect(extractedText).toContain("टेस्टनेट डेमो");
-        expect(extractedText).toContain("रसीद");
-        expect(extractedText).toContain("भुगतान");
+        expect(extractedText).toContain("डेमो भुगतान रसीद परीक्षण");
+        expect(extractedText).toContain("डेमो भुगतान रसीद");
+        expect(extractedText).toContain("भुगतान रसीद");
         expect(extractedText).toContain("चालान");
+        expect(extractedText).toContain("लेनदेन");
         expect(extractedText).not.toContain("official");
         expect(extractedText).not.toContain("आधिकारिक");
-      } else {
-        console.warn(
-          `[CI Notice] Skipping macOS native 'sips' / 'osascript (PDFKit)' extraction on non-darwin platform (${process.platform}). Executing Linux-capable fallback assertions.`
-        );
-        // Fallback assertions:
-        // 1. Verify valid PDF format via magic bytes and payload size
-        expect(pdfBuffer.subarray(0, 5).toString("ascii")).toBe("%PDF-");
-        expect(pdfBuffer.length).toBeGreaterThan(1000);
+      },
+      30000
+    );
 
-        // 2. Assert HTML template contains exact Hindi strings, disclaimer, and payment URL
-        const html = await buildInvoiceHtml(mockInvoice);
-        expect(html).toContain("डेमो चालान (Demo Invoice)");
-        expect(html).toContain("टेस्टनेट डेमो");
-        expect(html).toContain("रसीद");
-        expect(html).toContain("भुगतान");
-        expect(html).toContain("चालान");
-        expect(html).toContain(expectedPayUrl);
-        expect(html).not.toContain("official");
-        expect(html).not.toContain("आधिकारिक");
-      }
-    }, 30000);
-
-    it("generates a receipt PDF, renders to image, decodes QR code, and asserts explorer tx URL", async () => {
+    it("cross-platform: generates valid receipt PDF buffer and validates HTML template copy & explorer URL", async () => {
       const txHash = "0x7267ee88fff671f7ca6d78d83a134e5c9bc9b34d1d1147ea0c333919a75deaec";
       const mockReceipt = {
         invoiceNumber: "INV-0002",
@@ -227,44 +307,27 @@ describe("Invoice & Receipt PDF Verification (Section J & Phase 5.7 Item C)", ()
       };
 
       const pdfBuffer = await generateReceiptPdfBuffer(mockReceipt);
+      expect(pdfBuffer.subarray(0, 5).toString("ascii")).toBe("%PDF-");
       expect(pdfBuffer.length).toBeGreaterThan(1000);
 
       const expectedTxUrl = `${CURRENT_NETWORK.explorerUrl}/tx/${txHash}`;
 
-      if (process.platform === "darwin") {
-        // Decode QR from actual rendered PDF via macOS sips + jsQR
-        const decodedQr = decodeQrFromPdf(pdfBuffer);
-        expect(decodedQr).toBe(expectedTxUrl);
+      const html = await buildReceiptHtml(mockReceipt);
+      expect(html).toContain("डेमो भुगतान रसीद परीक्षण");
+      expect(html).toContain("डेमो भुगतान रसीद");
+      expect(html).toContain("भुगतान रसीद");
+      expect(html).toContain("चालान");
+      expect(html).toContain("लेनदेन");
+      expect(html).not.toContain("official");
+      expect(html).not.toContain("आधिकारिक");
 
-        // Extract text from actual generated PDF via macOS PDFKit
-        const extractedText = extractTextFromPdf(pdfBuffer);
-        expect(extractedText).toContain("डेमो भुगतान रसीद परीक्षण");
-        expect(extractedText).toContain("डेमो भुगतान रसीद");
-        expect(extractedText).toContain("भुगतान रसीद");
-        expect(extractedText).toContain("चालान");
-        expect(extractedText).toContain("लेनदेन");
-        expect(extractedText).not.toContain("official");
-        expect(extractedText).not.toContain("आधिकारिक");
-      } else {
-        console.warn(
-          `[CI Notice] Skipping macOS native 'sips' / 'osascript (PDFKit)' extraction on non-darwin platform (${process.platform}). Executing Linux-capable fallback assertions.`
-        );
-        // Fallback assertions:
-        // 1. Verify valid PDF format via magic bytes and payload size
-        expect(pdfBuffer.subarray(0, 5).toString("ascii")).toBe("%PDF-");
-        expect(pdfBuffer.length).toBeGreaterThan(1000);
-
-        // 2. Assert HTML template contains exact Hindi strings, disclaimer, and explorer URL
-        const html = await buildReceiptHtml(mockReceipt);
-        expect(html).toContain("डेमो भुगतान रसीद परीक्षण");
-        expect(html).toContain("डेमो भुगतान रसीद");
-        expect(html).toContain("भुगतान रसीद");
-        expect(html).toContain("चालान");
-        expect(html).toContain("लेनदेन");
-        expect(html).toContain(expectedTxUrl);
-        expect(html).not.toContain("official");
-        expect(html).not.toContain("आधिकारिक");
-      }
+      // Cross-platform QR verification: decode base64 data URI directly via pngjs & jsQR
+      const qrMatch = html.match(/src="data:image\/png;base64,([^"]+)"/);
+      expect(qrMatch).not.toBeNull();
+      const qrPngBuffer = Buffer.from(qrMatch![1], "base64");
+      const png = PNG.sync.read(qrPngBuffer);
+      const decoded = jsQR(new Uint8ClampedArray(png.data), png.width, png.height);
+      expect(decoded?.data).toBe(expectedTxUrl);
     }, 30000);
   });
 });

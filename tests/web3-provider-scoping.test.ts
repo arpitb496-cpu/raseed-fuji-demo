@@ -55,10 +55,13 @@ describe("Web3 Provider Scoping to Protected/Interactive Routes", () => {
     }
   });
 
-  it("verifies build output for landing page does not include wallet provider chunk when .next exists", () => {
+  it("verifies build output for landing page does not include wallet provider chunk when .next exists", (ctx) => {
     const manifestPath = path.join(rootDir, ".next/build-manifest.json");
     if (!fs.existsSync(manifestPath)) {
-      // Skip if build has not been run in this environment
+      console.info(
+        "[INFO] Skipping build manifest inspection: .next/build-manifest.json does not exist (no production build present in this CI run; run 'npm run build' first to inspect generated chunks)."
+      );
+      ctx.skip();
       return;
     }
 
