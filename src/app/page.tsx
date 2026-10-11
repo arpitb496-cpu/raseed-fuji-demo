@@ -16,7 +16,6 @@ import {
   Info,
   CheckCircle2,
   AlertTriangle,
-  Clock,
   Video,
   ExternalLink,
   Users,
