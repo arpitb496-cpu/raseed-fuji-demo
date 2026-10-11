@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useAccount } from "wagmi";
 import { BRANDING } from "@/config/branding";
@@ -11,6 +12,8 @@ import { LanguageToggle } from "@/components/common/LanguageToggle";
 import { Receipt, ShieldCheck, Menu, X, LogIn, LogOut, LayoutDashboard } from "lucide-react";
 
 export function Navbar() {
+  const pathname = usePathname();
+  const isPayPage = pathname?.startsWith("/pay");
   const { isConnected } = useAccount();
   const { t } = useI18n();
   const { isAuthenticated, isSigning, signIn, logout, merchant } = useAuth();
@@ -64,8 +67,8 @@ export function Navbar() {
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <LanguageToggle />
 
-            {/* SIWE Auth Button (when wallet is connected) */}
-            {isConnected && (
+            {/* SIWE Auth Button (when wallet is connected; hidden on /pay/* for payers) */}
+            {!isPayPage && isConnected && (
               <>
                 {isAuthenticated ? (
                   <button
@@ -145,7 +148,7 @@ export function Navbar() {
                 {t("nav.dashboard")}
               </Link>
             )}
-            {isConnected && isAuthenticated && (
+            {!isPayPage && isConnected && isAuthenticated && (
               <button
                 onClick={() => {
                   logout();

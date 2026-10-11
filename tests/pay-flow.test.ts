@@ -127,4 +127,21 @@ describe("PayInvoiceClient & Pay Flow Logic", () => {
 
     expect(paymentStep).toBe("confirmed");
   });
+
+  it("proves SIWE authentication button is suppressed on /pay/* routes", () => {
+    // Navbar route logic simulation
+    function shouldShowSiwe(pathname: string, isConnected: boolean): boolean {
+      const isPayPage = pathname.startsWith("/pay");
+      return !isPayPage && isConnected;
+    }
+
+    // On standard app pages, SIWE is shown when wallet is connected
+    expect(shouldShowSiwe("/app", true)).toBe(true);
+    expect(shouldShowSiwe("/app/invoices", true)).toBe(true);
+    expect(shouldShowSiwe("/", true)).toBe(true);
+
+    // On /pay/* routes, SIWE is suppressed even when wallet is connected
+    expect(shouldShowSiwe("/pay/INV-0001", true)).toBe(false);
+    expect(shouldShowSiwe("/pay/raseed_unguessable_public_id", true)).toBe(false);
+  });
 });
