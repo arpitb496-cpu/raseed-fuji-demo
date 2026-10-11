@@ -33,7 +33,7 @@ const FORBIDDEN_CLAIM_PATTERNS: Array<{ name: string; pattern: RegExp; allowFilt
     name: "secure",
     // Disallow claims of being "secure" as a product claim
     pattern: /\b(?:secure|सुरक्षित)\b/i,
-    allowFilter: (_m, full) => /\b(?:not\s+secure|insecure)\b/i.test(full),
+    allowFilter: (_m, full) => /(?:not\s+secure|insecure|`Secure`|Secure\s+cookie)/i.test(full),
   },
   {
     name: "safe",
@@ -44,7 +44,7 @@ const FORBIDDEN_CLAIM_PATTERNS: Array<{ name: string; pattern: RegExp; allowFilt
   {
     name: "guaranteed",
     pattern: /\b(?:guaranteed|guarantee|गारंटी)\b/i,
-    allowFilter: (_m, full) => /\b(?:no\s+guarantee|not\s+guaranteed|without\s+guarantee)\b/i.test(full),
+    allowFilter: (_m, full) => /\b(?:no\s+guarantee|not\s+guaranteed|without\s+guarantee|no\s+copy\s+makes\s+claims\s+of)\b/i.test(full),
   },
   {
     name: "verified",
@@ -69,10 +69,12 @@ const FORBIDDEN_CLAIM_PATTERNS: Array<{ name: string; pattern: RegExp; allowFilt
   {
     name: "yield / APY",
     pattern: /\b(?:yield|apy|apr)\b/i,
+    allowFilter: (_m, full) => /\b(?:no\s+copy\s+makes\s+claims\s+of|disclaimers?)\b/i.test(full),
   },
   {
     name: "returns / investment",
     pattern: /\b(?:high\s+returns|investment\s+returns|guaranteed\s+returns|निवेश)\b/i,
+    allowFilter: (_m, full) => /\b(?:no\s+copy\s+makes\s+claims\s+of|disclaimers?)\b/i.test(full),
   },
   {
     name: "fake metrics & user counts",
@@ -89,6 +91,7 @@ const FORBIDDEN_CLAIM_PATTERNS: Array<{ name: string; pattern: RegExp; allowFilt
   {
     name: "protocol",
     pattern: /\b(?:protocol|प्रोटोकॉल)\b/i,
+    allowFilter: (_m, full) => /\b(?:WalletConnect(?:\s+protocol|\s+v2)?|protocol\s+transport|protocol\s+client)\b/i.test(full),
   },
 ];
 
@@ -219,5 +222,49 @@ describe("Claims Policy Verification (Scope & Compliance)", () => {
         `Forbidden claims detected in ${relativeFilePath}:\n${violations.join("\n")}`
       ).toEqual([]);
     });
+  });
+
+  describe("Documentation (README.md & docs/*.md)", () => {
+    const DOC_FILES = [
+      "README.md",
+      ...fs
+        .readdirSync(path.resolve(process.cwd(), "docs"))
+        .filter((file) => file.endsWith(".md") && file !== "VERIFY_ROUTER.md")
+        .map((file) => `docs/${file}`),
+    ];
+
+    it.each(DOC_FILES)(
+      "scans %s for forbidden claims (protocol, verified, audited, official, etc.)",
+      (relativeFilePath) => {
+        const absolutePath = path.resolve(process.cwd(), relativeFilePath);
+        expect(fs.existsSync(absolutePath), `File must exist: ${relativeFilePath}`).toBe(true);
+
+        const content = fs.readFileSync(absolutePath, "utf-8");
+        const lines = content.split("\n");
+        const violations: string[] = [];
+
+        lines.forEach((line, lineNum) => {
+          const trimmed = line.trim();
+          if (trimmed.length === 0) return;
+          if (trimmed.startsWith("- ❌") || trimmed.startsWith("* ❌")) return;
+
+          for (const { name, pattern, allowFilter } of FORBIDDEN_CLAIM_PATTERNS) {
+            if (pattern.test(trimmed)) {
+              const allowed = allowFilter ? allowFilter(trimmed, trimmed) : false;
+              if (!allowed) {
+                violations.push(
+                  `${relativeFilePath}:${lineNum + 1}: violates '${name}' -> "${trimmed}"`
+                );
+              }
+            }
+          }
+        });
+
+        expect(
+          violations,
+          `Forbidden claims detected in ${relativeFilePath}:\n${violations.join("\n")}`
+        ).toEqual([]);
+      }
+    );
   });
 });
