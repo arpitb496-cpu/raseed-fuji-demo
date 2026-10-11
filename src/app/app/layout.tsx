@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth/useAuth";
 import { useI18n } from "@/lib/i18n";
 import { LayoutDashboard, FileText, PlusCircle, Settings, ShieldAlert, LogIn, Loader2 } from "lucide-react";
-import { TestnetDemoBanner } from "@/components/common/TestnetDemoBanner";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -66,7 +65,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-      <TestnetDemoBanner className="rounded-xl border" />
       {/* Subnavigation Bar */}
       <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-slate-200 dark:border-slate-800 scrollbar-none">
         {navItems.map((item) => {

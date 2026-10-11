@@ -66,6 +66,9 @@ The platform presentation is targeted exclusively to institutional grant committ
   - Page metadata issues `noindex, nofollow, noarchive`.
   - Dynamic sitemap (`sitemap.xml`) yields an empty index.
 
+> [!IMPORTANT]
+> **DEMO_INVITE_MODE is strictly for search-engine indexing suppression (`noindex`, `nofollow`, empty `sitemap.xml`, and `robots.txt Disallow: /`). It is NOT an access control or authentication barrier.**
+
 ---
 
 ## 6. Security Hygiene Posture

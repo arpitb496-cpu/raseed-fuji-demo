@@ -21,22 +21,22 @@ export function Footer() {
                 {BRANDING.name} ({BRANDING.devanagariName})
               </span>
               <span className="bg-teal-100 dark:bg-teal-950/60 text-teal-800 dark:text-teal-300 text-[10px] px-2 py-0.5 rounded-full font-medium">
-                Avalanche C-Chain
+                {CURRENT_NETWORK.name}
               </span>
             </div>
             <p className="max-w-md leading-relaxed text-slate-600 dark:text-slate-400">
-              {BRANDING.description}
+              {t("footer.tagline")}
             </p>
             <div className="flex items-center gap-2 text-[11px] text-slate-400">
               <Shield className="w-3.5 h-3.5 text-teal-600" />
-              <span>Non-custodial smart contracts verified on Snowtrace</span>
+              <span>{t("footer.smartContractsLabel")}</span>
             </div>
           </div>
 
           {/* Protocol Links */}
           <div className="space-y-2">
             <h4 className="font-semibold text-slate-900 dark:text-white uppercase tracking-wider text-[11px]">
-              Protocol
+              {t("footer.protocol")}
             </h4>
             <ul className="space-y-1.5">
               <li>
@@ -65,7 +65,7 @@ export function Footer() {
           {/* Legal Disclaimers (Drafts pending lawyer review) */}
           <div className="space-y-2">
             <h4 className="font-semibold text-slate-900 dark:text-white uppercase tracking-wider text-[11px]">
-              Legal (Drafts)
+              {t("footer.legal")}
             </h4>
             <ul className="space-y-1.5">
               <li>
@@ -93,7 +93,7 @@ export function Footer() {
             {t("footer.disclaimer")}
           </p>
           <div className="text-[11px] text-slate-400">
-            © 2026 {BRANDING.name} Protocol. Open source.
+            {t("footer.copyright")}
           </div>
         </div>
       </div>

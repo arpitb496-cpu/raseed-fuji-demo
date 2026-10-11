@@ -6,7 +6,7 @@ import { useAccount } from "wagmi";
 import { useAuth } from "@/lib/auth/useAuth";
 import { useI18n } from "@/lib/i18n";
 import { CURRENT_NETWORK } from "@/config/network";
-import { MIN_INVOICE_AMOUNT_FLOAT, INDICATIVE_USD_TO_INR_RATE } from "@/config/constants";
+import { MIN_INVOICE_AMOUNT_FLOAT, INDICATIVE_USD_TO_INR_RATE, INDICATIVE_RATE_AS_OF } from "@/config/constants";
 import {
   ShieldCheck,
   ArrowRight,
@@ -57,14 +57,14 @@ export default function HomePage() {
           <p className="text-base sm:text-lg md:text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed">
             {lang === "hi"
               ? "फ्रीलांसरों और व्यवसायों के लिए पीयर-टू-पीयर पेमेंट लिंक। न कोई मध्यस्थ, न कोई फंड लॉकअप। शून्य कस्टडी।"
-              : "Peer-to-peer invoice links for global & Indian freelancers. No intermediary holds your money. Zero custody. Instant cryptographic settlement."}
+              : "Peer-to-peer invoice links for global & Indian freelancers. No intermediary holds your money. Zero custody. Confirmed on-chain with deterministic settlement."}
           </p>
 
           {/* Indicative Rate Reference */}
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300 text-xs font-mono-code">
             <Info className="w-3.5 h-3.5" />
             <span>
-              Indicative reference: 1 USDC ≈ ₹{INDICATIVE_USD_TO_INR_RATE.toFixed(2)} INR (approximate, clearly labeled)
+              Indicative reference (as of {INDICATIVE_RATE_AS_OF}, not a live rate): 1 USDC ≈ ₹{INDICATIVE_USD_TO_INR_RATE.toFixed(2)} INR
             </span>
           </div>
 

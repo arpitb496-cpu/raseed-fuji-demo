@@ -147,6 +147,11 @@
     "tagline": "Non-custodial stablecoin invoicing protocol built on Avalanche C-Chain.",
     "protocol": "Protocol",
     "legal": "Legal (Drafts)",
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy",
+    "risks": "Risk Disclosures",
+    "smartContractsLabel": "Non-custodial smart contracts on Avalanche Fuji",
+    "copyright": "© 2026 Raseed Protocol.",
     "disclaimer": "Raseed is a non-custodial decentralized payment routing software. The protocol and application never hold, escrow, or take custody of user funds. All token transfers occur peer-to-peer directly between wallets on Avalanche C-Chain."
   }
 }

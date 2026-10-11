@@ -19,5 +19,6 @@ export const DEFAULT_CURRENCY = "USD";
 export const SUPPORTED_DISPLAY_CURRENCIES = ["USD", "INR"] as const;
 export type DisplayCurrency = (typeof SUPPORTED_DISPLAY_CURRENCIES)[number];
 
-/** Approximate reference exchange rate (USD to INR), clearly marked as indicative */
+/** Approximate reference exchange rate (USD to INR), clearly marked as indicative and not a live rate */
 export const INDICATIVE_USD_TO_INR_RATE = 86.5;
+export const INDICATIVE_RATE_AS_OF = "October 2026";

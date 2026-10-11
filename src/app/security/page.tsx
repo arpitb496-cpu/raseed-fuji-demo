@@ -4,6 +4,8 @@ import { ArrowLeft, ShieldCheck, Lock } from "lucide-react";
 import { BRANDING } from "@/config/branding";
 
 export default function SecurityPage() {
+  const securityEmail = process.env.SECURITY_CONTACT_EMAIL;
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-8">
       <Link href="/" className="inline-flex items-center gap-1.5 text-xs text-teal-600 hover:text-teal-700 font-medium">
@@ -15,7 +17,7 @@ export default function SecurityPage() {
           Security Architecture & Principles
         </h1>
         <p className="text-sm text-slate-600 dark:text-slate-400">
-          How Raseed guarantees zero custody and peer-to-peer transaction integrity.
+          How Raseed is architected for zero custody and peer-to-peer transaction integrity.
         </p>
       </div>
 
@@ -44,7 +46,14 @@ export default function SecurityPage() {
       <div className="p-6 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2 text-xs text-slate-600 dark:text-slate-400">
         <div className="font-semibold text-slate-900 dark:text-white text-sm">Vulnerability Reporting</div>
         <p>
-          Discovered a security vulnerability? Please review our responsible disclosure policy at <code className="font-mono-code">/docs/SECURITY.md</code> and report to <code className="font-mono-code">{BRANDING.securityEmail}</code>.
+          {securityEmail ? (
+            <>
+              Discovered a potential vulnerability? Please report to{" "}
+              <code className="font-mono-code">{securityEmail}</code>.
+            </>
+          ) : (
+            <>contact details coming soon</>
+          )}
         </p>
       </div>
     </div>
