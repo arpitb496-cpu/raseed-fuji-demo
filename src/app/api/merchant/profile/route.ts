@@ -20,6 +20,14 @@ export async function GET() {
     const session = await getServerSession();
     const { merchantId } = requireAuthenticatedMerchant(session);
 
+    const rateLimit = await checkRateLimit(`get_profile_${merchantId}`, 60, 60);
+    if (!rateLimit.success) {
+      return NextResponse.json(
+        { error: "Rate limit exceeded. Please wait a minute." },
+        { status: 429 }
+      );
+    }
+
     const merchant = await prisma.merchant.findUnique({
       where: { id: merchantId },
     });

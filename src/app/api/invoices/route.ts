@@ -20,6 +20,14 @@ export async function GET(req: NextRequest) {
     const session = await getServerSession();
     const { merchantId } = requireAuthenticatedMerchant(session);
 
+    const rateLimit = await checkRateLimit(`list_invoices_${merchantId}`, 60, 60);
+    if (!rateLimit.success) {
+      return NextResponse.json(
+        { error: "Rate limit exceeded. Please wait a minute." },
+        { status: 429 }
+      );
+    }
+
     const { searchParams } = new URL(req.url);
     const search = searchParams.get("search")?.trim() || "";
     const statusParam = searchParams.get("status") || "ALL";

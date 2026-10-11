@@ -98,5 +98,21 @@ describe("Rate Limiter (Upstash Production Guard & Dev Fallback)", () => {
       const res3 = await checkRateLimit(key, 1, 1);
       expect(res3.success).toBe(true);
     });
+
+    it("enforces export rate limit (5 per 10 min) and returns 429 once exhausted", async () => {
+      const merchantId = `m_${Date.now()}_export`;
+      const key = `export_invoices_${merchantId}`;
+
+      // First 5 requests within limit
+      for (let i = 0; i < 5; i++) {
+        const res = await checkRateLimit(key, 5, 600);
+        expect(res.success).toBe(true);
+      }
+
+      // 6th request fails
+      const resBlocked = await checkRateLimit(key, 5, 600);
+      expect(resBlocked.success).toBe(false);
+      expect(resBlocked.remaining).toBe(0);
+    });
   });
 });

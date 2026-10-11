@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "@/lib/auth/session";
 import { requireAuthenticatedMerchant } from "@/lib/auth/authorization";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { prisma } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -9,6 +10,14 @@ export async function GET() {
   try {
     const session = await getServerSession();
     const { merchantId } = requireAuthenticatedMerchant(session);
+
+    const rateLimit = await checkRateLimit(`export_merchant_${merchantId}`, 5, 600);
+    if (!rateLimit.success) {
+      return NextResponse.json(
+        { error: "Too many export requests. Please wait a few minutes." },
+        { status: 429 }
+      );
+    }
 
     const merchant = await prisma.merchant.findUnique({
       where: { id: merchantId },

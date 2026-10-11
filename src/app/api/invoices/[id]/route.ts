@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { evaluateInvoiceStatus } from "@/lib/invoice-utils";
 import { InvoiceStatus } from "@prisma/client";
 import { verifyRequestOrigin } from "@/lib/auth/csrf";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +16,15 @@ export async function GET(
   try {
     const session = await getServerSession();
     const { merchantId } = requireAuthenticatedMerchant(session);
+
+    const rateLimit = await checkRateLimit(`get_invoice_${merchantId}`, 60, 60);
+    if (!rateLimit.success) {
+      return NextResponse.json(
+        { error: "Rate limit exceeded. Please wait a minute." },
+        { status: 429 }
+      );
+    }
+
     const { id } = await context.params;
 
     const invoice = await prisma.invoice.findUnique({
