@@ -20,7 +20,7 @@ The following components are in scope:
 
 ## 2. Reporting a Vulnerability
 If you discover a security vulnerability, please submit your findings to:
-- **Security Contact**: `security@raseed.fi` (or open a private security advisory on GitHub)
+- **Security Contact**: Contact details configured via environment (SECURITY_CONTACT_EMAIL) or open a private security advisory on GitHub.
 - **PGP Key**: Available upon request.
 - **Please Include**:
   - Detailed description of the vulnerability.

@@ -23,7 +23,7 @@ sequenceDiagram
     Merchant->>WebApp: Create Invoice (Amount, Line Items, Due Date)
     WebApp->>Server: Save Invoice (DRAFT/SENT)
     Server-->>WebApp: Generate Public Pay Link + PDF
-    Merchant->>Payer: Share Link (raseed.fi/pay/[publicId])
+    Merchant->>Payer: Share Link (/pay/[publicId])
     
     Payer->>WebApp: Open Pay Page & Connect Wallet
     Payer->>USDC: Approve exact invoice amount

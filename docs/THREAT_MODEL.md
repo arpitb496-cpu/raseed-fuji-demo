@@ -57,7 +57,7 @@ Raseed is a non-custodial stablecoin invoicing protocol on Avalanche C-Chain. Th
   - *Mitigation*: Server-side verification enforces unique transaction hash linkage (`PaymentEvent.txHash`). Each event log is decoded and validated against the specific target `(merchant, onchainInvoiceId)`.
 
 ### 3.4. Phishing Clone of Pay Pages
-* **Threat**: Attacker creates a replica of `raseed.fi/pay/[id]` on a typosquat domain with an attacker contract.
+* **Threat**: Attacker creates a replica of `/pay/[id]` on a typosquat domain with an attacker contract.
 * **Mitigation**:
   - Clear domain branding and warnings displayed on all pay links.
   - Pay page prominently displays the verified Avalanche chain ID (43113/43114) and verified `PaymentRouter` address.
