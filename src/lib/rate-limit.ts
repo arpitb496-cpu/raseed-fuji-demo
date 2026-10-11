@@ -95,7 +95,9 @@ export async function checkRateLimit(
   windowSeconds: number = 60
 ): Promise<{ success: boolean; remaining: number; resetAt: number }> {
   const isProd = process.env.NODE_ENV === "production";
-  const hasUpstash = Boolean(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  const hasUpstash = Boolean(url && url !== "undefined" && url.trim() !== "" && token && token !== "undefined" && token.trim() !== "");
 
   if (isProd || hasUpstash) {
     if (!hasUpstash && isProd) {

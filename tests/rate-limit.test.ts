@@ -13,8 +13,10 @@ describe("Rate Limiter (Upstash Production Guard & Dev Fallback)", () => {
           /UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN must be configured in production/
         );
       } finally {
-        process.env.UPSTASH_REDIS_REST_URL = origUrl;
-        process.env.UPSTASH_REDIS_REST_TOKEN = origToken;
+        if (origUrl !== undefined) process.env.UPSTASH_REDIS_REST_URL = origUrl;
+        else delete process.env.UPSTASH_REDIS_REST_URL;
+        if (origToken !== undefined) process.env.UPSTASH_REDIS_REST_TOKEN = origToken;
+        else delete process.env.UPSTASH_REDIS_REST_TOKEN;
       }
     });
 
@@ -28,8 +30,10 @@ describe("Rate Limiter (Upstash Production Guard & Dev Fallback)", () => {
           /UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN must be configured in production/
         );
       } finally {
-        process.env.UPSTASH_REDIS_REST_URL = origUrl;
-        process.env.UPSTASH_REDIS_REST_TOKEN = origToken;
+        if (origUrl !== undefined) process.env.UPSTASH_REDIS_REST_URL = origUrl;
+        else delete process.env.UPSTASH_REDIS_REST_URL;
+        if (origToken !== undefined) process.env.UPSTASH_REDIS_REST_TOKEN = origToken;
+        else delete process.env.UPSTASH_REDIS_REST_TOKEN;
       }
     });
 
@@ -41,8 +45,10 @@ describe("Rate Limiter (Upstash Production Guard & Dev Fallback)", () => {
         process.env.UPSTASH_REDIS_REST_TOKEN = "valid_upstash_secret_token";
         expect(() => validateRateLimiterConfig(true)).not.toThrow();
       } finally {
-        process.env.UPSTASH_REDIS_REST_URL = origUrl;
-        process.env.UPSTASH_REDIS_REST_TOKEN = origToken;
+        if (origUrl !== undefined) process.env.UPSTASH_REDIS_REST_URL = origUrl;
+        else delete process.env.UPSTASH_REDIS_REST_URL;
+        if (origToken !== undefined) process.env.UPSTASH_REDIS_REST_TOKEN = origToken;
+        else delete process.env.UPSTASH_REDIS_REST_TOKEN;
       }
     });
   });
