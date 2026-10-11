@@ -82,13 +82,139 @@ export function verifyCronAuthorization(authHeader?: string | null): {
   return { authorized: true };
 }
 
-export async function runReconciliation(options?: {
+export const DEFAULT_MAX_CHUNKS_PER_RUN = 15;
+export const DEFAULT_RECONCILE_TIME_BUDGET_MS = 25_000;
+
+export interface ReconcileResult {
+  acquiredLock: boolean;
+  fromBlock?: bigint;
+  toBlock?: bigint;
+  latestBlock?: bigint;
+  logsFound?: number;
+  newEventsStored?: number;
+  invoicesSettled?: number;
+  expiredInvoicesCount?: number;
+  chunksProcessed?: number;
+  message?: string;
+}
+
+export function sanitizeLogMessage(msg: string): string {
+  // Redact URLs containing API keys/tokens or query params
+  return msg.replace(/https?:\/\/[^\s"'<>]+/gi, "[REDACTED_RPC_URL]").slice(0, 200);
+}
+
+export function isRpcBlockRangeOrLimitError(err: unknown): boolean {
+  if (!err || typeof err !== "object") return false;
+
+  const candidate = err as {
+    code?: number | string;
+    status?: number;
+    message?: string;
+    details?: string;
+    shortMessage?: string;
+    cause?: unknown;
+  };
+
+  const code = typeof candidate.code === "number" ? candidate.code : undefined;
+  if (code === -32600 || code === -32005) {
+    return true;
+  }
+
+  const status = typeof candidate.status === "number" ? candidate.status : undefined;
+  if (status === 413) {
+    return true;
+  }
+
+  const texts: string[] = [];
+  if (typeof candidate.message === "string") texts.push(candidate.message);
+  if (typeof candidate.details === "string") texts.push(candidate.details);
+  if (typeof candidate.shortMessage === "string") texts.push(candidate.shortMessage);
+
+  if (candidate.cause && typeof candidate.cause === "object") {
+    const causeObj = candidate.cause as { code?: number | string; message?: string; details?: string; shortMessage?: string };
+    if (causeObj.code === -32600 || causeObj.code === -32005) return true;
+    if (typeof causeObj.message === "string") texts.push(causeObj.message);
+    if (typeof causeObj.details === "string") texts.push(causeObj.details);
+    if (typeof causeObj.shortMessage === "string") texts.push(causeObj.shortMessage);
+  }
+
+  const combined = texts.join(" ").toLowerCase();
+  const patterns = [
+    "block range",
+    "free tier",
+    "eth_getlogs",
+    "query exceeds",
+    "exceeds maximum",
+    "maximum block",
+    "limit exceeded",
+    "range is too wide",
+    "block filter",
+  ];
+
+  return patterns.some((p) => combined.includes(p));
+}
+
+interface DecodedPaidLog {
+  args: {
+    invoiceId: `0x${string}`;
+    payer: `0x${string}`;
+    merchant: `0x${string}`;
+    amount: bigint;
+    fee: bigint;
+  };
+  transactionHash: `0x${string}`;
+  logIndex: number;
+  blockHash: `0x${string}`;
+  blockNumber: bigint;
+}
+
+async function fetchLogsWithFallback(
+  client: PublicClient,
+  routerAddress: `0x${string}`,
+  fromBlock: bigint,
+  toBlock: bigint
+): Promise<DecodedPaidLog[]> {
+  try {
+    return (await client.getLogs({
+      address: routerAddress,
+      event: PAID_EVENT_ABI,
+      fromBlock,
+      toBlock,
+    })) as unknown as DecodedPaidLog[];
+  } catch (err: unknown) {
+    if (isRpcBlockRangeOrLimitError(err)) {
+      const sanitizedReason = sanitizeLogMessage(err instanceof Error ? err.message : String(err));
+      console.warn(
+        `[reconciliation] WARN: Provider block range limit detected; falling back to public RPC transport. Reason: ${sanitizedReason}`
+      );
+      const fallbackClient = createPublicClient({
+        chain: CURRENT_NETWORK.chain,
+        transport: http(CURRENT_NETWORK.rpcUrl),
+      });
+      return (await fallbackClient.getLogs({
+        address: routerAddress,
+        event: PAID_EVENT_ABI,
+        fromBlock,
+        toBlock,
+      })) as unknown as DecodedPaidLog[];
+    }
+    throw err;
+  }
+}
+
+export interface RunReconciliationOptions {
   publicClient?: PublicClient;
   chainId?: number;
   routerAddress?: string;
   prismaClient?: PrismaClient;
   lockKey?: string;
-}): Promise<ReconcileResult> {
+  maxChunks?: number;
+  timeBudgetMs?: number;
+}
+
+export async function runReconciliation(
+  options?: RunReconciliationOptions
+): Promise<ReconcileResult> {
   const db = options?.prismaClient || prisma;
   const lockKey = options?.lockKey ?? "raseed_reconciliation_cron";
   const chainId = options?.chainId ?? CURRENT_NETWORK.chain.id;
@@ -98,89 +224,15 @@ export async function runReconciliation(options?: {
   }
   const routerAddress = rawRouter.toLowerCase();
   const client = options?.publicClient ?? getServerPublicClient(chainId);
-
-  // 1. Fetch cursor outside transaction to determine RPC block range
-  const cursor = await db.reconciliationCursor.findUnique({
-    where: {
-      chainId_routerAddress: {
-        chainId,
-        routerAddress,
-      },
-    },
-  });
-
-  // 2. Pre-fetch blockchain data strictly OUTSIDE the database transaction
-  // (Prevents holding database locks during slow RPC calls or network roundtrips)
-  const latestBlock = await client.getBlockNumber();
-
-  let fromBlock: bigint;
-  if (cursor) {
-    fromBlock =
-      cursor.lastBlockNumber > REORG_LOOKBACK_BLOCKS
-        ? cursor.lastBlockNumber - REORG_LOOKBACK_BLOCKS
-        : 0n;
-  } else {
-    // If first run, start from router deployment block in deployments.json
-    const deployBlock = getRouterDeployBlock(chainId);
-    fromBlock = deployBlock;
-  }
-
-  const toBlock =
-    fromBlock + MAX_RECONCILE_BLOCK_RANGE > latestBlock
-      ? latestBlock
-      : fromBlock + MAX_RECONCILE_BLOCK_RANGE;
-
-  // 3. Pre-fetch logs from router address via RPC strictly OUTSIDE the transaction
-  interface DecodedPaidLog {
-    args: {
-      invoiceId: `0x${string}`;
-      payer: `0x${string}`;
-      merchant: `0x${string}`;
-      amount: bigint;
-      fee: bigint;
-    };
-    transactionHash: `0x${string}`;
-    logIndex: number;
-    blockHash: `0x${string}`;
-    blockNumber: bigint;
-  }
-  let logs: DecodedPaidLog[] = [];
-  if (toBlock >= fromBlock) {
-    try {
-      logs = (await client.getLogs({
-        address: routerAddress as `0x${string}`,
-        event: PAID_EVENT_ABI,
-        fromBlock,
-        toBlock,
-      })) as unknown as DecodedPaidLog[];
-    } catch (err: unknown) {
-      const rpcErr = err as { message?: string; details?: string; code?: number };
-      if (
-        rpcErr?.message?.includes("block range") ||
-        rpcErr?.details?.includes("block range") ||
-        rpcErr?.code === -32600
-      ) {
-        const fallbackClient = createPublicClient({
-          chain: CURRENT_NETWORK.chain,
-          transport: http(CURRENT_NETWORK.rpcUrl),
-        });
-        logs = (await fallbackClient.getLogs({
-          address: routerAddress as `0x${string}`,
-          event: PAID_EVENT_ABI,
-          fromBlock,
-          toBlock,
-        })) as unknown as DecodedPaidLog[];
-      } else {
-        throw err;
-      }
-    }
-  }
+  const maxChunks = options?.maxChunks ?? DEFAULT_MAX_CHUNKS_PER_RUN;
+  const timeBudgetMs = options?.timeBudgetMs ?? DEFAULT_RECONCILE_TIME_BUDGET_MS;
+  const startTime = Date.now();
 
   const affectedInvoiceIds = new Set<string>();
-  let newEventsStored = 0;
+  let totalNewEventsStored = 0;
   let overdueCount = 0;
 
-  // 4. Open PostgreSQL transaction with advisory lock and explicit timeout
+  // Open PostgreSQL transaction with advisory lock and explicit timeout
   const executeReconcile = async (tx: Prisma.TransactionClient): Promise<ReconcileResult> => {
     // Acquire PostgreSQL transaction advisory lock (pooler and PgBouncer safe)
     const lockQuery = await tx.$queryRaw<Array<{ acquired: boolean }>>`
@@ -195,67 +247,143 @@ export async function runReconciliation(options?: {
       };
     }
 
-    for (const log of logs) {
-      const args = log.args as {
-        invoiceId: `0x${string}`;
-        payer: `0x${string}`;
-        merchant: `0x${string}`;
-        amount: bigint;
-        fee: bigint;
-      };
-
-      const logInvoiceId = args.invoiceId.toLowerCase();
-      const logMerchant = args.merchant.toLowerCase();
-
-      // Find matching invoice by onchainInvoiceId and merchant wallet
-      const invoice = await tx.invoice.findFirst({
-        where: {
-          onchainInvoiceId: logInvoiceId,
-          merchant: {
-            walletAddress: logMerchant,
-          },
-        },
-        select: { id: true },
-      });
-
-      if (!invoice) continue;
-
-      // Idempotently upsert PaymentEvent with re-validation if previously soft-invalidated
-      await tx.paymentEvent.upsert({
-        where: {
-          chainId_txHash_logIndex: {
-            chainId,
-            txHash: log.transactionHash.toLowerCase(),
-            logIndex: log.logIndex,
-          },
-        },
-        update: {
-          invalidatedAt: null,
-          invalidReason: null,
-          blockHash: log.blockHash.toLowerCase(),
-          blockNumber: log.blockNumber,
-        },
-        create: {
-          invoiceId: invoice.id,
-          txHash: log.transactionHash.toLowerCase(),
-          logIndex: log.logIndex,
-          blockHash: log.blockHash.toLowerCase(),
-          blockNumber: log.blockNumber,
+    // 1. Fetch current cursor from database
+    const cursor = await tx.reconciliationCursor.findUnique({
+      where: {
+        chainId_routerAddress: {
           chainId,
           routerAddress,
-          merchantAddress: logMerchant,
-          payerAddress: args.payer.toLowerCase(),
-          onchainInvoiceId: logInvoiceId,
-          amountUsdc: BigInt(args.amount),
-          feeUsdc: BigInt(args.fee),
+        },
+      },
+    });
+
+    const latestBlock = await client.getBlockNumber();
+
+    let currentFromBlock: bigint;
+    if (cursor) {
+      currentFromBlock =
+        cursor.lastBlockNumber > REORG_LOOKBACK_BLOCKS
+          ? cursor.lastBlockNumber - REORG_LOOKBACK_BLOCKS
+          : 0n;
+    } else {
+      currentFromBlock = getRouterDeployBlock(chainId);
+    }
+
+    const initialFromBlock = currentFromBlock;
+    let lastProcessedToBlock = currentFromBlock;
+    let totalLogsCount = 0;
+    let chunksProcessed = 0;
+
+    // Process multiple chunks bounded by maxChunks and time budget
+    while (
+      chunksProcessed < maxChunks &&
+      Date.now() - startTime < timeBudgetMs &&
+      currentFromBlock <= latestBlock
+    ) {
+      const toBlock =
+        currentFromBlock + MAX_RECONCILE_BLOCK_RANGE > latestBlock
+          ? latestBlock
+          : currentFromBlock + MAX_RECONCILE_BLOCK_RANGE;
+
+      if (toBlock < currentFromBlock) {
+        break;
+      }
+
+      const chunkLogs = await fetchLogsWithFallback(
+        client,
+        routerAddress as `0x${string}`,
+        currentFromBlock,
+        toBlock
+      );
+
+      totalLogsCount += chunkLogs.length;
+
+      for (const log of chunkLogs) {
+        const args = log.args;
+        const logInvoiceId = args.invoiceId.toLowerCase();
+        const logMerchant = args.merchant.toLowerCase();
+
+        // Find matching invoice by onchainInvoiceId and merchant wallet
+        const invoice = await tx.invoice.findFirst({
+          where: {
+            onchainInvoiceId: logInvoiceId,
+            merchant: {
+              walletAddress: logMerchant,
+            },
+          },
+          select: { id: true },
+        });
+
+        if (!invoice) continue;
+
+        // Idempotently upsert PaymentEvent with re-validation if previously soft-invalidated
+        await tx.paymentEvent.upsert({
+          where: {
+            chainId_txHash_logIndex: {
+              chainId,
+              txHash: log.transactionHash.toLowerCase(),
+              logIndex: log.logIndex,
+            },
+          },
+          update: {
+            invalidatedAt: null,
+            invalidReason: null,
+            blockHash: log.blockHash.toLowerCase(),
+            blockNumber: log.blockNumber,
+          },
+          create: {
+            invoiceId: invoice.id,
+            txHash: log.transactionHash.toLowerCase(),
+            logIndex: log.logIndex,
+            blockHash: log.blockHash.toLowerCase(),
+            blockNumber: log.blockNumber,
+            chainId,
+            routerAddress,
+            merchantAddress: logMerchant,
+            payerAddress: args.payer.toLowerCase(),
+            onchainInvoiceId: logInvoiceId,
+            amountUsdc: BigInt(args.amount),
+            feeUsdc: BigInt(args.fee),
+          },
+        });
+
+        totalNewEventsStored++;
+        affectedInvoiceIds.add(invoice.id);
+      }
+
+      // Persist cursor after each completed chunk
+      await tx.reconciliationCursor.upsert({
+        where: {
+          chainId_routerAddress: {
+            chainId,
+            routerAddress,
+          },
+        },
+        create: {
+          id: `cursor_${chainId}_${routerAddress}`,
+          chainId,
+          routerAddress,
+          lastBlockNumber: toBlock,
+        },
+        update: {
+          lastBlockNumber: toBlock,
         },
       });
 
-      newEventsStored++;
-      affectedInvoiceIds.add(invoice.id);
+      lastProcessedToBlock = toBlock;
+      chunksProcessed++;
+
+      if (toBlock >= latestBlock) {
+        break;
+      }
+
+      currentFromBlock =
+        toBlock > REORG_LOOKBACK_BLOCKS
+          ? toBlock - REORG_LOOKBACK_BLOCKS
+          : 0n;
     }
 
-    // Also include any invoices with recorded payment events that are not yet marked PAID (e.g. previously awaiting block confirmations)
+    // Include unsettled invoices
     const unsettledInvoices = await tx.invoice.findMany({
       where: {
         status: { in: [InvoiceStatus.SENT, InvoiceStatus.PARTIALLY_PAID, InvoiceStatus.DRAFT] },
@@ -266,25 +394,6 @@ export async function runReconciliation(options?: {
     for (const u of unsettledInvoices) {
       affectedInvoiceIds.add(u.id);
     }
-
-    // Update ReconciliationCursor
-    await tx.reconciliationCursor.upsert({
-      where: {
-        chainId_routerAddress: {
-          chainId,
-          routerAddress,
-        },
-      },
-      create: {
-        id: `cursor_${chainId}_${routerAddress}`,
-        chainId,
-        routerAddress,
-        lastBlockNumber: toBlock,
-      },
-      update: {
-        lastBlockNumber: toBlock,
-      },
-    });
 
     // Mark unpaid SENT invoices past due as EXPIRED using atomic conditional update
     const now = new Date();
@@ -303,7 +412,6 @@ export async function runReconciliation(options?: {
 
     let actuallyExpiredCount = 0;
     for (const candidate of overdueCandidates) {
-      // Conditional update: only update if STILL SENT and STILL 0n paidAmountUsdc and STILL past due
       const updateResult = await tx.invoice.updateMany({
         where: {
           id: candidate.id,
@@ -316,7 +424,6 @@ export async function runReconciliation(options?: {
         },
       });
 
-      // Write audit log ONLY if count === 1
       if (updateResult.count === 1) {
         actuallyExpiredCount++;
         await tx.auditLog.create({
@@ -336,13 +443,14 @@ export async function runReconciliation(options?: {
 
     return {
       acquiredLock: true,
-      fromBlock,
-      toBlock,
+      fromBlock: initialFromBlock,
+      toBlock: lastProcessedToBlock,
       latestBlock,
-      logsFound: logs.length,
-      newEventsStored,
+      logsFound: totalLogsCount,
+      newEventsStored: totalNewEventsStored,
       invoicesSettled: affectedInvoiceIds.size,
       expiredInvoicesCount: overdueCount,
+      chunksProcessed,
       message: "Reconciliation completed successfully",
     };
   };
@@ -353,7 +461,7 @@ export async function runReconciliation(options?: {
   } else {
     result = await (db as PrismaClient).$transaction(executeReconcile, {
       maxWait: 15000,
-      timeout: 30000,
+      timeout: 60000,
     });
   }
 

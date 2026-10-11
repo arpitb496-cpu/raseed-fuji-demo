@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect } from "vitest";
 import crypto from "crypto";
 import { getTestPrisma } from "@/lib/db/test-db";
@@ -8,6 +9,9 @@ import {
   MAX_RECONCILE_BLOCK_RANGE,
   REORG_LOOKBACK_BLOCKS,
   getRouterDeployBlock,
+  isRpcBlockRangeOrLimitError,
+  sanitizeLogMessage,
+  runReconciliation,
 } from "@/lib/settlement/reconciliation";
 
 describe("Reconciliation Hardening & Catch-up Guards", () => {
@@ -293,16 +297,166 @@ describe("Reconciliation Hardening & Catch-up Guards", () => {
     }
   }, 25000);
 
-  it("gracefully catches RPC block-range limitation errors from free-tier providers", () => {
-    const errorWithBlockRange = {
-      message: "Under the Free tier plan, you can make eth_getLogs requests with up to a 10 block range.",
-      code: -32600,
-    };
+  describe("Free-tier RPC block-range limitation detection & log sanitization", () => {
+    it("detects error by provider code -32600 (Invalid Request / Range Limit)", () => {
+      expect(isRpcBlockRangeOrLimitError({ code: -32600, message: "Invalid request" })).toBe(true);
+    });
 
-    const isBlockRangeError =
-      errorWithBlockRange.message.includes("block range") ||
-      errorWithBlockRange.code === -32600;
+    it("detects error by provider code -32005 (Query limit exceeded)", () => {
+      expect(isRpcBlockRangeOrLimitError({ code: -32005, message: "limit exceeded" })).toBe(true);
+    });
 
-    expect(isBlockRangeError).toBe(true);
+    it("detects HTTP 413 Payload Too Large / Range Exceeded", () => {
+      expect(isRpcBlockRangeOrLimitError({ status: 413, message: "Response too large" })).toBe(true);
+    });
+
+    it("detects provider-specific block range error messages and details", () => {
+      expect(
+        isRpcBlockRangeOrLimitError({
+          message: "Under the Free tier plan, you can make eth_getLogs requests with up to a 10 block range.",
+        })
+      ).toBe(true);
+
+      expect(
+        isRpcBlockRangeOrLimitError({
+          details: "query exceeds max block range of 2048 blocks",
+        })
+      ).toBe(true);
+
+      expect(
+        isRpcBlockRangeOrLimitError({
+          shortMessage: "exceeds maximum block range for free tier",
+        })
+      ).toBe(true);
+    });
+
+    it("detects nested error causes from viem wrapped errors", () => {
+      const nestedViemError = {
+        name: "HttpRequestError",
+        message: "HTTP request failed",
+        cause: {
+          code: -32600,
+          message: "eth_getLogs range is too wide",
+        },
+      };
+      expect(isRpcBlockRangeOrLimitError(nestedViemError)).toBe(true);
+    });
+
+    it("does not false-positive on unrelated errors (e.g. revert or timeout)", () => {
+      expect(isRpcBlockRangeOrLimitError(null)).toBe(false);
+      expect(isRpcBlockRangeOrLimitError(undefined)).toBe(false);
+      expect(isRpcBlockRangeOrLimitError({ message: "execution reverted: ERC20: insufficient allowance" })).toBe(false);
+      expect(isRpcBlockRangeOrLimitError({ message: "Network connection timeout" })).toBe(false);
+      expect(isRpcBlockRangeOrLimitError(new Error("Database connection closed"))).toBe(false);
+    });
+
+    it("sanitizes log messages to ensure RPC URLs with secret keys/tokens are redacted", () => {
+      const errorWithSecretUrl =
+        "RPC request failed at https://avalanche-fuji.infura.io/v3/9aa3d95b3c84493a99d8e123456789ab with status 400";
+      const sanitized = sanitizeLogMessage(errorWithSecretUrl);
+
+      expect(sanitized).not.toContain("https://avalanche-fuji.infura.io");
+      expect(sanitized).not.toContain("9aa3d95b3c84493a99d8e123456789ab");
+      expect(sanitized).toContain("[REDACTED_RPC_URL]");
+    });
+  });
+
+  describe("Multi-chunk catch-up execution & limits", () => {
+    it("processes multiple chunks in a single run and catches up to latestBlock", async () => {
+      const startBlock = 59271254n;
+      const targetLatest = startBlock + 4500n; // ~3 chunks (2000, 2000, 500)
+      const rangesQueried: Array<{ from: bigint; to: bigint }> = [];
+
+      const mockClient = {
+        getBlockNumber: async () => targetLatest,
+        getLogs: async (args: { fromBlock: bigint; toBlock: bigint }) => {
+          rangesQueried.push({ from: args.fromBlock, to: args.toBlock });
+          return [];
+        },
+      } as unknown as PublicClient;
+
+      // Mock database transaction client
+      let savedCursor: bigint = 0n;
+      const mockTx = {
+        $queryRaw: async () => [{ acquired: true }],
+        reconciliationCursor: {
+          findUnique: async () => ({ lastBlockNumber: startBlock }),
+          upsert: async (args: { update: { lastBlockNumber: bigint } }) => {
+            savedCursor = args.update.lastBlockNumber;
+            return { lastBlockNumber: savedCursor };
+          },
+        },
+        invoice: {
+          findFirst: async () => null,
+          findMany: async () => [],
+          updateMany: async () => ({ count: 0 }),
+        },
+        paymentEvent: {
+          upsert: async () => ({}),
+        },
+        auditLog: {
+          create: async () => ({}),
+        },
+      };
+
+      const result = await runReconciliation({
+        prismaClient: mockTx as any,
+        publicClient: mockClient,
+        maxChunks: 5,
+        timeBudgetMs: 5000,
+      });
+
+      expect(result.acquiredLock).toBe(true);
+      expect(result.chunksProcessed).toBe(3);
+      expect(rangesQueried.length).toBe(3);
+      // Chunk 1: startBlock - lookback (or startBlock) to +2000
+      expect(rangesQueried[0].to).toBe(rangesQueried[0].from + 2000n);
+      // Final chunk finishes at targetLatest
+      expect(rangesQueried[2].to).toBe(targetLatest);
+      // Saved cursor persisted at targetLatest
+      expect(savedCursor).toBe(targetLatest);
+    });
+
+    it("respects maxChunks boundary and stops early without exceeding limit", async () => {
+      const startBlock = 59271254n;
+      const targetLatest = startBlock + 20000n; // 10 chunks ahead
+
+      let chunksCalled = 0;
+      const mockClient = {
+        getBlockNumber: async () => targetLatest,
+        getLogs: async () => {
+          chunksCalled++;
+          return [];
+        },
+      } as unknown as PublicClient;
+
+      const mockTx = {
+        $queryRaw: async () => [{ acquired: true }],
+        reconciliationCursor: {
+          findUnique: async () => ({ lastBlockNumber: startBlock }),
+          upsert: async () => ({}),
+        },
+        invoice: {
+          findFirst: async () => null,
+          findMany: async () => [],
+          updateMany: async () => ({ count: 0 }),
+        },
+        paymentEvent: {
+          upsert: async () => ({}),
+        },
+        auditLog: {
+          create: async () => ({}),
+        },
+      };
+
+      const result = await runReconciliation({
+        prismaClient: mockTx as any,
+        publicClient: mockClient,
+        maxChunks: 2, // Strictly bound to 2 chunks
+      });
+
+      expect(result.chunksProcessed).toBe(2);
+      expect(chunksCalled).toBe(2);
+    });
   });
 });
