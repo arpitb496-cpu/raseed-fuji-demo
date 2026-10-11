@@ -4,7 +4,9 @@
 - **Application**: Next.js App Router (TypeScript, Node.js v20+)
 - **Database**: PostgreSQL (Prisma ORM, Neon or Supabase)
 - **Cache & Rate Limiting**: Upstash Redis (or in-memory sliding window fallback)
-- **Blockchain**: Avalanche C-Chain RPC nodes (Ankr, Infura, or Avalanche official RPC)
+- **Blockchain**: Avalanche C-Chain RPC nodes (Fuji testnet `43113`, Mainnet `43114`)
+  - Server-only backend RPC: `FUJI_RPC_URL`, `MAINNET_RPC_URL` (never bundled to browser; fallback to `deployments.json`)
+  - Client public RPC: `NEXT_PUBLIC_FUJI_RPC_URL`, `NEXT_PUBLIC_MAINNET_RPC_URL` (public rate-limited RPCs only)
 - **Monitoring & Logging**: Sentry (error tracking), privacy-respecting analytics
 - **Cron Jobs**: Vercel Cron for payment reconciliation (`/api/cron/reconcile`)
 
