@@ -48,8 +48,26 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
     }
     return "en";
   });
-  const [paymentStep, setPaymentStep] = useState<"idle" | "approving" | "paying" | "waiting_confirmation" | "confirmed">("idle");
-  const [txHash, setTxHash] = useState<string | null>(null);
+  const pendingTxStorageKey = `raseed_pending_tx_${publicId}`;
+  const [pendingTxHash, setPendingTxHash] = useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem(`raseed_pending_tx_${publicId}`);
+    }
+    return null;
+  });
+  const [reportStatusMessage, setReportStatusMessage] = useState<string | null>(null);
+  const [paymentStep, setPaymentStep] = useState<"idle" | "approving" | "paying" | "waiting_confirmation" | "confirmed">(() => {
+    if (typeof window !== "undefined" && localStorage.getItem(`raseed_pending_tx_${publicId}`)) {
+      return "waiting_confirmation";
+    }
+    return "idle";
+  });
+  const [txHash, setTxHash] = useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem(`raseed_pending_tx_${publicId}`);
+    }
+    return null;
+  });
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const { address, isConnected, chain } = useAccount();
@@ -67,7 +85,22 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
           return;
         }
         const data = await res.json();
-        if (!ignore) setInvoice(data);
+        if (!ignore) {
+          setInvoice(data);
+          const isPaid =
+            data.status === "PAID" ||
+            data.status === "PARTIALLY_PAID" ||
+            BigInt(data.remainingUsdc) === 0n;
+
+          if (isPaid) {
+            if (typeof window !== "undefined") {
+              localStorage.removeItem(pendingTxStorageKey);
+            }
+            setPendingTxHash(null);
+            setPaymentStep("confirmed");
+            setReportStatusMessage(null);
+          }
+        }
       } catch {
         if (!ignore) setNotFound(true);
       } finally {
@@ -78,7 +111,7 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
     return () => {
       ignore = true;
     };
-  }, [publicId]);
+  }, [publicId, pendingTxStorageKey]);
 
   // Read USDC Balance
   const { data: usdcBalanceRaw, refetch: refetchBalance } = useReadContract({
@@ -116,7 +149,7 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
   const isDraft = (invoice?.status === "DRAFT" || mockState === "draft");
   const isAlreadyPaid = mockState === "paid" || invoice?.status === "PAID" || (remainingUsdc === 0n && invoice !== null && invoice.status !== "DRAFT");
   const hasInsufficientBalance = mockState === "insufficient_usdc" ? true : (isConnectedSim && !isWrongChain && userBalance < remainingUsdc);
-  const effectivePaymentStep = mockState === "paying" ? "paying" : mockState === "waiting_confirmation" ? "waiting_confirmation" : paymentStep;
+  const effectivePaymentStep = mockState === "paying" ? "paying" : (mockState === "waiting_confirmation" || (pendingTxHash && !isAlreadyPaid)) ? "waiting_confirmation" : paymentStep;
 
   const formatUsdc = (micro: bigint | string) => {
     const val = typeof micro === "string" ? BigInt(micro) : micro;
@@ -125,6 +158,113 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
       maximumFractionDigits: 6,
     });
   };
+
+  // Persistent Polling & Verification Effect
+  useEffect(() => {
+    const activeTx = txHash || pendingTxHash;
+    if (paymentStep !== "waiting_confirmation" || !activeTx) return;
+
+    let cancelled = false;
+    let attempts = 0;
+    const maxAttempts = 72; // 6 minutes at 5s interval
+
+    const checkAndReport = async () => {
+      attempts++;
+      try {
+        // 1. Call report endpoint
+        const reportRes = await fetch(`/api/pay/${publicId}/report`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ publicId, txHash: activeTx }),
+        });
+
+        if (!reportRes.ok) {
+          const errData = await reportRes.json().catch(() => ({}));
+          const errMsg = errData.error || `HTTP ${reportRes.status}`;
+          if (!cancelled) {
+            setReportStatusMessage(
+              lang === "en"
+                ? `Verification report pending: ${errMsg}. Retrying...`
+                : `सत्यापन रिपोर्ट लंबित: ${errMsg}। पुनः प्रयास जारी...`
+            );
+          }
+        } else {
+          const reportData = await reportRes.json();
+          if (reportData.status === "PAID" || reportData.status === "PARTIALLY_PAID") {
+            if (typeof window !== "undefined") {
+              localStorage.removeItem(pendingTxStorageKey);
+            }
+            if (!cancelled) {
+              setPendingTxHash(null);
+              setPaymentStep("confirmed");
+              setReportStatusMessage(null);
+              refetchBalance();
+              const invRes = await fetch(`/api/pay/${publicId}`);
+              if (invRes.ok) setInvoice(await invRes.json());
+            }
+            return true;
+          } else {
+            if (!cancelled) {
+              setReportStatusMessage(
+                lang === "en"
+                  ? "Waiting for blockchain block confirmations (at least 3 confirmations required)..."
+                  : "ब्लॉकचेन ब्लॉक पुष्टि की प्रतीक्षा है (कम से कम 3 पुष्टि आवश्यक)..."
+              );
+            }
+          }
+        }
+
+        // 2. Also poll GET /api/pay/[publicId] in case background reconciliation settled it
+        const invRes = await fetch(`/api/pay/${publicId}`);
+        if (invRes.ok) {
+          const updated = (await invRes.json()) as PublicInvoiceData;
+          if (!cancelled) setInvoice(updated);
+          if (updated.status === "PAID" || updated.status === "PARTIALLY_PAID") {
+            if (typeof window !== "undefined") {
+              localStorage.removeItem(pendingTxStorageKey);
+            }
+            if (!cancelled) {
+              setPendingTxHash(null);
+              setPaymentStep("confirmed");
+              setReportStatusMessage(null);
+              refetchBalance();
+            }
+            return true;
+          }
+        }
+      } catch {
+        if (!cancelled) {
+          setReportStatusMessage(
+            lang === "en"
+              ? "Network issue contacting settlement server. Retrying..."
+              : "निपटान सर्वर से संपर्क करने में समस्या। पुनः प्रयास जारी..."
+          );
+        }
+      }
+
+      if (attempts >= maxAttempts && !cancelled) {
+        setReportStatusMessage(
+          lang === "en"
+            ? "Settlement confirmation is taking longer than expected. Your payment was submitted; background reconciliation will update status shortly."
+            : "सत्यापन में अपेक्षा से अधिक समय लग रहा है। आपका भुगतान प्रस्तुत किया गया है; पृष्ठभूमि मिलान द्वारा जल्द ही स्थिति अपडेट की जाएगी।"
+        );
+      }
+      return false;
+    };
+
+    // Immediate initial check
+    checkAndReport();
+
+    const interval = setInterval(async () => {
+      const done = await checkAndReport();
+      if (done) clearInterval(interval);
+    }, 5000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [paymentStep, txHash, pendingTxHash, publicId, pendingTxStorageKey, lang, refetchBalance]);
 
   const handlePay = async () => {
     if (!invoice || !address || isDraft || isCancelledOrExpired) return;
@@ -176,28 +316,24 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
       });
 
       setTxHash(payTx);
+      setPendingTxHash(payTx);
+      if (typeof window !== "undefined") {
+        localStorage.setItem(pendingTxStorageKey, payTx);
+      }
 
       // Transition immediately to "Submitted, waiting for confirmations" state
       setPaymentStep("waiting_confirmation");
 
-      // 3. Report payment transaction hash to server verification
-      fetch(`/api/pay/${publicId}/report`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          publicId: invoice.publicId,
-          txHash: payTx,
-        }),
-      }).catch((err) => {
-        console.warn("Async report notification error:", err);
-      });
-
-      // 4. Concurrently monitor tx receipt to detect reverted transactions
+      // Concurrently monitor tx receipt to detect reverted transactions
       if (publicClient) {
         publicClient
           .waitForTransactionReceipt({ hash: payTx })
           .then((receipt: { status: string }) => {
             if (receipt.status !== "success") {
+              if (typeof window !== "undefined") {
+                localStorage.removeItem(pendingTxStorageKey);
+              }
+              setPendingTxHash(null);
               setErrorMessage(
                 lang === "en"
                   ? "Payment transaction reverted on-chain."
@@ -210,38 +346,6 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
             console.warn("Receipt tracking error:", receiptErr);
           });
       }
-
-      // 5. Poll GET /api/pay/[publicId] every 5s (max ~3 min) until server returns PAID or PARTIALLY_PAID
-      let attempts = 0;
-      const maxAttempts = 36;
-      const pollTimer = setInterval(async () => {
-        attempts++;
-        try {
-          const res = await fetch(`/api/pay/${publicId}`);
-          if (res.ok) {
-            const updated = (await res.json()) as PublicInvoiceData;
-            setInvoice(updated);
-            if (updated.status === "PAID" || updated.status === "PARTIALLY_PAID") {
-              clearInterval(pollTimer);
-              setPaymentStep("confirmed");
-              await refetchBalance();
-              return;
-            }
-          }
-        } catch {
-          // ignore network hiccups
-        }
-
-        if (attempts >= maxAttempts) {
-          clearInterval(pollTimer);
-          setPaymentStep("idle");
-          setErrorMessage(
-            lang === "en"
-              ? "Transaction submitted. Settlement confirmation is taking longer than expected; background reconciliation will update status shortly."
-              : "लेनदेन प्रस्तुत किया गया। सत्यापन में अपेक्षा से अधिक समय लग रहा है; पृष्ठभूमि मिलान द्वारा जल्द ही स्थिति अपडेट की जाएगी।"
-          );
-        }
-      }, 5000);
     } catch (err: unknown) {
       console.error("Payment flow failed:", err);
       const msg = err instanceof Error ? err.message : String(err);
@@ -473,10 +577,15 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
                   ? "Transaction broadcast to Avalanche Fuji. Polling server for block confirmations..."
                   : "लेनदेन Avalanche Fuji पर प्रसारित किया गया। ब्लॉक पुष्टि के लिए सर्वर से सत्यापन की प्रतीक्षा की जा रही है..."}
               </p>
-              {txHash && (
+              {reportStatusMessage && (
+                <div className="p-2.5 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-200 text-xs font-mono max-w-md mx-auto" data-testid="report-status-message">
+                  {reportStatusMessage}
+                </div>
+              )}
+              {(txHash || pendingTxHash) && (
                 <div className="pt-1">
                   <a
-                    href={`${invoice.network.explorerUrl}/tx/${txHash}`}
+                    href={`${invoice.network.explorerUrl}/tx/${txHash || pendingTxHash}`}
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex items-center gap-1.5 text-xs text-amber-400 hover:text-amber-300 underline font-mono"
@@ -537,7 +646,7 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
 
               <button
                 onClick={handlePay}
-                disabled={effectivePaymentStep !== "idle"}
+                disabled={effectivePaymentStep !== "idle" || !!pendingTxHash}
                 className="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-slate-950 font-bold text-base transition shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2"
               >
                 {effectivePaymentStep === "approving" ? (
