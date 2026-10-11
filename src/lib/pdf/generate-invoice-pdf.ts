@@ -2,6 +2,8 @@ import QRCode from "qrcode";
 import { formatUsdc } from "@/lib/currency";
 import { INDICATIVE_USD_TO_INR_RATE } from "@/config/constants";
 import { getAppBaseUrl } from "@/config/url";
+import { CURRENT_NETWORK } from "@/config/network";
+import { formatUnambiguousDate } from "@/lib/utils/date";
 import {
   NOTO_SANS_DEVANAGARI_REGULAR_BASE64,
   NOTO_SANS_DEVANAGARI_BOLD_BASE64,
@@ -85,11 +87,7 @@ export async function generateInvoicePdfBuffer(data: InvoicePdfData): Promise<Bu
     maximumFractionDigits: 2,
   });
 
-  const formattedDueDate = new Date(data.dueDate).toLocaleDateString("en-IN", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+  const formattedDueDate = formatUnambiguousDate(data.dueDate, "en");
 
   const itemsHtml = data.items
     .map((item) => {
@@ -372,7 +370,7 @@ export async function generateInvoicePdfBuffer(data: InvoicePdfData): Promise<Bu
         <span class="total-grand-label">TOTAL DUE / कुल देय राशि</span>
         <span class="total-grand-amount">${totalUsdcFormatted} USDC</span>
       </div>
-      <div class="inr-ref">Indicative INR: ~₹${approxInr}</div>
+      <div class="inr-ref">Illustrative demo rate (~₹${approxInr} INR, not a live rate)</div>
     </div>
   </div>
 
@@ -380,7 +378,7 @@ export async function generateInvoicePdfBuffer(data: InvoicePdfData): Promise<Bu
     <img src="${qrDataUrl}" alt="Payment QR Code" class="qr-img" />
     <div>
       <div class="instructions-title">PAYMENT INSTRUCTIONS / भुगतान निर्देश</div>
-      <div class="instructions-step">1. Scan the QR code or open the official payment link.</div>
+      <div class="instructions-step">1. Scan the QR code or open the payment link.</div>
       <div class="instructions-step">2. Connect your Web3 wallet on Avalanche Fuji Testnet.</div>
       <div class="instructions-step">3. Settle directly using native Circle USDC. Funds transfer directly to merchant.</div>
       <div style="margin-top: 6px; font-size: 10px;">
@@ -471,9 +469,11 @@ export async function generateReceiptPdfBuffer(data: ReceiptPdfData): Promise<Bu
     minimumFractionDigits: 2,
   });
 
-  const baseUrl = getAppBaseUrl();
-  const payUrl = `${baseUrl}/pay/${encodeURIComponent(data.publicId)}`;
-  const qrDataUri = await QRCode.toDataURL(payUrl, { width: 140, margin: 1 });
+  const primaryTxHash = data.paymentEvents[0]?.txHash || "";
+  const explorerTxUrl = primaryTxHash
+    ? `${CURRENT_NETWORK.explorerUrl}/tx/${primaryTxHash}`
+    : `${CURRENT_NETWORK.explorerUrl}/address/${CURRENT_NETWORK.routerAddress || ""}`;
+  const qrDataUri = await QRCode.toDataURL(explorerTxUrl, { width: 140, margin: 1 });
 
   const paymentRows = data.paymentEvents
     .map(
@@ -486,7 +486,7 @@ export async function generateReceiptPdfBuffer(data: ReceiptPdfData): Promise<Bu
         ${escapeHtml(ev.payerAddress.slice(0, 8))}...${escapeHtml(ev.payerAddress.slice(-6))}
       </td>
       <td style="font-size: 11px;">
-        ${escapeHtml(new Date(ev.confirmedAt).toLocaleDateString())}
+        ${escapeHtml(formatUnambiguousDate(ev.confirmedAt, "en"))}
       </td>
       <td style="font-size: 11px; text-align: right; font-family: monospace; font-weight: bold; color: #059669;">
         +${formatUsdc(ev.amountUsdc)} USDC
@@ -698,7 +698,7 @@ export async function generateReceiptPdfBuffer(data: ReceiptPdfData): Promise<Bu
     </div>
     <div class="receipt-badge">
       <div class="receipt-title">RECEIPT</div>
-      <div class="receipt-hi">आधिकारिक रसीद</div>
+      <div class="receipt-hi">डेमो भुगतान रसीद</div>
       <div class="ref-number">REF: ${escapeHtml(data.receiptNumber)}</div>
     </div>
   </div>
@@ -750,7 +750,7 @@ export async function generateReceiptPdfBuffer(data: ReceiptPdfData): Promise<Bu
       <span>Total Paid:</span>
       <span style="font-family: monospace; color: #059669;">${totalPaidFormatted} USDC</span>
     </div>
-    <div class="inr-equiv">≈ ₹${totalPaidInr} INR (Indicative)</div>
+    <div class="inr-equiv">Illustrative demo rate (~₹${totalPaidInr} INR, not a live rate)</div>
   </div>
 
   <div style="margin-top: 16px;">

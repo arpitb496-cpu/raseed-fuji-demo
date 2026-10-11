@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n";
 import { formatUsdc } from "@/lib/currency";
+import { formatUnambiguousDate } from "@/lib/utils/date";
 import {
   PlusCircle,
   Search,
@@ -29,7 +30,7 @@ interface InvoiceItem {
 }
 
 export default function InvoicesListPage() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const [invoices, setInvoices] = useState<InvoiceItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -237,7 +238,7 @@ export default function InvoicesListPage() {
                       {inv.clientName || <span className="text-slate-400">—</span>}
                     </td>
                     <td className="py-3.5 px-4 text-slate-500 whitespace-nowrap">
-                      {new Date(inv.dueDate).toLocaleDateString()}
+                      {formatUnambiguousDate(inv.dueDate, lang)}
                     </td>
                     <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-white text-right whitespace-nowrap">
                       {formatUsdc(BigInt(inv.amountUsdc))} USDC

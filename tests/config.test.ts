@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect } from "vitest";
 import { NETWORKS, PLACEHOLDER_ADDRESS } from "@/config/network";
 import { PAYMENT_ROUTER_ABI, ERC20_ABI, getRouterContractConfig, getUsdcContractConfig } from "@/config/contracts";

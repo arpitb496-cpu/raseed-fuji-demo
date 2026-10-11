@@ -51,7 +51,7 @@
     "wrongNetwork": "गलत नेटवर्क पाया गया",
     "wrongNetworkDesc": "जारी रखने के लिए कृपया अपने वॉलेट को एवलांच फूजी (चेन आईडी 43113) पर स्विच करें।",
     "language": "भाषा",
-    "indicativeRate": "अनुमानित संदर्भ दर (1 USDC ≈ ₹86.50 INR)"
+    "indicativeRate": "सांकेतिक डेमो दर, वास्तविक दर नहीं"
   },
   "dashboard": {
     "title": "व्यापारी डैशबोर्ड",
@@ -89,9 +89,9 @@
     "titleLabel": "चालान शीर्षक",
     "titlePlaceholder": "उदा. स्मार्ट अनुबंध विकास सेवाएं",
     "clientNameLabel": "ग्राहक का नाम (वैकल्पिक)",
-    "clientNamePlaceholder": "उदा. मेसर्स शर्मा एंड संस",
+    "clientNamePlaceholder": "उदा. डेमो ग्राहक (Acme Ltd.)",
     "clientEmailLabel": "ग्राहक का ईमेल (वैकल्पिक)",
-    "clientEmailPlaceholder": "उदा. billing@sharma.in",
+    "clientEmailPlaceholder": "उदा. client@example.com",
     "dueDateLabel": "नियत तारीख",
     "notesLabel": "नियम एवं शर्तें (वैकल्पिक)",
     "notesPlaceholder": "उदा. भुगतान एवलांच सी-चेन पर नेट 15 दिनों में देय है।",

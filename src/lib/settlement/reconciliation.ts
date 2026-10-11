@@ -92,7 +92,11 @@ export async function runReconciliation(options?: {
   const db = options?.prismaClient || prisma;
   const lockKey = options?.lockKey ?? "raseed_reconciliation_cron";
   const chainId = options?.chainId ?? CURRENT_NETWORK.chain.id;
-  const routerAddress = (options?.routerAddress ?? CURRENT_NETWORK.routerAddress).toLowerCase();
+  const rawRouter = options?.routerAddress ?? CURRENT_NETWORK.routerAddress;
+  if (!rawRouter) {
+    throw new Error("RECONCILIATION ERROR: Router address is null or unconfigured for active network.");
+  }
+  const routerAddress = rawRouter.toLowerCase();
   const client = options?.publicClient ?? getServerPublicClient(chainId);
 
   // 1. Fetch cursor outside transaction to determine RPC block range

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { getServerPublicClient, resetServerPublicClient } from "@/lib/blockchain/client";
-import { readFileSync, existsSync } from "fs";
-import { resolve } from "path";
+import { readFileSync, existsSync, readdirSync, statSync } from "fs";
+import { resolve, join } from "path";
 import deploymentsData from "../contracts/deployments.json";
 
 describe("Server-Only RPC Isolation & Client Bundle Security (Section A)", () => {
@@ -57,18 +57,15 @@ describe("Server-Only RPC Isolation & Client Bundle Security (Section A)", () =>
   it("proves client bundle static assets do not contain server-only RPC secrets", () => {
     const staticDir = resolve(__dirname, "../.next/static");
     if (existsSync(staticDir)) {
-      const fs = require("fs");
-      const path = require("path");
-
       function checkDir(dir: string) {
-        const files = fs.readdirSync(dir);
+        const files = readdirSync(dir);
         for (const file of files) {
-          const fullPath = path.join(dir, file);
-          const stat = fs.statSync(fullPath);
+          const fullPath = join(dir, file);
+          const stat = statSync(fullPath);
           if (stat.isDirectory()) {
             checkDir(fullPath);
           } else if (file.endsWith(".js")) {
-            const code = fs.readFileSync(fullPath, "utf-8");
+            const code = readFileSync(fullPath, "utf-8");
             expect(code).not.toContain("FUJI_RPC_URL");
             expect(code).not.toContain("MAINNET_RPC_URL");
           }

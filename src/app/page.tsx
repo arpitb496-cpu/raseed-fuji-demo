@@ -6,7 +6,7 @@ import { useAccount } from "wagmi";
 import { useAuth } from "@/lib/auth/useAuth";
 import { useI18n } from "@/lib/i18n";
 import { CURRENT_NETWORK } from "@/config/network";
-import { MIN_INVOICE_AMOUNT_FLOAT, INDICATIVE_USD_TO_INR_RATE, INDICATIVE_RATE_AS_OF } from "@/config/constants";
+import { MIN_INVOICE_AMOUNT_FLOAT, INDICATIVE_USD_TO_INR_RATE } from "@/config/constants";
 import {
   ShieldCheck,
   ArrowRight,
@@ -64,7 +64,7 @@ export default function HomePage() {
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300 text-xs font-mono-code">
             <Info className="w-3.5 h-3.5" />
             <span>
-              Indicative reference (as of {INDICATIVE_RATE_AS_OF}, not a live rate): 1 USDC ≈ ₹{INDICATIVE_USD_TO_INR_RATE.toFixed(2)} INR
+              Indicative reference: 1 USDC ≈ ₹{INDICATIVE_USD_TO_INR_RATE.toFixed(2)} INR (illustrative demo rate, not a live rate)
             </span>
           </div>
 

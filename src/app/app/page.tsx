@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n";
 import { formatUsdc } from "@/lib/currency";
+import { formatUnambiguousDate } from "@/lib/utils/date";
 import { INDICATIVE_USD_TO_INR_RATE } from "@/config/constants";
 import {
   FileText,
@@ -31,7 +32,7 @@ interface InvoiceSummary {
 }
 
 export default function DashboardPage() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const [invoices, setInvoices] = useState<InvoiceSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -219,7 +220,7 @@ export default function DashboardPage() {
                         {getStatusBadge(inv.status)}
                       </div>
                       <div className="text-[11px] text-slate-400 mt-0.5">
-                        {inv.clientName ? `${inv.clientName} • ` : ""}Due: {new Date(inv.dueDate).toLocaleDateString()}
+                        {inv.clientName ? `${inv.clientName} • ` : ""}Due: {formatUnambiguousDate(inv.dueDate, lang)}
                       </div>
                     </div>
                   </div>

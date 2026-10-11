@@ -5,6 +5,7 @@ import { useAccount, useSwitchChain, useReadContract, useWriteContract, usePubli
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { ERC20_ABI, PAYMENT_ROUTER_ABI } from "@/config/contracts";
 import { avalancheFuji } from "viem/chains";
+import { formatUnambiguousDate } from "@/lib/utils/date";
 
 interface PublicInvoiceData {
   publicId: string;
@@ -352,7 +353,7 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
               </span>
               <p className="text-xs text-slate-400 mt-1.5">
                 {lang === "en" ? "Due:" : "अंतिम तिथि:"}{" "}
-                {new Date(invoice.dueDate).toLocaleDateString()}
+                {formatUnambiguousDate(invoice.dueDate, lang)}
               </p>
             </div>
           </div>

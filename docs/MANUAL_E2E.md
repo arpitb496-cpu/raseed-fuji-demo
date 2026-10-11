@@ -85,7 +85,7 @@ This guide documents the complete end-to-end testing procedure on **Avalanche Fu
      - Payer address (`0x...`)
      - Settled amount (`+1.00 USDC`)
      - Snowtrace transaction link
-2. **Download Bilingual Official Receipt**:
+2. **Download Bilingual Demo Receipt**:
    - Click the **Download Receipt / रसीद** button.
    - Open the generated PDF:
      - Check that all merchant and payer fields are escaped.

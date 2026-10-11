@@ -3,10 +3,59 @@ import { describe, it, expect } from "vitest";
 import QRCode from "qrcode";
 import { PNG } from "pngjs";
 import jsQR from "jsqr";
+import fs from "fs";
+import os from "os";
+import path from "path";
+import { execSync } from "child_process";
 import { getAppBaseUrl } from "@/config/url";
-import { escapeHtml } from "@/lib/pdf/generate-invoice-pdf";
+import { CURRENT_NETWORK } from "@/config/network";
+import {
+  generateInvoicePdfBuffer,
+  generateReceiptPdfBuffer,
+} from "@/lib/pdf/generate-invoice-pdf";
 
-describe("Invoice & Receipt PDF Verification (Section J)", () => {
+function decodeQrFromPdf(pdfBuffer: Buffer): string | null {
+  const tmpDir = os.tmpdir();
+  const rand = Math.random().toString(36).substring(7);
+  const pdfPath = path.join(tmpDir, `test_qr_${Date.now()}_${rand}.pdf`);
+  const pngPath = path.join(tmpDir, `test_qr_${Date.now()}_${rand}.png`);
+  try {
+    fs.writeFileSync(pdfPath, pdfBuffer);
+    execSync(`sips -s format png "${pdfPath}" --out "${pngPath}"`, { stdio: "pipe" });
+    const pngBuffer = fs.readFileSync(pngPath);
+    const png = PNG.sync.read(pngBuffer);
+    const decoded = jsQR(new Uint8ClampedArray(png.data), png.width, png.height);
+    return decoded ? decoded.data : null;
+  } finally {
+    if (fs.existsSync(pdfPath)) try { fs.unlinkSync(pdfPath); } catch {}
+    if (fs.existsSync(pngPath)) try { fs.unlinkSync(pngPath); } catch {}
+  }
+}
+
+function extractTextFromPdf(pdfBuffer: Buffer): string {
+  const tmpDir = os.tmpdir();
+  const rand = Math.random().toString(36).substring(7);
+  const pdfPath = path.join(tmpDir, `test_txt_${Date.now()}_${rand}.pdf`);
+  try {
+    fs.writeFileSync(pdfPath, pdfBuffer);
+    const script = `
+      ObjC.import("PDFKit");
+      var url = $.NSURL.fileURLWithPath("${pdfPath}");
+      var doc = $.PDFDocument.alloc.initWithURL(url);
+      var text = "";
+      for (var i = 0; i < doc.pageCount; i++) {
+        text += doc.pageAtIndex(i).string.js + "\\n";
+      }
+      text;
+    `;
+    const out = execSync(`osascript -l JavaScript -e '${script.replace(/'/g, "'\\''")}'`, { encoding: "utf8" });
+    return out;
+  } finally {
+    if (fs.existsSync(pdfPath)) try { fs.unlinkSync(pdfPath); } catch {}
+  }
+}
+
+describe("Invoice & Receipt PDF Verification (Section J & Phase 5.7 Item C)", () => {
   describe("getAppBaseUrl configuration guard", () => {
     it("fails fast in production mode if NEXT_PUBLIC_APP_URL is unset or empty", () => {
       const origEnv = process.env.NODE_ENV;
@@ -60,14 +109,12 @@ describe("Invoice & Receipt PDF Verification (Section J)", () => {
       const baseUrl = "https://app.testnet.network";
       const expectedUrl = `${baseUrl}/pay/${encodeURIComponent(publicId)}`;
 
-      // Generate PNG Buffer data URI exactly as in generate-invoice-pdf.ts
       const qrDataUrl = await QRCode.toDataURL(expectedUrl, { width: 200, margin: 1 });
       expect(qrDataUrl.startsWith("data:image/png;base64,")).toBe(true);
 
       const base64Data = qrDataUrl.replace(/^data:image\/png;base64,/, "");
       const pngBuffer = Buffer.from(base64Data, "base64");
 
-      // Decode PNG image
       const png = PNG.sync.read(pngBuffer);
       const decoded = jsQR(new Uint8ClampedArray(png.data), png.width, png.height);
 
@@ -76,37 +123,90 @@ describe("Invoice & Receipt PDF Verification (Section J)", () => {
     });
   });
 
-  describe("PDF Template Content & Hindi Label Invariants", () => {
-    it("includes the visible TESTNET DEMO notice and Hindi labels in invoice HTML", () => {
+  describe("End-to-End PDF QR Decoding and Text Extraction", () => {
+    it("generates an invoice PDF, renders to image, decodes QR code, and asserts pay URL", async () => {
       const mockInvoice = {
         invoiceNumber: "INV-0001",
-        publicId: "raseed_123456",
-        title: "Frontend Engineering Services",
-        merchantDisplayName: "Sharma Web Consulting",
+        publicId: "raseed_invoice_test_123",
+        title: "डेमो चालान (Demo Invoice)",
+        merchantDisplayName: "Demo Merchant Ltd",
         merchantWallet: "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
+        clientName: "Demo Client",
+        clientEmail: "client@example.com",
+        amountUsdc: 2_000_000n,
+        status: "SENT",
+        dueDate: new Date(Date.now() + 86400000 * 7),
+        createdAt: new Date(),
+        items: [
+          {
+            description: "Smart contract audit & consulting",
+            quantity: 1,
+            unitAmountUsdc: 2_000_000n,
+          },
+        ],
       };
 
-      // HTML template verification
-      const noticeText = "TESTNET DEMO - NO REAL MONEY / टेस्टनेट डेमो - कोई वास्तविक धन नहीं";
-      const hindiLabels = [
-        "देय तिथि",
-        "विक्रेता",
-        "विवरण",
-        "मात्रा",
-        "कुल देय राशि",
-        "भुगतान निर्देश",
-      ];
+      const pdfBuffer = await generateInvoicePdfBuffer(mockInvoice);
+      expect(pdfBuffer.length).toBeGreaterThan(1000);
 
-      expect(noticeText).toContain("TESTNET DEMO - NO REAL MONEY");
-      expect(noticeText).toContain("टेस्टनेट डेमो - कोई वास्तविक धन नहीं");
+      // Decode QR from actual rendered PDF
+      const decodedQr = decodeQrFromPdf(pdfBuffer);
+      const baseUrl = getAppBaseUrl();
+      const expectedPayUrl = `${baseUrl}/pay/${mockInvoice.publicId}`;
+      expect(decodedQr).toBe(expectedPayUrl);
 
-      for (const label of hindiLabels) {
-        expect(label.length).toBeGreaterThan(0);
-      }
+      // Extract text from actual generated PDF
+      const extractedText = extractTextFromPdf(pdfBuffer);
+      expect(extractedText).toContain("डेमो चालान (Demo Invoice)");
+      expect(extractedText).toContain("टेस्टनेट डेमो");
+      expect(extractedText).toContain("रसीद");
+      expect(extractedText).toContain("भुगतान");
+      expect(extractedText).toContain("चालान");
+      expect(extractedText).not.toContain("official");
+      expect(extractedText).not.toContain("आधिकारिक");
+    }, 30000);
 
-      // Title escaping check
-      const escapedTitle = escapeHtml(mockInvoice.title);
-      expect(escapedTitle).toBe("Frontend Engineering Services");
-    });
+    it("generates a receipt PDF, renders to image, decodes QR code, and asserts explorer tx URL", async () => {
+      const txHash = "0x7267ee88fff671f7ca6d78d83a134e5c9bc9b34d1d1147ea0c333919a75deaec";
+      const mockReceipt = {
+        invoiceNumber: "INV-0002",
+        receiptNumber: "RCPT-INV-0002",
+        publicId: "raseed_receipt_test_456",
+        title: "डेमो भुगतान रसीद परीक्षण",
+        merchantDisplayName: "Demo Merchant Ltd",
+        merchantWallet: "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
+        totalInvoiceAmountUsdc: 2_000_000n,
+        totalPaidAmountUsdc: 2_000_000n,
+        status: "PAID",
+        createdAt: new Date(),
+        paymentEvents: [
+          {
+            txHash,
+            payerAddress: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+            amountUsdc: 2_000_000n,
+            blockNumber: 12345678n,
+            confirmedAt: new Date(),
+          },
+        ],
+      };
+
+      const pdfBuffer = await generateReceiptPdfBuffer(mockReceipt);
+      expect(pdfBuffer.length).toBeGreaterThan(1000);
+
+      // Decode QR from actual rendered PDF
+      const decodedQr = decodeQrFromPdf(pdfBuffer);
+      const expectedTxUrl = `${CURRENT_NETWORK.explorerUrl}/tx/${txHash}`;
+      expect(decodedQr).toBe(expectedTxUrl);
+
+      // Extract text from actual generated PDF
+      const extractedText = extractTextFromPdf(pdfBuffer);
+      expect(extractedText).toContain("डेमो भुगतान रसीद परीक्षण");
+      expect(extractedText).toContain("डेमो भुगतान रसीद");
+      expect(extractedText).toContain("भुगतान रसीद");
+      expect(extractedText).toContain("चालान");
+      expect(extractedText).toContain("लेनदेन");
+      expect(extractedText).not.toContain("official");
+      expect(extractedText).not.toContain("आधिकारिक");
+    }, 30000);
   });
 });

@@ -58,8 +58,13 @@ export const ERC20_ABI = [
 ] as const;
 
 export function getRouterContractConfig() {
+  if (!CURRENT_NETWORK.routerAddress) {
+    throw new Error(
+      `NETWORK CONFIG ERROR: Cannot enable network '${CURRENT_NETWORK.name}': routerAddress is null or not configured.`
+    );
+  }
   return {
-    address: (CURRENT_NETWORK.routerAddress || PLACEHOLDER_ADDRESS) as `0x${string}`,
+    address: CURRENT_NETWORK.routerAddress as `0x${string}`,
     abi: PAYMENT_ROUTER_ABI,
   };
 }

@@ -54,9 +54,15 @@ export async function verifyAndRecordPayment(
   }
 
   const client = params.publicClient || getServerPublicClient();
-  const configuredRouter = (
-    params.expectedRouterAddress || CURRENT_NETWORK.routerAddress
-  ).toLowerCase();
+  const rawRouter = params.expectedRouterAddress || CURRENT_NETWORK.routerAddress;
+  if (!rawRouter) {
+    return {
+      success: false,
+      error: "Router address is not configured for active network",
+      statusCode: 500,
+    };
+  }
+  const configuredRouter = rawRouter.toLowerCase();
 
   // 2. Fetch receipt from RPC
   let receipt;

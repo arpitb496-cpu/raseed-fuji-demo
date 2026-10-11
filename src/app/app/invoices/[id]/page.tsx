@@ -5,6 +5,7 @@ import Link from "next/link";
 import QRCode from "qrcode";
 import { useI18n } from "@/lib/i18n";
 import { formatUsdc } from "@/lib/currency";
+import { formatUnambiguousDate } from "@/lib/utils/date";
 import { INDICATIVE_USD_TO_INR_RATE } from "@/config/constants";
 import { CURRENT_NETWORK } from "@/config/network";
 import {
@@ -64,7 +65,7 @@ export default function InvoiceDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
 
   const [invoice, setInvoice] = useState<InvoiceDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -328,7 +329,7 @@ export default function InvoiceDetailPage({
               {formatUsdc(totalMicro)} <span className="text-xs font-normal text-slate-500">USDC</span>
             </div>
             <div className="text-xs text-slate-400 mt-0.5">
-              ~₹{approxInr} INR indicative
+              ~₹{approxInr} INR (illustrative demo rate, not a live rate)
             </div>
           </div>
         </div>
@@ -340,7 +341,7 @@ export default function InvoiceDetailPage({
               <Calendar className="w-3.5 h-3.5" /> Due Date
             </div>
             <div className="font-semibold text-slate-800 dark:text-slate-200">
-              {new Date(invoice.dueDate).toLocaleDateString()}
+              {formatUnambiguousDate(invoice.dueDate, lang)}
             </div>
           </div>
 

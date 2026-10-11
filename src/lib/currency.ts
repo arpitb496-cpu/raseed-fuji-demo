@@ -41,7 +41,7 @@ export function parseUsdcToMicro(input: string | number): bigint {
 }
 
 /**
- * Calculates indicative INR estimate based on official conversion rate constant.
+ * Calculates indicative INR estimate based on indicative demo conversion rate constant.
  */
 export function formatInrEstimate(microAmount: bigint | number | string): string {
   const bigVal = BigInt(microAmount);
