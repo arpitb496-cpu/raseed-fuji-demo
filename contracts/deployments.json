@@ -6,7 +6,9 @@
     "explorerUrl": "https://testnet.snowtrace.io",
     "usdcAddress": "0x5425890298aed601595a70AB815c96711a31Bc65",
     "usdcDecimals": 6,
-    "routerAddress": "0xb94a922261bba2e07648520bf56125a4102eab95"
+    "routerAddress": "0xb94a922261bba2e07648520bf56125a4102eab95",
+    "deployBlock": 59271254,
+    "deployTxHash": "0x7267ee88fff671f7ca6d78d83a134e5c9bc9b34d1d1147ea0c333919a75deaec"
   },
   "mainnet": {
     "chainId": 43114,

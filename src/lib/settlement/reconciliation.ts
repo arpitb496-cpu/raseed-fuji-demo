@@ -7,8 +7,22 @@ import { recomputeInvoiceSettlement } from "./settlement-engine";
 import crypto from "crypto";
 import type { PublicClient } from "viem";
 
+import deploymentsData from "../../../contracts/deployments.json";
+
 export const REORG_LOOKBACK_BLOCKS = 12n;
-export const MAX_RECONCILE_BLOCK_RANGE = 2048n;
+export const MAX_RECONCILE_BLOCK_RANGE = 2000n;
+
+export function getRouterDeployBlock(chainId: number): bigint {
+  const fuji = (deploymentsData as { fuji?: { deployBlock?: number } }).fuji;
+  const mainnet = (deploymentsData as { mainnet?: { deployBlock?: number } }).mainnet;
+  if (chainId === 43113 && fuji?.deployBlock) {
+    return BigInt(fuji.deployBlock);
+  }
+  if (chainId === 43114 && mainnet?.deployBlock) {
+    return BigInt(mainnet.deployBlock);
+  }
+  return 0n;
+}
 
 export interface ReconcileResult {
   acquiredLock: boolean;
@@ -102,8 +116,9 @@ export async function runReconciliation(options?: {
         ? cursor.lastBlockNumber - REORG_LOOKBACK_BLOCKS
         : 0n;
   } else {
-    // If first run, look back 1,000 blocks or from 0
-    fromBlock = latestBlock > 1000n ? latestBlock - 1000n : 0n;
+    // If first run, start from router deployment block in deployments.json
+    const deployBlock = getRouterDeployBlock(chainId);
+    fromBlock = deployBlock;
   }
 
   const toBlock =
@@ -220,34 +235,53 @@ export async function runReconciliation(options?: {
       },
     });
 
-    // Mark unpaid SENT invoices past due as EXPIRED
-    const overdueInvoices = await tx.invoice.findMany({
+    // Mark unpaid SENT invoices past due as EXPIRED using atomic conditional update
+    const now = new Date();
+    const overdueCandidates = await tx.invoice.findMany({
       where: {
         status: InvoiceStatus.SENT,
-        dueDate: { lt: new Date() },
+        dueDate: { lt: now },
         paidAmountUsdc: 0n,
       },
+      select: {
+        id: true,
+        merchantId: true,
+        dueDate: true,
+      },
     });
-    overdueCount = overdueInvoices.length;
 
-    for (const overdue of overdueInvoices) {
-      await tx.invoice.update({
-        where: { id: overdue.id },
-        data: { status: InvoiceStatus.EXPIRED },
-      });
-
-      await tx.auditLog.create({
+    let actuallyExpiredCount = 0;
+    for (const candidate of overdueCandidates) {
+      // Conditional update: only update if STILL SENT and STILL 0n paidAmountUsdc and STILL past due
+      const updateResult = await tx.invoice.updateMany({
+        where: {
+          id: candidate.id,
+          status: InvoiceStatus.SENT,
+          paidAmountUsdc: 0n,
+          dueDate: { lt: now },
+        },
         data: {
-          merchantId: overdue.merchantId,
-          invoiceId: overdue.id,
-          action: "INVOICE_EXPIRED_BY_RECONCILIATION",
-          details: JSON.stringify({
-            dueDate: overdue.dueDate.toISOString(),
-            statusTransition: "SENT -> EXPIRED",
-          }),
+          status: InvoiceStatus.EXPIRED,
         },
       });
+
+      // Write audit log ONLY if count === 1
+      if (updateResult.count === 1) {
+        actuallyExpiredCount++;
+        await tx.auditLog.create({
+          data: {
+            merchantId: candidate.merchantId,
+            invoiceId: candidate.id,
+            action: "INVOICE_EXPIRED_BY_RECONCILIATION",
+            details: JSON.stringify({
+              dueDate: candidate.dueDate.toISOString(),
+              statusTransition: "SENT -> EXPIRED",
+            }),
+          },
+        });
+      }
     }
+    overdueCount = actuallyExpiredCount;
 
     return {
       acquiredLock: true,
