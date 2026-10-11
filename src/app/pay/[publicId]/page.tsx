@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Pay Invoice | Raseed (रसीद)",
     description: "Non-custodial USDC invoice payment settlement on Avalanche Fuji testnet.",
-    siteName: "Raseed Protocol",
+    siteName: "Raseed",
     locale: "en_US",
     type: "website",
   },

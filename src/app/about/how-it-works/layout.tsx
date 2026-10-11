@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     title: "How It Works | Raseed (रसीद)",
     description: "Learn how non-custodial, peer-to-peer USDC invoicing operates on Avalanche Fuji testnet.",
     url: "/about/how-it-works",
-    siteName: "Raseed Protocol",
+    siteName: "Raseed",
     locale: "en_US",
     type: "website",
   },

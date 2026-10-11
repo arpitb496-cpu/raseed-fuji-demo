@@ -48,8 +48,8 @@ export default function TermsPage() {
         </h2>
         <p>
           {lang === "hi"
-            ? "व्यापारी और भुगतानकर्ता प्रोटोकॉल के माध्यम से किए गए किसी भी चालान या लेनदेन से उत्पन्न होने वाले सभी लागू करों के निर्धारण, रिपोर्टिंग और भुगतान के लिए पूरी तरह से जिम्मेदार हैं।"
-            : "Merchants and payers are solely and exclusively responsible for determining, reporting, and remitting all applicable taxes resulting from any invoices or transactions conducted via the protocol."}
+            ? "व्यापारी और भुगतानकर्ता इस एप्लिकेशन के माध्यम से किए गए किसी भी चालान या लेनदेन से उत्पन्न होने वाले सभी लागू करों के निर्धारण, रिपोर्टिंग और भुगतान के लिए पूरी तरह से जिम्मेदार हैं।"
+            : "Merchants and payers are solely and exclusively responsible for determining, reporting, and remitting all applicable taxes resulting from any invoices or transactions conducted via the application."}
         </p>
       </section>
 

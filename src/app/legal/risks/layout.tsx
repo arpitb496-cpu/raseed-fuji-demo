@@ -10,14 +10,14 @@ export const metadata: Metadata = {
     title: "Risk Disclosures (Demo Notice) | Raseed (रसीद)",
     description: "Self-custody, smart contract, and testnet risk disclosures for Raseed evaluation on Avalanche Fuji.",
     url: "/legal/risks",
-    siteName: "Raseed Protocol",
+    siteName: "Raseed",
     locale: "en_US",
     type: "website",
   },
   twitter: {
     card: "summary",
     title: "Risk Disclosures (Demo Notice) | Raseed (रसीद)",
-    description: "Self-custody and testnet risk disclosures for Raseed protocol evaluation.",
+    description: "Self-custody and testnet risk disclosures for Raseed evaluation on Avalanche Fuji.",
   },
 };
 

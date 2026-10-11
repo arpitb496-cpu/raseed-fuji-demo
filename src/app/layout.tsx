@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   title: `${BRANDING.name} (${BRANDING.devanagariName}) | Non-Custodial Stablecoin Invoicing`,
   description: BRANDING.description,
   keywords: ["USDC invoicing", "Avalanche Fuji", "non-custodial payments", "crypto invoices India", "stablecoin payment link"],
-  authors: [{ name: "Raseed Protocol Contributors" }],
+  authors: [{ name: "Raseed Contributors" }],
   alternates: {
     canonical: "/",
   },
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     title: `${BRANDING.name} (${BRANDING.devanagariName}) | Non-Custodial Stablecoin Invoicing`,
     description: BRANDING.description,
     url: "/",
-    siteName: "Raseed Protocol",
+    siteName: "Raseed",
     locale: "en_US",
     type: "website",
   },

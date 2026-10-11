@@ -82,6 +82,14 @@ const FORBIDDEN_CLAIM_PATTERNS: Array<{ name: string; pattern: RegExp; allowFilt
     name: "testimonials & ratings",
     pattern: /\b(?:customer\s+testimonials?|client\s+reviews?|5-star\s+rating|★★★★★)\b/i,
   },
+  {
+    name: "self-hosted",
+    pattern: /\b(?:self[- ]hosted|सेल्फ[- ]होस्टेड)\b/i,
+  },
+  {
+    name: "protocol",
+    pattern: /\b(?:protocol|प्रोटोकॉल)\b/i,
+  },
 ];
 
 describe("Claims Policy Verification (Scope & Compliance)", () => {

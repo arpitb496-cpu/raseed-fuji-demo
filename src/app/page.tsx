@@ -81,8 +81,8 @@ export default function HomePage() {
           {/* One-Line Value Proposition */}
           <p className="text-base sm:text-lg md:text-xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto leading-relaxed">
             {lang === "hi"
-              ? "एवलांच फूजी टेस्टनेट पर गैर-कस्टोडियल पीयर-टू-पीयर USDC चालान — फंड सीधे भुगतानकर्ता से विक्रेता के वॉलेट में ट्रांसफर होते हैं, बिना किसी मध्यस्थ कस्टडी के।"
-              : "Non-custodial, peer-to-peer USDC invoicing on Avalanche Fuji testnet — funds transfer directly from payer to merchant with zero protocol custody."}
+              ? "Avalanche Fuji टेस्टनेट पर नॉन-कस्टोडियल पीयर-टू-पीयर USDC इनवॉइसिंग ऐप — राशि बिना किसी मध्यस्थ कस्टडी के सीधे भुगतानकर्ता से विक्रेता के वॉलेट में जाती है।"
+              : "Non-custodial USDC invoicing app on Avalanche Fuji testnet — funds transfer directly from payer to merchant with zero intermediary custody."}
           </p>
 
           {/* Indicative Rate Reference */}
@@ -197,7 +197,7 @@ export default function HomePage() {
             <p className="text-xs text-slate-500 max-w-2xl mx-auto">
               {lang === "hi"
                 ? "हम कभी भी आपके पैसे को नहीं छूते। फंड सीधे भुगतानकर्ता से विक्रेता के पास जाता है।"
-                : "Zero custodial risk by design. The protocol never holds, pools, or delays your funds."}
+                : "Zero custodial risk by design. The application never holds, pools, or delays your funds."}
             </p>
           </div>
 
@@ -445,7 +445,7 @@ export default function HomePage() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
           <div className="text-center space-y-2">
             <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-              {lang === "hi" ? "रोडमैप (भविष्य की योजनाएं)" : "Protocol Roadmap"}
+              {lang === "hi" ? "रोडमैप (भविष्य की योजनाएं)" : "Planned Roadmap"}
             </h2>
             <p className="text-xs text-slate-500 max-w-xl mx-auto">
               Future development milestones. Each item is strictly labeled: planned, not built.

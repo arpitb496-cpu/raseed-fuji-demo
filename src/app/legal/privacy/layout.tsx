@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     title: "Privacy Policy (Demo Notice) | Raseed (रसीद)",
     description: "Data minimization policy and public on-chain ledger transparency for Raseed testnet demo.",
     url: "/legal/privacy",
-    siteName: "Raseed Protocol",
+    siteName: "Raseed",
     locale: "en_US",
     type: "website",
   },

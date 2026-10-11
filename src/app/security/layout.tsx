@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     title: "Security Architecture | Raseed (रसीद)",
     description: "Non-custodial architecture, zero fund custody, and stateless routing on Avalanche Fuji testnet.",
     url: "/security",
-    siteName: "Raseed Protocol",
+    siteName: "Raseed",
     locale: "en_US",
     type: "website",
   },
