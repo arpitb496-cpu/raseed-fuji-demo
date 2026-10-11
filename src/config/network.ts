@@ -31,6 +31,17 @@ function isConfiguredAddress(address?: string): address is `0x${string}` {
 export const ACTIVE_NETWORK_KEY: NetworkKey =
   process.env.NEXT_PUBLIC_NETWORK === "mainnet" ? "mainnet" : "fuji";
 
+// Strict Runtime Guard: Refuse to execute against Mainnet unless deliberate override flag is set
+if (
+  ACTIVE_NETWORK_KEY === "mainnet" &&
+  process.env.ALLOW_MAINNET !== "true" &&
+  process.env.NEXT_PUBLIC_ALLOW_MAINNET !== "true"
+) {
+  throw new Error(
+    "MAINNET GUARD: Raseed is configured strictly as a TESTNET-ONLY DEMO on Avalanche Fuji for partnership and grant reviews. Refusing to run against mainnet unless ALLOW_MAINNET=true is explicitly configured."
+  );
+}
+
 const fujiRouter = process.env.NEXT_PUBLIC_FUJI_ROUTER_ADDRESS;
 const mainnetRouter = process.env.NEXT_PUBLIC_MAINNET_ROUTER_ADDRESS;
 

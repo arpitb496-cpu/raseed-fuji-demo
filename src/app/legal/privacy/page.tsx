@@ -12,11 +12,11 @@ export default function PrivacyPage() {
       <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300 flex items-center gap-3">
         <AlertCircle className="w-5 h-5 shrink-0" />
         <p className="font-medium">
-          DRAFT NOTICE: This document is a readable draft pending formal legal and regulatory review.
+          DEMO NOTICE: This page is a testnet demo notice, not final legal terms. Raseed is configured strictly for evaluation and partnership discussions on Avalanche Fuji testnet. No real funds are involved.
         </p>
       </div>
 
-      <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Privacy Policy (Draft)</h1>
+      <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Privacy Policy (Demo Notice)</h1>
       
       <section className="space-y-2">
         <h2 className="text-sm font-semibold text-slate-900 dark:text-white">1. Data Minimization</h2>

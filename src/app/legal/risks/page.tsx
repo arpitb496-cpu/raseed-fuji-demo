@@ -12,23 +12,23 @@ export default function RisksPage() {
       <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300 flex items-center gap-3">
         <AlertTriangle className="w-5 h-5 shrink-0" />
         <p className="font-medium">
-          DRAFT NOTICE: Blockchain & Smart Contract Risk Disclosure (Draft pending legal review).
+          DEMO NOTICE: This is a testnet demo notice, not final legal terms. Raseed is configured strictly on Avalanche Fuji testnet for evaluation and partnership discussions. No real funds are involved.
         </p>
       </div>
 
-      <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Risk Disclosures (Draft)</h1>
+      <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Risk Disclosures (Demo Notice)</h1>
       
       <section className="space-y-2">
         <h2 className="text-sm font-semibold text-slate-900 dark:text-white">1. Self-Custody & Key Management</h2>
         <p>
-          You are solely responsible for maintaining the security of your private keys and seed phrases. Raseed has no ability to recover lost keys, cancel sent transactions, or reverse transfers once confirmed on Avalanche C-Chain.
+          You are solely responsible for maintaining the confidentiality of your private keys and seed phrases. Raseed has no ability to recover lost keys, cancel sent transactions, or reverse transfers once confirmed on Avalanche Fuji testnet.
         </p>
       </section>
 
       <section className="space-y-2">
         <h2 className="text-sm font-semibold text-slate-900 dark:text-white">2. Smart Contract Risk</h2>
         <p>
-          While PaymentRouter is designed to be minimal, stateless, and audited with static analyzers, all smart contracts carry technical risks of software defects or RPC disruption. Contracts deployed on Fuji testnet are for testing purposes only.
+          While PaymentRouter is designed to be minimal and stateless, all smart contracts carry technical risks of software defects or RPC disruption. Contracts deployed on Fuji testnet are for testing purposes only with testnet tokens. Software is provided strictly as-is without financial or legal advice.
         </p>
       </section>
 

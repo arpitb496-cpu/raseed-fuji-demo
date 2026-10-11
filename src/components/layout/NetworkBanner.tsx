@@ -5,6 +5,7 @@ import { useAccount, useSwitchChain } from "wagmi";
 import { CURRENT_NETWORK } from "@/config/network";
 import { useI18n } from "@/lib/i18n";
 import { AlertCircle, AlertTriangle, ArrowRight } from "lucide-react";
+import { TestnetDemoBanner } from "@/components/common/TestnetDemoBanner";
 
 export function NetworkBanner() {
   const { isConnected, chainId } = useAccount();
@@ -34,14 +35,7 @@ export function NetworkBanner() {
       )}
 
       {/* 2. Persistent Testnet Mode Banner */}
-      {CURRENT_NETWORK.isTestnet && (
-        <div className="bg-amber-500/10 border-b border-amber-500/20 text-amber-700 dark:text-amber-400 px-4 py-1.5 flex items-center justify-center gap-2 font-medium tracking-wide">
-          <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-          <span>{t("brand.testMode")}</span>
-          <span className="text-amber-600/70 dark:text-amber-400/70">|</span>
-          <span className="font-mono-code text-[11px]">Chain ID {CURRENT_NETWORK.chain.id}</span>
-        </div>
-      )}
+      {CURRENT_NETWORK.isTestnet && <TestnetDemoBanner />}
 
       {/* 3. Router Not Configured Notice (if placeholder) */}
       {!CURRENT_NETWORK.isRouterConfigured && (

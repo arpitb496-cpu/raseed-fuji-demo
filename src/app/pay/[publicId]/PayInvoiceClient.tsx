@@ -252,6 +252,22 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
           </div>
         </div>
 
+        {/* Persistent Testnet Demo Notice */}
+        <div
+          role="banner"
+          aria-label="Testnet demo notice"
+          data-testid="pay-testnet-notice"
+          className="bg-amber-500/10 border border-amber-500/30 text-amber-300 rounded-xl px-4 py-2 text-xs flex flex-wrap items-center justify-between gap-2"
+        >
+          <div className="flex items-center gap-2 font-medium">
+            <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shrink-0" />
+            <span>Testnet Demo — No Real Money</span>
+            <span className="text-amber-500/40">|</span>
+            <span className="text-amber-300/80">टेस्टनेट डेमो — कोई वास्तविक धन नहीं</span>
+          </div>
+          <span className="text-[11px] text-amber-400/80 font-mono">Avalanche Fuji</span>
+        </div>
+
         {/* Invoice Summary Card */}
         <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-6 sm:p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl -z-10 pointer-events-none" />

@@ -56,4 +56,50 @@ describe("Network & Contract Configuration Tests", () => {
     expect(erc20Functions).toContain("balanceOf");
     expect(erc20Functions).toContain("decimals");
   });
+
+  describe("Scope Update & Demo Guardrails", () => {
+    it("refuses to initialize mainnet configuration unless ALLOW_MAINNET=true is explicitly set", async () => {
+      const origNetwork = process.env.NEXT_PUBLIC_NETWORK;
+      const origAllow = process.env.ALLOW_MAINNET;
+      try {
+        process.env.NEXT_PUBLIC_NETWORK = "mainnet";
+        delete process.env.ALLOW_MAINNET;
+        delete process.env.NEXT_PUBLIC_ALLOW_MAINNET;
+
+        // Dynamic import should throw the MAINNET GUARD error
+        await expect(async () => {
+          // Force module re-evaluation
+          const modPath = "../src/config/network.ts?" + Date.now();
+          await import(modPath);
+        }).rejects.toThrow(/MAINNET GUARD/);
+      } finally {
+        process.env.NEXT_PUBLIC_NETWORK = origNetwork;
+        if (origAllow) process.env.ALLOW_MAINNET = origAllow;
+      }
+    });
+
+    it("configures robots and sitemap to noindex and empty list when DEMO_INVITE_MODE=true", async () => {
+      const origInvite = process.env.DEMO_INVITE_MODE;
+      try {
+        process.env.DEMO_INVITE_MODE = "true";
+        const robotsMod = (await import("../src/app/robots")).default;
+        const sitemapMod = (await import("../src/app/sitemap")).default;
+
+        const robotsConfig = robotsMod();
+        expect(robotsConfig.rules).toEqual({
+          userAgent: "*",
+          disallow: "/",
+        });
+
+        const sitemapConfig = sitemapMod();
+        expect(sitemapConfig).toEqual([]);
+      } finally {
+        if (origInvite !== undefined) {
+          process.env.DEMO_INVITE_MODE = origInvite;
+        } else {
+          delete process.env.DEMO_INVITE_MODE;
+        }
+      }
+    });
+  });
 });

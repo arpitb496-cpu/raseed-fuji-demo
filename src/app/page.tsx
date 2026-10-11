@@ -172,8 +172,8 @@ export default function HomePage() {
               </p>
             </div>
             <div className="shrink-0 flex items-center gap-2">
-              <span className="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-medium text-[11px]">
-                Status: Not yet audited (Fuji Devnet)
+              <span className="px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 font-medium text-[11px] border border-amber-500/20">
+                Status: Testnet Demo (Avalanche Fuji)
               </span>
             </div>
           </div>

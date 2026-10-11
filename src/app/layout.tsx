@@ -13,11 +13,28 @@ export const viewport: Viewport = {
   maximumScale: 5,
 };
 
+const isDemoInviteMode = process.env.DEMO_INVITE_MODE === "true";
+
 export const metadata: Metadata = {
   title: `${BRANDING.name} (${BRANDING.devanagariName}) | Non-Custodial Stablecoin Invoicing`,
   description: BRANDING.description,
   keywords: ["USDC invoicing", "Avalanche C-Chain", "non-custodial payments", "crypto invoices India", "stablecoin payment link"],
   authors: [{ name: "Raseed Protocol Contributors" }],
+  robots: isDemoInviteMode
+    ? {
+        index: false,
+        follow: false,
+        nocache: true,
+        googleBot: {
+          index: false,
+          follow: false,
+          noimageindex: true,
+        },
+      }
+    : {
+        index: true,
+        follow: true,
+      },
 };
 
 export default function RootLayout({
