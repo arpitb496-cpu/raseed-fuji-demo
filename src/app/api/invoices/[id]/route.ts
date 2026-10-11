@@ -31,6 +31,9 @@ export async function GET(
         paymentEvents: {
           orderBy: { confirmedAt: "desc" },
         },
+        auditLogs: {
+          orderBy: { createdAt: "desc" },
+        },
       },
     });
 
@@ -58,6 +61,12 @@ export async function GET(
           amountUsdc: pe.amountUsdc.toString(),
           feeUsdc: pe.feeUsdc.toString(),
           blockNumber: pe.blockNumber.toString(),
+        })),
+        auditLogs: invoice.auditLogs.map((log) => ({
+          id: log.id,
+          action: log.action,
+          details: log.details,
+          createdAt: log.createdAt.toISOString(),
         })),
       },
     });

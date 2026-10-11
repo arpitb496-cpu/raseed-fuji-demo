@@ -245,6 +245,24 @@ export async function recomputeInvoiceSettlement(
           },
         });
       }
+
+      // Draft invoice payment flag & audit: record payment arrival on draft invoice
+      if (previousStatus === InvoiceStatus.DRAFT && validPaidSum > 0n) {
+        warnings.push("PAYMENT_ON_DRAFT_INVOICE");
+        await tx.auditLog.create({
+          data: {
+            merchantId: invoice.merchantId,
+            invoiceId: invoice.id,
+            action: "PAYMENT_ON_DRAFT_INVOICE",
+            details: JSON.stringify({
+              previousStatus: "DRAFT",
+              newStatus,
+              totalReceivedUsdc: validPaidSum.toString(),
+              eventsCount: validEvents.length,
+            }),
+          },
+        });
+      }
     }
 
     // 7. Update Invoice record

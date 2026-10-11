@@ -57,6 +57,12 @@ interface InvoiceDetail {
     blockNumber: string;
     confirmedAt: string;
   }>;
+  auditLogs?: Array<{
+    id: string;
+    action: string;
+    details: string | null;
+    createdAt: string;
+  }>;
 }
 
 export default function InvoiceDetailPage({
@@ -450,6 +456,9 @@ export default function InvoiceDetailPage({
                   const isLate = new Date(pe.confirmedAt) > new Date(invoice.dueDate);
                   const isDust = BigInt(pe.amountUsdc) < 10000n;
                   const isCancelled = invoice.status === "CANCELLED";
+                  const isPaymentOnDraft = Boolean(
+                    invoice.auditLogs?.some((l) => l.action === "PAYMENT_ON_DRAFT_INVOICE")
+                  );
 
                   return (
                     <tr key={pe.id}>
@@ -463,6 +472,11 @@ export default function InvoiceDetailPage({
                         +{formatUsdc(BigInt(pe.amountUsdc))} USDC
                       </td>
                       <td className="py-3 px-4 whitespace-nowrap space-x-1.5">
+                        {isPaymentOnDraft && (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                            On Draft / ड्राफ्ट पर भुगतान
+                          </span>
+                        )}
                         {isDust && (
                           <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
                             Dust (&lt;0.01 USDC)
@@ -478,7 +492,7 @@ export default function InvoiceDetailPage({
                             On Cancelled Invoice
                           </span>
                         )}
-                        {!isDust && !isLate && !isCancelled && (
+                        {!isDust && !isLate && !isCancelled && !isPaymentOnDraft && (
                           <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
                             Valid / वैध
                           </span>

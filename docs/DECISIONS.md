@@ -59,7 +59,15 @@ This document records the architectural, technical, product, and security decisi
 * **Status Invariance**: Dust payments alone NEVER change invoice status. An invoice in `SENT` status receiving only dust remains in `SENT` status (never `PARTIALLY_PAID`).
 * **Transition Criteria**: The invoice transitions to `PARTIALLY_PAID` only when at least one non-dust payment (`>= 0.01 USDC` / `10,000` micro-units) is confirmed. It transitions to `PAID` when cumulative valid payments reach or exceed `invoice.amountUsdc`.
 * **Merchant UI & Audit**: Dust events are visibly flagged with a "Dust" badge in the invoice payments timeline and recorded in `AuditLog`.
-* **Background Reconciliation**: A scheduled cron endpoint (`/api/cron/reconcile`) queries the `PaymentRouter` event logs for recent blocks and reconciles any invoices whose payment confirmation was dropped by client connectivity issues.
+### 4.2 Draft Invoice Payments and GET /api/pay/[publicId] Behavior (Phase 5.7 Spec)
+* **Public Pay API Exposure (`GET /api/pay/[publicId]`)**:
+  - Exposes sanitized public invoice fields: `title`, `amountUsdc`, `dueDate`, `merchant` details, and `status: "DRAFT"`.
+  - Strictly omits internal database IDs, clientEmail, and PII.
+  - Pay client UI (`PayInvoiceClient.tsx`) observes `status === "DRAFT"` and disables payment actions, displaying an informational message to the payer that the invoice has not yet been formally issued by the merchant.
+* **On-Chain Settlement for Draft Invoices**:
+  - If on-chain funds arrive for a DRAFT invoice (e.g. payer executes `PaymentRouter.pay` directly with the `onchainInvoiceId`), the settlement engine recognizes that actual USDC was transferred peer-to-peer to the merchant's wallet.
+  - Recording it is correct and mandatory: the settlement engine advances the invoice status to `PAID` (or `PARTIALLY_PAID`).
+  - To alert the merchant of this anomaly, the settlement engine logs an audit action `PAYMENT_ON_DRAFT_INVOICE`, and the merchant invoice payments table visibly flags the payment with an **"On Draft / ड्राफ्ट पर भुगतान"** badge.
 
 ---
 

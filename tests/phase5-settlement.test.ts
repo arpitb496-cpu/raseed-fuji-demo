@@ -440,4 +440,52 @@ describe("Phase 5 - Settlement Engine & Reorg Fixtures", () => {
     await testPrisma.invoice.delete({ where: { id: invoice.id } });
     await testPrisma.merchant.delete({ where: { id: merchant.id } });
   }, 25000);
+
+  it("settles a DRAFT invoice to PAID and records PAYMENT_ON_DRAFT_INVOICE warning and audit log", async () => {
+    const { invoice, merchant } = await createFixtureInvoice({
+      amountUsdc: 5_000_000n,
+      status: InvoiceStatus.DRAFT,
+    });
+    const blockHash = ("0x" + crypto.randomBytes(32).toString("hex")).toLowerCase();
+
+    // Valid on-chain payment for full amount (5 USDC)
+    await createFixturePaymentEvent({
+      invoiceId: invoice.id,
+      amountUsdc: 5_000_000n,
+      blockNumber: 700n,
+      blockHash,
+      onchainInvoiceId: invoice.onchainInvoiceId,
+      merchantAddress: merchant.walletAddress,
+    });
+
+    const mockClient = {
+      getBlockNumber: async () => 705n, // 6 confirmations
+      getBlock: async () => ({ hash: blockHash }),
+    } as unknown as PublicClient;
+
+    const result = await recomputeInvoiceSettlement(invoice.id, {
+      publicClient: mockClient,
+      confirmations: 3,
+      prismaClient: testPrisma,
+    });
+
+    expect(result.newStatus).toBe(InvoiceStatus.PAID);
+    expect(result.warnings).toContain("PAYMENT_ON_DRAFT_INVOICE");
+
+    // Check that AuditLog record exists
+    const draftAudit = await testPrisma.auditLog.findFirst({
+      where: {
+        invoiceId: invoice.id,
+        action: "PAYMENT_ON_DRAFT_INVOICE",
+      },
+    });
+    expect(draftAudit).toBeDefined();
+    expect(draftAudit?.action).toBe("PAYMENT_ON_DRAFT_INVOICE");
+
+    // Clean up
+    await testPrisma.paymentEvent.deleteMany({ where: { invoiceId: invoice.id } });
+    await testPrisma.auditLog.deleteMany({ where: { invoiceId: invoice.id } });
+    await testPrisma.invoice.delete({ where: { id: invoice.id } });
+    await testPrisma.merchant.delete({ where: { id: merchant.id } });
+  }, 25000);
 });
