@@ -17,9 +17,17 @@
   - Validates DB connectivity via `prisma.$queryRaw`
   - Validates RPC connectivity by checking `eth_blockNumber`
   - Returns JSON with system status, active network, and latency.
-- **Sentry Integration**:
-  - Gated by `SENTRY_DSN` and `NEXT_PUBLIC_SENTRY_DSN`.
-  - PII scrubbing: strips client emails, names, IP addresses, and authorization headers.
+- **Sentry Error Monitoring**:
+  - Activation: Set `SENTRY_DSN` (server runtime) and `NEXT_PUBLIC_SENTRY_DSN` (client runtime). When either is unset or blank, error reporting is completely disabled (strict no-op).
+  - PII Scrubbing Rules:
+    - Strips all request bodies (`request.data`).
+    - Strips all cookie headers and `request.cookies`.
+    - Strips `Authorization` and `X-Api-Key` headers.
+    - Strips query strings on `/pay/*` routes.
+    - Strips wallet signature fields (`signature`, `sig`, `message`, `signTypedData`).
+    - Redacts RPC URLs containing embedded API keys (`alchemy.com/v2/...`, `infura.io/v3/...`, etc.).
+    - Strictly sets `sendDefaultPii: false`.
+  - Bundle Size Isolation Note: Full `@sentry/nextjs` automatic wrapper is intentionally omitted from the root next config to avoid injecting client-side telemetry bundles onto public pages (`/`, `/about/how-it-works`, `/security`, `/legal/*`), preserving the Lighthouse 95+ performance budget achieved in Phase 6.1.
 
 ---
 
