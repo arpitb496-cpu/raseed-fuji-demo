@@ -292,6 +292,9 @@ export default function NewInvoicePage() {
           <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
             {t("newInvoice.notesLabel")}
           </label>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400">
+            {t("newInvoice.notesSubtext")}
+          </p>
           <textarea
             rows={3}
             maxLength={1000}
