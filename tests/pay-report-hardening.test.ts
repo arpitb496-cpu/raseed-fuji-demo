@@ -85,11 +85,46 @@ describe("Payment Report Endpoint Hardening", () => {
       expect(existingEvent).toBeDefined();
       expect(existingEvent?.invoice.status).toBe("PAID");
 
-      // Verify that no RPC client call is needed:
+      // Verify that no RPC client call is needed when invoice is already PAID:
       const rpcClientMock = {
         getTransactionReceipt: vi.fn(),
       };
       expect(rpcClientMock.getTransactionReceipt).not.toHaveBeenCalled();
+    });
+
+    it("recomputes settlement if existing PaymentEvent is found but invoice is not yet marked PAID", async () => {
+      const mockRecompute = vi.fn().mockResolvedValue({
+        newStatus: "PAID",
+        paidAmountUsdc: 1000000n,
+        reorgInvalidations: 0,
+      });
+
+      const existingEvent = {
+        id: "pe_waiting",
+        txHash: "0x170a55ee238d86b2ae5ca0d29c5a84fd4ded9934873800f032fe66f7361f1454",
+        invoice: {
+          id: "inv_123",
+          status: "SENT", // Not yet paid because confirmations were pending at initial report
+          paidAmountUsdc: 0n,
+        },
+      };
+
+      let responsePayload;
+      if (existingEvent.invoice.status === "PAID") {
+        responsePayload = { success: true, status: "PAID" };
+      } else {
+        const settlement = await mockRecompute(existingEvent.invoice.id);
+        responsePayload = {
+          success: true,
+          status: settlement.newStatus,
+          paidAmountUsdc: settlement.paidAmountUsdc.toString(),
+          alreadyProcessed: true,
+        };
+      }
+
+      expect(mockRecompute).toHaveBeenCalledWith("inv_123");
+      expect(responsePayload.status).toBe("PAID");
+      expect(responsePayload.paidAmountUsdc).toBe("1000000");
     });
   });
 

@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { PaymentReportSchema } from "@/lib/validation/payment-report";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { verifyAndRecordPayment } from "@/lib/settlement/verification";
+import { recomputeInvoiceSettlement } from "@/lib/settlement/settlement-engine";
 import { prisma } from "@/lib/db";
 
 export function getClientIp(req: Request | NextRequest): string {
@@ -80,7 +81,7 @@ export async function POST(
 
     const normalizedTxHash = parseResult.data.txHash.toLowerCase();
 
-    // Fast-path: If txHash is already stored as a PaymentEvent, return current state with no RPC call
+    // Fast-path: If txHash is already stored as a PaymentEvent, return current state
     const existingEvent = await prisma.paymentEvent.findFirst({
       where: {
         txHash: normalizedTxHash,
@@ -88,6 +89,7 @@ export async function POST(
       include: {
         invoice: {
           select: {
+            id: true,
             status: true,
             paidAmountUsdc: true,
           },
@@ -96,10 +98,23 @@ export async function POST(
     });
 
     if (existingEvent) {
+      if (existingEvent.invoice.status === "PAID") {
+        return NextResponse.json({
+          success: true,
+          status: "PAID",
+          paidAmountUsdc: existingEvent.invoice.paidAmountUsdc.toString(),
+          recordedEvents: 0,
+          alreadyProcessed: true,
+        });
+      }
+
+      // If the event exists but invoice is not yet marked PAID (e.g. was waiting for confirmations),
+      // recompute settlement now that more blocks may have been mined
+      const updatedSettlement = await recomputeInvoiceSettlement(existingEvent.invoice.id);
       return NextResponse.json({
         success: true,
-        status: existingEvent.invoice.status,
-        paidAmountUsdc: existingEvent.invoice.paidAmountUsdc.toString(),
+        status: updatedSettlement.newStatus,
+        paidAmountUsdc: updatedSettlement.paidAmountUsdc.toString(),
         recordedEvents: 0,
         alreadyProcessed: true,
       });
