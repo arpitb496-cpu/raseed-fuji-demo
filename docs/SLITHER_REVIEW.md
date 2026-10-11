@@ -7,7 +7,7 @@ Slither was configured to analyze all production contracts under `contracts/src/
 
 | Excluded Path | Rationale & Justification |
 |---|---|
-| `lib/` | Contains upstream OpenZeppelin v5.0.2 contracts and Forge Standard library (`forge-std`). These third-party dependencies are pre-audited and maintained upstream; analyzing them produces redundant external notices outside our codebase scope. |
+| `lib/` | Contains upstream OpenZeppelin v5.0.2 contracts and Forge Standard library (`forge-std`). These third-party dependencies are pre-reviewed and maintained upstream; analyzing them produces redundant external notices outside our codebase scope. |
 | `test/` | Contains testing harness contracts, mocks (`MockUSDC`, `MockMaliciousToken`, `MockRevertingToken`, `MockFeeOnTransferToken`), and Foundry assertions. These contracts are purely for test verification and are never deployed to production. |
 
 ## 3. Excluded Detectors & Justifications

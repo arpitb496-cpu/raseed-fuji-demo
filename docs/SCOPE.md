@@ -2,7 +2,7 @@
 
 > **Document Classification**: Strategic & Operational Scope  
 > **Status**: Active (Applicable to all development and review phases)  
-> **Target Audience**: Strategic Partners, Grant Reviewers, Protocol Integrators
+> **Target Audience**: Strategic Partners, Grant Reviewers, Technical partners
 
 ---
 
@@ -64,7 +64,7 @@ The platform presentation is targeted exclusively to institutional grant committ
 - **Behavior**:
   - When enabled, dynamic robots configuration (`robots.txt`) disallows crawling across all paths.
   - Page metadata issues `noindex, nofollow, noarchive`.
-  - Dynamic sitemap (`sitemap.xml`) yields an empty index.
+  - Dynamic sitemap (`sitemap.xml`) returns an empty index.
 
 > [!IMPORTANT]
 > **DEMO_INVITE_MODE is strictly for search-engine indexing suppression (`noindex`, `nofollow`, empty `sitemap.xml`, and `robots.txt Disallow: /`). It is NOT an access control or authentication barrier.**
@@ -73,7 +73,7 @@ The platform presentation is targeted exclusively to institutional grant committ
 
 ## 6. Security Hygiene Posture
 
-All security standards developed during protocol hardening remain strictly enforced:
+All security standards developed during application hardening remain strictly enforced:
 - **Zero Secrets**: No private keys or secrets logged, tracked, or committed.
 - **Database Isolation**: Complete separation between production and test databases with ON DELETE RESTRICT foreign keys and PostgreSQL advisory locks.
 - **Determinism**: 100% test pass rate maintained under sequential deterministic test runners.

@@ -5,10 +5,10 @@ This checklist tracks requirements before flipping `NEXT_PUBLIC_NETWORK=mainnet`
 ---
 
 ## 1. Smart Contract Governance & Ownership
-- [ ] **Contract Ownership Transfer**: Transfer `PaymentRouter` ownership to a multi-signature Safe (e.g., 3-of-5 multisig) on Avalanche C-Chain.
+- [ ] **Contract Ownership Transfer**: Transfer `PaymentRouter` ownership to a multi-signature wallet (e.g., 3-of-5 multisig) on Avalanche C-Chain.
 - [ ] **Zero Dev Keys**: Verify that no deployer private key retains admin authority or fee withdrawal rights.
 - [ ] **Fee Cap Verification**: Re-verify on-chain that `feeBps` is set to agreed initial rate (default `0`) and cannot exceed 100 bps (1%).
-- [ ] **Snowtrace Verification**: Contract source code verified and matched with pinned Solidity version `0.8.24` and exact compiler optimizations.
+- [ ] **Snowtrace Verification**: Contract source code published and matched with pinned Solidity version `0.8.24` and exact compiler optimizations.
 
 ---
 
@@ -31,9 +31,9 @@ This checklist tracks requirements before flipping `NEXT_PUBLIC_NETWORK=mainnet`
 - [ ] **Custom Domain & DNSSEC**: Custom domain configured with DNSSEC and Strict HTTPS (HSTS).
 - [ ] **Production Database**: Dedicated high-availability PostgreSQL instance (Neon / Supabase) with automated PITR backups.
 - [ ] **Upstash Redis**: Production rate limiting cluster with failover.
-- [ ] **RPC Redundancy**: Multi-provider fallback RPC endpoints (e.g. Infura + Alchemy + official Avalanche C-Chain RPC).
+- [ ] **RPC Redundancy**: Multi-provider fallback RPC endpoints (e.g. Infura + Alchemy + public Avalanche C-Chain RPC).
 - [ ] **Sentry Alerts & PagerDuty**: Error alerting and escalation rules configured.
-- [ ] **Vercel Cron**: Scheduled payment reconciliation job active with secure `CRON_SECRET`.
+- [ ] **Vercel Cron**: Scheduled payment reconciliation job active with random 32-byte `CRON_SECRET`.
 
 ---
 

@@ -1,4 +1,4 @@
-# Raseed (रसीद) Protocol
+# Raseed (रसीद)
 
 > **Non-custodial, peer-to-peer stablecoin invoicing and payment links on Avalanche C-Chain.**  
 > Zero custody. Direct settlement. Stateless on-chain router. Cryptographic verification.
@@ -128,9 +128,9 @@ defi/
 
 ## 4. Stateless On-Chain Settlement Spec (Anti-Griefing)
 
-1. **Zero Fund Custody**: The `PaymentRouter` smart contract holds zero balances at all times. Transfers execute directly from the payer to the merchant's wallet (and protocol treasury if a fee is active) atomically.
+1. **Zero Fund Custody**: The `PaymentRouter` smart contract holds zero balances at all times. Transfers execute directly from the payer to the merchant's wallet (and platform treasury if a fee is active) atomically.
 2. **Stateless Idempotency**: The smart contract does NOT maintain an on-chain `isPaid[invoiceId]` mapping. Because smart contracts cannot know off-chain invoice total amounts, enforcing a single-payment invariant on-chain allows an attacker to front-run and brick any invoice by calling `pay(invoiceId, merchant, 1)`.
-3. **Cumulative Off-Chain Settlement**: The off-chain engine monitors canonical `Paid` events emitted by `PaymentRouter` and aggregates verified payment amounts for each `(merchant, onchainInvoiceId)`. Invoices transition from `SENT` to `PARTIALLY_PAID`, and finally to `PAID` once the cumulative sum meets or exceeds `amountUsdc`.
+3. **Cumulative Off-Chain Settlement**: The off-chain engine monitors canonical `Paid` events emitted by `PaymentRouter` and aggregates confirmed payment amounts for each `(merchant, onchainInvoiceId)`. Invoices transition from `SENT` to `PARTIALLY_PAID`, and finally to `PAID` once the cumulative sum meets or exceeds `amountUsdc`.
 
 ---
 
@@ -145,7 +145,7 @@ When a transaction hash is submitted or reconciled by the background engine:
    - `merchant` matches invoice's `merchant.walletAddress`.
    - `chainId` matches current Avalanche network (`43113` Fuji / `43114` Mainnet).
 5. **Idempotent Record**: Upserts into `PaymentEvent` table with unique constraint `(chainId, txHash, logIndex)`. All payers are recorded (`payerAddress`).
-6. **Cumulative Summation**: Computes `SUM(amountUsdc)` for all verified events matching the invoice. If cumulative amount >= invoice target, updates status to `PAID` and timestamps `confirmedAt`.
+6. **Cumulative Summation**: Computes `SUM(amountUsdc)` for all confirmed events matching the invoice. If cumulative amount >= invoice target, updates status to `PAID` and timestamps `confirmedAt`.
 
 ---
 

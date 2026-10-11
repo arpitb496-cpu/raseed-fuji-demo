@@ -1,6 +1,6 @@
 # Security Policy & Vulnerability Disclosure (SECURITY.md)
 
-Raseed Protocol prioritizes the safety and security of self-custodial transactions. We welcome responsible security reports from researchers and the community.
+Raseed prioritizes the protection of self-custodial transactions. We welcome responsible security reports from researchers and the community.
 
 ---
 
@@ -26,7 +26,7 @@ If you discover a security vulnerability, please submit your findings to:
   - Detailed description of the vulnerability.
   - Proof-of-concept (PoC) script or curl commands.
   - Recommended fix or mitigation.
-  - Expected impact on merchant funds or protocol integrity.
+  - Expected impact on merchant funds or application integrity.
 
 ---
 

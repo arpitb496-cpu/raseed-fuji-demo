@@ -15,7 +15,7 @@ cast wallet new
 
 # 2. Import the private key into Foundry's encrypted keystore
 cast wallet import fuji-deployer --interactive
-# (Paste your private key when prompted, and set a secure keystore password)
+# (Paste your private key when prompted, and set a strong keystore password)
 
 # 3. Check and confirm the derived address
 cast wallet address --account fuji-deployer
@@ -32,12 +32,12 @@ cast wallet address --account fuji-deployer
 ### 1.2. Fund the Keystore Address with Testnet AVAX
 Request testnet AVAX for the address printed above to pay for transaction gas:
 * **Core Faucet**: [https://core.app/tools/testnet-faucet/?subnet=c&token=c](https://core.app/tools/testnet-faucet/?subnet=c&token=c)
-* **Avalanche Official Faucet**: [https://faucet.avax.network/](https://faucet.avax.network/)
+* **Avalanche Testnet Faucet**: [https://faucet.avax.network/](https://faucet.avax.network/)
 
 ### 1.3. Get Testnet USDC (for Payment Testing)
-Request native Fuji USDC directly to your test payer wallet from Circle's official faucet:
+Request native Fuji USDC directly to your test payer wallet from Circle's testnet faucet:
 * **Circle Testnet Faucet**: [https://faucet.circle.com/](https://faucet.circle.com/) (Select Avalanche Fuji)
-* Official Fuji USDC Address: `0x5425890298aed601595a70AB815c96711a31Bc65`
+* Canonical Fuji USDC Address: `0x5425890298aed601595a70AB815c96711a31Bc65`
 
 ### 1.4. (Optional) Snowtrace API Key
 If you want automatic verification on Snowtrace during deployment, create a free API key at [https://testnet.snowtrace.io](https://testnet.snowtrace.io).
@@ -75,7 +75,7 @@ forge script script/DeployFuji.s.sol \
 Foundry will prompt for the password of your `fuji-deployer` keystore.
 The script checks that:
 - Deployer is **NOT** the default Anvil address (`0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266`).
-- USDC is pinned to official Circle Fuji USDC (`0x5425890298aed601595a70AB815c96711a31Bc65`).
+- USDC is pinned to canonical Circle Fuji USDC (`0x5425890298aed601595a70AB815c96711a31Bc65`).
 - Deployer has sufficient AVAX for gas.
 
 ---

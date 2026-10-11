@@ -1,6 +1,6 @@
 # Architecture & Product Decisions (DECISIONS.md)
 
-This document records the architectural, technical, product, and security decisions for **Raseed Protocol**.
+This document records the architectural, technical, product, and security decisions for **Raseed**.
 
 ---
 
@@ -17,7 +17,7 @@ This document records the architectural, technical, product, and security decisi
 ## 2. Blockchain & Token Configuration
 * **Default Network**: Avalanche Fuji Testnet (`chainId: 43113`).
 * **Production Network**: Avalanche C-Chain Mainnet (`chainId: 43114`), gated strictly by `NEXT_PUBLIC_NETWORK=mainnet`.
-* **USDC Addresses** (Verified from Circle's Official Documentation):
+* **USDC Addresses** (Checked against Circle's published documentation; re-check before any mainnet use):
   * **Mainnet (43114)**: `0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E` (Native USDC issued by Circle).
   * **Fuji Testnet (43113)**: `0x5425890298aed601595a70AB815c96711a31Bc65` (Native USDC Testnet faucet token).
   * **Decimals**: Pinned to 6 decimals, with an on-chain sanity check assertion at runtime.
@@ -29,9 +29,9 @@ This document records the architectural, technical, product, and security decisi
 * **Zero Custody Invariant**: The contract holds **zero token balance** before, during, and after any transaction. Tokens are transferred atomically from `msg.sender` to the merchant wallet (and optional treasury).
 * **Stateless Settlement & Permanent Anti-Griefing**: The smart contract keeps **zero per-invoice settlement state**. `isPaid` mappings and `InvoiceAlreadyPaid` errors are completely omitted from the contract bytecode.
   - *Griefing Root Cause*: Because the contract cannot know the off-chain invoice price, any on-chain single-payment restriction allowed an attacker to call `pay(victimInvoiceId, victimMerchant, 1)` with 1 micro-USDC and permanently brick the payer's ability to settle the legitimate invoice.
-  - *Stateless Model*: The router validates inputs, executes transfers via SafeERC20, and emits `Paid(invoiceId, payer, merchant, amount, fee)`. Multiple payments to the same invoice (partial payments, top-ups, separate installments) succeed unhindered on-chain. All settlement and accounting logic is securely performed **off-chain** by observing verified canonical logs.
+  - *Stateless Model*: The router validates inputs, executes transfers via SafeERC20, and emits `Paid(invoiceId, payer, merchant, amount, fee)`. Multiple payments to the same invoice (partial payments, top-ups, separate installments) succeed unhindered on-chain. All settlement and accounting logic is securely performed **off-chain** by observing confirmed canonical logs.
 * **Fee-on-Transfer & Circle Token Dynamics**:
-  - The router constructor immutably pins the official Circle USDC token contract address. Arbitrary tokens cannot be routed through production contracts.
+  - The router constructor immutably pins the canonical Circle USDC token contract address. Arbitrary tokens cannot be routed through production contracts.
   - *Circle USDC Blacklist Note*: Native Circle USDC has a built-in blacklisting mechanism (`Blacklistable`). If a merchant address is blacklisted by Circle compliance, `SafeERC20.safeTransferFrom` will revert on-chain, preventing transfers. The UI explicitly alerts merchants if an address appears blacklisted.
 * **Fee Structure**:
   * Default `feeBps = 0`.
@@ -46,8 +46,8 @@ This document records the architectural, technical, product, and security decisi
 ## 4. Payment Verification Strategy & Off-Chain Settlement Engine (Phase 5 Spec)
 * **Zero Client Trust**: The frontend UI is never trusted to mark an invoice as paid.
 * **Cumulative Event Summation**:
-  - The server queries verified canonical `Paid` event logs on Avalanche C-Chain for `(merchantAddress, onchainInvoiceId)` emitted by the configured `PaymentRouter`.
-  - The server sums all verified amounts: `cumulativePaid = sum(event.amount)`.
+  - The server queries confirmed canonical `Paid` event logs on Avalanche C-Chain for `(merchantAddress, onchainInvoiceId)` emitted by the configured `PaymentRouter`.
+  - The server sums all confirmed amounts: `cumulativePaid = sum(event.amount)`.
 * **State Transition Rules**:
   - **`PAID`**: Triggered when `cumulativePaid >= invoice.amountUsdc` after `N` block confirmations (sub-second finality on Avalanche).
   - **`PARTIALLY_PAID`**: If `0 < cumulativePaid < invoice.amountUsdc`, invoice moves to `PARTIALLY_PAID`. The payer UI displays remaining balance due (`invoice.amountUsdc - cumulativePaid`).
@@ -55,7 +55,7 @@ This document records the architectural, technical, product, and security decisi
   - **Dust Threshold Protection**: Micro-dust transactions below a threshold (`< 0.01 USDC` / `10_000` micro-units) do not trigger invoice status changes on their own to prevent griefing/notification spam.
 
 ### 4.1 Dust Payment Accounting (< 0.01 USDC / 10,000 micro-USDC)
-* **Storage & Ledger**: Every verified payment event—regardless of size—is stored in `PaymentEvent` and contributes to the cumulative received total (`invoice.paidAmountUsdc`).
+* **Storage & Ledger**: Every confirmed payment event—regardless of size—is stored in `PaymentEvent` and contributes to the cumulative received total (`invoice.paidAmountUsdc`).
 * **Status Invariance**: Dust payments alone NEVER change invoice status. An invoice in `SENT` status receiving only dust remains in `SENT` status (never `PARTIALLY_PAID`).
 * **Transition Criteria**: The invoice transitions to `PARTIALLY_PAID` only when at least one non-dust payment (`>= 0.01 USDC` / `10,000` micro-units) is confirmed. It transitions to `PAID` when cumulative valid payments reach or exceed `invoice.amountUsdc`.
 * **Merchant UI & Audit**: Dust events are visibly flagged with a "Dust" badge in the invoice payments timeline and recorded in `AuditLog`.
@@ -99,13 +99,13 @@ This document records the architectural, technical, product, and security decisi
 
 ## 7. Wallet Connectors & Security Policy
 * **Explicit Connector Governance**: Wagmi / RainbowKit configuration strictly specifies supported Avalanche wallets: Core, MetaMask, Rabby, Injected, and WalletConnect.
-* **No Coinbase / Base Wallet Connectors**: Coinbase and Base wallet connectors are explicitly excluded from the application connector list to guarantee clean, deterministic Avalanche C-Chain settlement without non-Avalanche SDK interference.
-* **Submodule & Vendoring Proof**: Core dependencies such as `contracts/lib/openzeppelin-contracts` are tracked directly in git with 544 files vendored to guarantee repeatable fresh-clone builds (`forge build && forge test`).
+* **No Coinbase / Base Wallet Connectors**: Coinbase and Base wallet connectors are explicitly excluded from the application connector list to ensure clean, deterministic Avalanche C-Chain settlement without non-Avalanche SDK interference.
+* **Submodule & Vendoring Proof**: Core dependencies such as `contracts/lib/openzeppelin-contracts` are tracked directly in git with 544 files vendored to ensure repeatable fresh-clone builds (`forge build && forge test`).
 
 ---
 
 ## 8. Internationalization (i18n)
 * **Supported Languages**: English (`en`) and Hindi (`hi`).
 * **Implementation**: Structured JSON dictionaries (`src/locales/en.json`, `src/locales/hi.json`) covering 100% of UI strings, validation errors, and legal disclaimers.
-* **PDF Rendering**: Server-side PDF generation utilizes Chromium rendering engine with Noto Sans Devanagari to guarantee 100% native HarfBuzz OpenType complex text shaping for Hindi conjuncts (e.g. "श्रीमान", "क्षत्रिय", "द्वारा भुगतान").
+* **PDF Rendering**: Server-side PDF generation utilizes Chromium rendering engine with Noto Sans Devanagari to provide 100% native HarfBuzz OpenType complex text shaping for Hindi conjuncts (e.g. "श्रीमान", "क्षत्रिय", "द्वारा भुगतान").
 * **Accessibility**: Dynamically updates `<html lang="en">` or `<html lang="hi">` and respects font stack (Inter + Noto Sans Devanagari).

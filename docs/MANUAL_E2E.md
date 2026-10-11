@@ -19,9 +19,9 @@ This guide documents the complete end-to-end testing procedure on **Avalanche Fu
 
 1. **Browser Wallet**: Install the [Core Wallet](https://core.app/) extension (or MetaMask / Rabby).
 2. **Testnet AVAX for Gas**:
-   - Request Fuji AVAX from the official Avalanche Faucet: [https://core.app/tools/testnet-faucet/](https://core.app/tools/testnet-faucet/)
+   - Request Fuji AVAX from the Avalanche testnet faucet: [https://core.app/tools/testnet-faucet/](https://core.app/tools/testnet-faucet/)
 3. **Testnet USDC for Payments**:
-   - Request official Fuji USDC from the Circle Faucet: [https://faucet.circle.com/](https://faucet.circle.com/) (select *Avalanche Fuji* network).
+   - Request Fuji USDC from the Circle Faucet: [https://faucet.circle.com/](https://faucet.circle.com/) (select *Avalanche Fuji* network).
 
 ---
 
@@ -89,8 +89,8 @@ This guide documents the complete end-to-end testing procedure on **Avalanche Fu
    - Click the **Download Receipt / रसीद** button.
    - Open the generated PDF:
      - Check that all merchant and payer fields are escaped.
-     - Check bilingual headings: *Verified Payment Receipt / भुगतान रसीद*.
-     - Verify embedded Devanagari typography rendered via self-hosted fonts.
+     - Check bilingual headings: *PAYMENT RECEIPT (TESTNET) / भुगतान रसीद (टेस्टनेट)*.
+     - Verify embedded Devanagari typography rendered via local bundled fonts.
      - Verify zero network requests were made during rendering.
 
 ---

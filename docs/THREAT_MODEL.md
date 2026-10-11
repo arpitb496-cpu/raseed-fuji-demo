@@ -1,7 +1,7 @@
 # Threat Model & Attack Surface Analysis (THREAT_MODEL.md)
 
 ## 1. Scope & Primary Assets
-Raseed is a non-custodial stablecoin invoicing protocol on Avalanche C-Chain. The system handles:
+Raseed is a non-custodial stablecoin invoicing app on Avalanche C-Chain. The system handles:
 1. **Payer Funds**: Native USDC held by payers in self-custody wallets.
 2. **Merchant Receivables**: USDC directed to merchant payout addresses.
 3. **Invoice Metadata**: Line items, amounts, merchant and optional client details.
@@ -34,7 +34,7 @@ Raseed is a non-custodial stablecoin invoicing protocol on Avalanche C-Chain. Th
   - Verification fetches the full transaction receipt from Avalanche C-Chain RPC via `viem`.
   - Asserts `receipt.status === 'success'`.
   - Asserts `receipt.to === PaymentRouter.address`.
-  - Asserts `receipt.logs` contains the `Paid` event emitted by the verified contract.
+  - Asserts `receipt.logs` contains the `Paid` event emitted by the configured router contract.
   - Decodes event arguments and strictly matches:
     - `invoiceId == onchainInvoiceId`
     - `merchant == invoice.merchant.walletAddress`
@@ -46,7 +46,7 @@ Raseed is a non-custodial stablecoin invoicing protocol on Avalanche C-Chain. Th
   - *Vector*: Because merchant payout addresses are public on invoice payment links, if a smart contract enforces on-chain double-pay protection (even scoped by merchant), an attacker could front-run or spam `pay(invoiceId, victimMerchant, 1)` with 1 micro-USDC ($0.000001). Under an on-chain single-payment model, this would permanently revert the invoice with `InvoiceAlreadyPaid`, locking the payer out from ever settling their bill.
   - *Mitigation*: The `PaymentRouter` smart contract keeps **zero per-invoice settlement state**. `isPaid` mappings and `InvoiceAlreadyPaid` checks are removed entirely. All calls with valid parameters transfer funds and emit `Paid(invoiceId, payer, merchant, amount, fee)`.
   - *Off-Chain Settlement Engine (Phase 5)*:
-    1. Server tracks cumulative payments by summing canonical `Paid` events matching `(merchant, onchainInvoiceId)` on the verified router address.
+    1. Server tracks cumulative payments by summing canonical `Paid` events matching `(merchant, onchainInvoiceId)` on the configured router address.
     2. An invoice transitions to **`PAID`** only when `sum(Paid.amount) >= invoice.amountUsdc` across `N` block confirmations.
     3. An attacker paying 1 micro-USDC only credits 1 unit to the merchant's balance; because `1 < invoice.amountUsdc`, the real payer can still pay the remaining amount and complete settlement.
     4. Payments under the required balance mark the invoice **`PARTIALLY_PAID`**.
@@ -60,7 +60,7 @@ Raseed is a non-custodial stablecoin invoicing protocol on Avalanche C-Chain. Th
 * **Threat**: Attacker creates a replica of `/pay/[id]` on a typosquat domain with an attacker contract.
 * **Mitigation**:
   - Clear domain branding and warnings displayed on all pay links.
-  - Pay page prominently displays the verified Avalanche chain ID (43113/43114) and verified `PaymentRouter` address.
+  - Pay page prominently displays the configured Avalanche chain ID (43113/43114) and configured `PaymentRouter` address.
   - Clear UI guidance recommending payers check contract address in MetaMask/Core before signing.
 
 ### 3.5. Blockchain Reorgs
@@ -73,7 +73,7 @@ Raseed is a non-custodial stablecoin invoicing protocol on Avalanche C-Chain. Th
 ### 3.6. Malicious Token Injection, Fee-On-Transfer & Circle Blacklists
 * **Threat 1 (Malicious / Fee-On-Transfer Token Injection)**:
   - *Vector*: Attacker triggers payments using a fee-on-transfer token, reentrancy token, or counterfeit USDC.
-  - *Mitigation*: `PaymentRouter` immutably pins the official Circle `USDC` token address at construction (`0x5425890298aed601595a70AB815c96711a31Bc65` on Fuji, `0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E` on Avalanche Mainnet). Non-standard tokens cannot be routed through production contracts. SafeERC20 is used for all operations, and the router retains strictly zero balances.
+  - *Mitigation*: `PaymentRouter` immutably pins the canonical Circle `USDC` token address at construction (`0x5425890298aed601595a70AB815c96711a31Bc65` on Fuji, `0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E` on Avalanche Mainnet). Non-standard tokens cannot be routed through production contracts. SafeERC20 is used for all operations, and the router retains strictly zero balances.
 * **Threat 2 (Circle USDC Compliance Blacklisting)**:
   - *Vector*: A merchant's wallet address has been blacklisted on-chain by Circle's regulatory compliance module (`Blacklistable`).
   - *Mitigation*: Any attempt to pay a blacklisted merchant will cause Circle's USDC contract to revert on `transferFrom`. The router will fail cleanly, funds will not leave the payer's wallet, and the UI will alert the payer that the destination merchant address cannot receive USDC.
