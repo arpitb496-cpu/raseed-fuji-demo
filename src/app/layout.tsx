@@ -16,10 +16,27 @@ export const viewport: Viewport = {
 const isDemoInviteMode = process.env.DEMO_INVITE_MODE === "true";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://raseed.app"),
   title: `${BRANDING.name} (${BRANDING.devanagariName}) | Non-Custodial Stablecoin Invoicing`,
   description: BRANDING.description,
-  keywords: ["USDC invoicing", "Avalanche C-Chain", "non-custodial payments", "crypto invoices India", "stablecoin payment link"],
+  keywords: ["USDC invoicing", "Avalanche Fuji", "non-custodial payments", "crypto invoices India", "stablecoin payment link"],
   authors: [{ name: "Raseed Protocol Contributors" }],
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: `${BRANDING.name} (${BRANDING.devanagariName}) | Non-Custodial Stablecoin Invoicing`,
+    description: BRANDING.description,
+    url: "/",
+    siteName: "Raseed Protocol",
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: `${BRANDING.name} (${BRANDING.devanagariName}) | Non-Custodial Stablecoin Invoicing`,
+    description: BRANDING.description,
+  },
   robots: isDemoInviteMode
     ? {
         index: false,

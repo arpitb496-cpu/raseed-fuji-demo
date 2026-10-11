@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { getAppBaseUrl } from "@/config/url";
 
 export default function robots(): MetadataRoute.Robots {
   const isDemoInviteMode = process.env.DEMO_INVITE_MODE === "true";
@@ -16,8 +17,8 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/api/", "/app/"],
+      disallow: ["/api/", "/app/", "/pay/"],
     },
-    sitemap: "https://raseed.app/sitemap.xml",
+    sitemap: `${getAppBaseUrl()}/sitemap.xml`,
   };
 }
