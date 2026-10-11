@@ -6,33 +6,35 @@ This document tracks vulnerability triage across all 25 findings identified via 
 
 ## 1. Full Audit Triage Table (`npm audit --omit=dev`: 25 Findings)
 
+**Triage Status**: 25 findings triaged, none fixed, accepted risk with an upgrade plan.
+
 | # | Package | Severity | Dependency Path | Stage | Target | Reachable by Our Code | Fix Path / Mitigation |
 |---|---|---|---|---|---|---|---|
-| 1 | `deepmerge-ts` | High | `prisma` → `@prisma/config` → `deepmerge-ts` | Build/CLI | Server (CLI) | **No** | Used strictly by Prisma CLI for merging config schemas. Not in runtime app bundle. Accepted risk. |
-| 2 | `@prisma/config` | High | `prisma` → `@prisma/config` | Build/CLI | Server (CLI) | **No** | Prisma CLI configuration parser. Not imported in runtime code. Accepted risk. |
-| 3 | `prisma` | High | Direct dev/build CLI (`prisma`) | Build/CLI | Server (CLI) | **No** | Database migration & generation CLI. Runtime uses `@prisma/client` binaries. Accepted risk. |
-| 4 | `decode-uri-component` | Moderate | `@rainbow-me/rainbowkit` → `wagmi` → `@wagmi/connectors` → `@walletconnect/ethereum-provider` → `query-string` → `decode-uri-component` | Runtime | Client | **No** | Used internally by WalletConnect for URI pairing decode. Input is constrained by WalletConnect client modal. |
-| 5 | `query-string` | Moderate | `...` → `@walletconnect/utils` → `query-string` | Runtime | Client | **No** | Transitive parser within WalletConnect. Resolved in upstream WalletConnect updates. |
-| 6 | `@walletconnect/utils` | Moderate | `...` → `@walletconnect/utils` | Runtime | Client | **No** | WalletConnect internal utility methods. |
-| 7 | `@walletconnect/core` | Moderate | `...` → `@walletconnect/core` | Runtime | Client | **No** | Core protocol transport for WalletConnect. |
-| 8 | `@walletconnect/sign-client` | Moderate | `...` → `@walletconnect/sign-client` | Runtime | Client | **No** | Signing protocol client for WalletConnect v2. |
-| 9 | `@walletconnect/universal-provider` | Moderate | `...` → `@walletconnect/universal-provider` | Runtime | Client | **No** | Provider abstraction for multi-chain WalletConnect. |
-| 10 | `@walletconnect/ethereum-provider` | Moderate | `...` → `@wagmi/connectors` → `@walletconnect/ethereum-provider` | Runtime | Client | **No** | Ethereum JSON-RPC provider wrapper. |
-| 11 | `uuid` | Moderate | `@rainbow-me/rainbowkit` → `wagmi` → `@wagmi/connectors` → `@metamask/sdk` → `uuid` | Runtime | Client | **No** | Missing buffer bounds check in uuid v3/v5/v6. Our application never passes custom buffers to MetaMask internal uuid functions. |
-| 12 | `@metamask/utils` | Moderate | `...` → `@metamask/sdk` → `@metamask/utils` | Runtime | Client | **No** | MetaMask SDK utility library. |
-| 13 | `@metamask/sdk-communication-layer` | Moderate | `...` → `@metamask/sdk` → `@metamask/sdk-communication-layer` | Runtime | Client | **No** | Internal communication channel between browser extension and page provider. |
-| 14 | `@metamask/rpc-errors` | Moderate | `...` → `@metamask/sdk` → `@metamask/rpc-errors` | Runtime | Client | **No** | Standard EIP-1193 RPC error objects. |
-| 15 | `@metamask/sdk` | Moderate | `...` → `@wagmi/connectors` → `@metamask/sdk` | Runtime | Client | **No** | MetaMask official SDK. Upstream bump in `@wagmi/connectors` will resolve. |
-| 16 | `@gemini-wallet/core` | Moderate | `...` → `@wagmi/connectors` → `@gemini-wallet/core` | Runtime | Client | **No** | Connector not registered in `Web3Provider` active connector list. Unreachable. |
-| 17 | `@reown/appkit` | Moderate | `...` → `@walletconnect/universal-provider` → `@reown/appkit` | Runtime | Client | **No** | Modal controller UI bundle inside WalletConnect. |
-| 18 | `@reown/appkit-controllers` | Moderate | `...` → `@reown/appkit` → `@reown/appkit-controllers` | Runtime | Client | **No** | State controller internals for Reown AppKit. |
-| 19 | `@reown/appkit-pay` | Moderate | `...` → `@reown/appkit` → `@reown/appkit-pay` | Runtime | Client | **No** | Payment on-ramp extension; not invoked or enabled by our application. |
-| 20 | `@reown/appkit-scaffold-ui` | Moderate | `...` → `@reown/appkit` → `@reown/appkit-scaffold-ui` | Runtime | Client | **No** | Web component UI scaffolding for wallet connect modal. |
-| 21 | `@reown/appkit-ui` | Moderate | `...` → `@reown/appkit` → `@reown/appkit-ui` | Runtime | Client | **No** | Web component styles and templates for wallet connect modal. |
-| 22 | `@reown/appkit-utils` | Moderate | `...` → `@reown/appkit` → `@reown/appkit-utils` | Runtime | Client | **No** | String and formatting utilities for Reown modal. |
-| 23 | `@wagmi/connectors` | Moderate | `@rainbow-me/rainbowkit` → `wagmi` → `@wagmi/connectors` | Runtime | Client | **No** | Standard EVM connector collection. Exposes standard wallet connections. |
-| 24 | `wagmi` | Moderate | `@rainbow-me/rainbowkit` → `wagmi` | Runtime | Client | **No** | Core React hooks for EVM blockchains. |
-| 25 | `@rainbow-me/rainbowkit` | Moderate | Direct dependency | Runtime | Client | **No** | RainbowKit UI library pinned to `2.2.11`. Upstream wagmi 3.x upgrade planned when stable. |
+| 1 | `deepmerge-ts` | High | `prisma` → `@prisma/config` → `deepmerge-ts` | Build/CLI | Server (CLI) | **No** (build/CLI only) | Used strictly by Prisma CLI for merging config schemas. Not in runtime app bundle. Accepted risk. |
+| 2 | `@prisma/config` | High | `prisma` → `@prisma/config` | Build/CLI | Server (CLI) | **No** (build/CLI only) | Prisma CLI configuration parser. Not imported in runtime code. Accepted risk. |
+| 3 | `prisma` | High | Direct dev/build CLI (`prisma`) | Build/CLI | Server (CLI) | **No** (build/CLI only) | Database migration & generation CLI. Runtime uses `@prisma/client` binaries. Accepted risk. |
+| 4 | `decode-uri-component` | Moderate | `@rainbow-me/rainbowkit` → `wagmi` → `@wagmi/connectors` → `@walletconnect/ethereum-provider` → `query-string` → `decode-uri-component` | Runtime | Client | package used; vulnerable path not shown reachable | Used internally by WalletConnect for URI pairing decode. Input is constrained by WalletConnect client modal. |
+| 5 | `query-string` | Moderate | `...` → `@walletconnect/utils` → `query-string` | Runtime | Client | package used; vulnerable path not shown reachable | Transitive parser within WalletConnect. Resolved in upstream WalletConnect updates. |
+| 6 | `@walletconnect/utils` | Moderate | `...` → `@walletconnect/utils` | Runtime | Client | package used; vulnerable path not shown reachable | WalletConnect internal utility methods. |
+| 7 | `@walletconnect/core` | Moderate | `...` → `@walletconnect/core` | Runtime | Client | package used; vulnerable path not shown reachable | Core protocol transport for WalletConnect. |
+| 8 | `@walletconnect/sign-client` | Moderate | `...` → `@walletconnect/sign-client` | Runtime | Client | package used; vulnerable path not shown reachable | Signing protocol client for WalletConnect v2. |
+| 9 | `@walletconnect/universal-provider` | Moderate | `...` → `@walletconnect/universal-provider` | Runtime | Client | package used; vulnerable path not shown reachable | Provider abstraction for multi-chain WalletConnect. |
+| 10 | `@walletconnect/ethereum-provider` | Moderate | `...` → `@wagmi/connectors` → `@walletconnect/ethereum-provider` | Runtime | Client | package used; vulnerable path not shown reachable | Ethereum JSON-RPC provider wrapper. |
+| 11 | `uuid` | Moderate | `@rainbow-me/rainbowkit` → `wagmi` → `@wagmi/connectors` → `@metamask/sdk` → `uuid` | Runtime | Client | package used; vulnerable path not shown reachable | Missing buffer bounds check in uuid v3/v5/v6. Our application never passes custom buffers to MetaMask internal uuid functions. |
+| 12 | `@metamask/utils` | Moderate | `...` → `@metamask/sdk` → `@metamask/utils` | Runtime | Client | package used; vulnerable path not shown reachable | MetaMask SDK utility library. |
+| 13 | `@metamask/sdk-communication-layer` | Moderate | `...` → `@metamask/sdk` → `@metamask/sdk-communication-layer` | Runtime | Client | package used; vulnerable path not shown reachable | Internal communication channel between browser extension and page provider. |
+| 14 | `@metamask/rpc-errors` | Moderate | `...` → `@metamask/sdk` → `@metamask/rpc-errors` | Runtime | Client | package used; vulnerable path not shown reachable | Standard EIP-1193 RPC error objects. |
+| 15 | `@metamask/sdk` | Moderate | `...` → `@wagmi/connectors` → `@metamask/sdk` | Runtime | Client | package used; vulnerable path not shown reachable | MetaMask official SDK. Upstream bump in `@wagmi/connectors` will resolve. |
+| 16 | `@gemini-wallet/core` | Moderate | `...` → `@wagmi/connectors` → `@gemini-wallet/core` | Runtime | Client | package used; vulnerable path not shown reachable | Connector packaged inside `@wagmi/connectors`; connector not registered in `Web3Provider` active connector list. |
+| 17 | `@reown/appkit` | Moderate | `...` → `@walletconnect/universal-provider` → `@reown/appkit` | Runtime | Client | package used; vulnerable path not shown reachable | Modal controller UI bundle inside WalletConnect. |
+| 18 | `@reown/appkit-controllers` | Moderate | `...` → `@reown/appkit` → `@reown/appkit-controllers` | Runtime | Client | package used; vulnerable path not shown reachable | State controller internals for Reown AppKit. |
+| 19 | `@reown/appkit-pay` | Moderate | `...` → `@reown/appkit` → `@reown/appkit-pay` | Runtime | Client | package used; vulnerable path not shown reachable | Payment on-ramp extension bundled inside Reown; not invoked or enabled by our application. |
+| 20 | `@reown/appkit-scaffold-ui` | Moderate | `...` → `@reown/appkit` → `@reown/appkit-scaffold-ui` | Runtime | Client | package used; vulnerable path not shown reachable | Web component UI scaffolding for wallet connect modal. |
+| 21 | `@reown/appkit-ui` | Moderate | `...` → `@reown/appkit` → `@reown/appkit-ui` | Runtime | Client | package used; vulnerable path not shown reachable | Web component styles and templates for wallet connect modal. |
+| 22 | `@reown/appkit-utils` | Moderate | `...` → `@reown/appkit` → `@reown/appkit-utils` | Runtime | Client | package used; vulnerable path not shown reachable | String and formatting utilities for Reown modal. |
+| 23 | `@wagmi/connectors` | Moderate | `@rainbow-me/rainbowkit` → `wagmi` → `@wagmi/connectors` | Runtime | Client | package used; vulnerable path not shown reachable | Standard EVM connector collection. Exposes standard wallet connections. |
+| 24 | `wagmi` | Moderate | `@rainbow-me/rainbowkit` → `wagmi` | Runtime | Client | package used; vulnerable path not shown reachable | Core React hooks for EVM blockchains. |
+| 25 | `@rainbow-me/rainbowkit` | Moderate | Direct dependency | Runtime | Client | package used; vulnerable path not shown reachable | RainbowKit UI library pinned to `2.2.11`. Upstream wagmi 3.x upgrade planned when stable. |
 
 ---
 
