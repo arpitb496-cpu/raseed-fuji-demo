@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { useAccount, useSwitchChain, useReadContract, useWriteContract, usePublicClient } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { ERC20_ABI, PAYMENT_ROUTER_ABI } from "@/config/contracts";
@@ -40,7 +40,13 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
   const [invoice, setInvoice] = useState<PublicInvoiceData | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
-  const [lang, setLang] = useState<"en" | "hi">("en");
+  const [lang, setLang] = useState<"en" | "hi">(() => {
+    if (typeof window !== "undefined") {
+      const l = new URLSearchParams(window.location.search).get("lang");
+      if (l === "hi" || l === "en") return l;
+    }
+    return "en";
+  });
   const [paymentStep, setPaymentStep] = useState<"idle" | "approving" | "paying" | "waiting_confirmation" | "confirmed">("idle");
   const [txHash, setTxHash] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -73,20 +79,6 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
     };
   }, [publicId]);
 
-  const refreshInvoice = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/pay/${publicId}`);
-      if (res.ok) {
-        const data = await res.json();
-        setInvoice(data);
-        return data;
-      }
-    } catch {
-      // ignore
-    }
-    return null;
-  }, [publicId]);
-
   // Read USDC Balance
   const { data: usdcBalanceRaw, refetch: refetchBalance } = useReadContract({
     address: invoice?.network.usdcAddress,
@@ -105,17 +97,12 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
     query: { enabled: !!address && !!invoice },
   });
 
-  const [mockState, setMockState] = useState<string | null>(null);
-
-  useEffect(() => {
+  const [mockState] = useState<string | null>(() => {
     if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      const m = params.get("mockState");
-      const l = params.get("lang");
-      if (m) setMockState(m);
-      if (l === "hi" || l === "en") setLang(l);
+      return new URLSearchParams(window.location.search).get("mockState");
     }
-  }, []);
+    return null;
+  });
 
   const rawRemainingUsdc = invoice ? BigInt(invoice.remainingUsdc) : 0n;
   const remainingUsdc = mockState === "paid" ? 0n : rawRemainingUsdc;

@@ -1,7 +1,6 @@
 import React from "react";
 import Link from "next/link";
 import { ArrowLeft, ShieldCheck, Lock } from "lucide-react";
-import { BRANDING } from "@/config/branding";
 
 export default function SecurityPage() {
   const securityEmail = process.env.SECURITY_CONTACT_EMAIL;

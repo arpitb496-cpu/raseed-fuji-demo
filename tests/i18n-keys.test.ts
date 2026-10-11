@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect } from "vitest";
 import en from "@/locales/en.json";
 import hi from "@/locales/hi.json";

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi } from "vitest";
 import { getClientIp } from "@/app/api/pay/[publicId]/report/route";
 
