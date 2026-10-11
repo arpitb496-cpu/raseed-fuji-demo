@@ -1,8 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import { Web3Provider } from "@/components/providers/Web3Provider";
 import { I18nProvider } from "@/lib/i18n";
-import { NetworkBanner } from "@/components/layout/NetworkBanner";
+import { TestnetDemoBanner } from "@/components/common/TestnetDemoBanner";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { BRANDING } from "@/config/branding";
@@ -62,14 +61,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="min-h-screen flex flex-col bg-[#FBFBF9] dark:bg-[#0B0F17] text-slate-900 dark:text-slate-100 antialiased selection:bg-teal-500 selection:text-white">
-        <Web3Provider>
-          <I18nProvider>
-            <NetworkBanner />
-            <Navbar />
-            <main className="flex-1 flex flex-col">{children}</main>
-            <Footer />
-          </I18nProvider>
-        </Web3Provider>
+        <I18nProvider>
+          <TestnetDemoBanner />
+          <Navbar />
+          <main className="flex-1 flex flex-col">{children}</main>
+          <Footer />
+        </I18nProvider>
       </body>
     </html>
   );

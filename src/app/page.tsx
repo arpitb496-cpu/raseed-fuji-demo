@@ -2,8 +2,6 @@
 
 import React from "react";
 import Link from "next/link";
-import { useAccount } from "wagmi";
-import { useAuth } from "@/lib/auth/useAuth";
 import { useI18n } from "@/lib/i18n";
 import { CURRENT_NETWORK } from "@/config/network";
 import { INDICATIVE_USD_TO_INR_RATE } from "@/config/constants";
@@ -24,8 +22,6 @@ import {
 } from "lucide-react";
 
 export default function HomePage() {
-  const { isConnected } = useAccount();
-  const { isAuthenticated, signIn, isSigning, merchant } = useAuth();
   const { t, lang } = useI18n();
 
   return (
@@ -95,27 +91,13 @@ export default function HomePage() {
 
           {/* Action CTAs */}
           <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
-            {!isConnected ? (
-              <div className="text-xs text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800">
-                👉 Connect your Web3 wallet using the button in the top navigation to test the demo.
-              </div>
-            ) : isAuthenticated ? (
-              <Link
-                href="/app"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-semibold text-sm shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-teal-500"
-              >
-                <span>Go to Merchant Portal ({merchant?.displayName})</span>
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-            ) : (
-              <button
-                onClick={signIn}
-                disabled={isSigning}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-semibold text-sm shadow-sm transition-all cursor-pointer disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-teal-500"
-              >
-                <span>{isSigning ? t("auth.signing") : t("nav.signInWithEthereum")}</span>
-              </button>
-            )}
+            <Link
+              href="/app"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-semibold text-sm shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-teal-500"
+            >
+              <span>{lang === "hi" ? "व्यापारी पोर्टल खोलें" : "Launch Merchant Portal"}</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
 
             <Link
               href="/about/how-it-works"

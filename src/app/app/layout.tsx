@@ -5,11 +5,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth/useAuth";
 import { useI18n } from "@/lib/i18n";
-import { LayoutDashboard, FileText, PlusCircle, Settings, ShieldAlert, LogIn, Loader2 } from "lucide-react";
+import { Web3Provider } from "@/components/providers/Web3Provider";
+import { WrongNetworkBanner } from "@/components/layout/WrongNetworkBanner";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { LayoutDashboard, FileText, PlusCircle, Settings, ShieldAlert, LogIn, LogOut, Loader2 } from "lucide-react";
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { isAuthenticated, isLoading, signIn, isSigning } = useAuth();
+  const { isAuthenticated, isLoading, signIn, logout, isSigning, merchant } = useAuth();
   const { t } = useI18n();
 
   if (isLoading) {
@@ -32,26 +35,30 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white mb-2">
           {t("auth.signInTitle")}
         </h1>
-        <p className="text-sm text-slate-600 dark:text-slate-400 mb-8 max-w-sm leading-relaxed">
+        <p className="text-sm text-slate-600 dark:text-slate-400 mb-6 max-w-sm leading-relaxed">
           {t("auth.signInDesc")}
         </p>
-        <button
-          onClick={signIn}
-          disabled={isSigning}
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-semibold text-sm shadow-sm transition-all cursor-pointer disabled:opacity-50"
-        >
-          {isSigning ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              <span>{t("auth.signing")}</span>
-            </>
-          ) : (
-            <>
-              <LogIn className="w-4 h-4" />
-              <span>{t("auth.signInButton")}</span>
-            </>
-          )}
-        </button>
+
+        <div className="flex flex-col sm:flex-row items-center gap-3">
+          <ConnectButton showBalance={false} chainStatus="icon" />
+          <button
+            onClick={signIn}
+            disabled={isSigning}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-semibold text-xs shadow-sm transition-all cursor-pointer disabled:opacity-50"
+          >
+            {isSigning ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>{t("auth.signing")}</span>
+              </>
+            ) : (
+              <>
+                <LogIn className="w-4 h-4" />
+                <span>{t("auth.signInButton")}</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
     );
   }
@@ -66,32 +73,56 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       {/* Subnavigation Bar */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-slate-200 dark:border-slate-800 scrollbar-none">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const isActive =
-            item.href === "/app"
-              ? pathname === "/app"
-              : pathname.startsWith(item.href);
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200 dark:border-slate-800">
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-none">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive =
+              item.href === "/app"
+                ? pathname === "/app"
+                : pathname.startsWith(item.href);
 
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
-                isActive
-                  ? "bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900"
-              }`}
-            >
-              <Icon className="w-4 h-4" />
-              <span>{item.label}</span>
-            </Link>
-          );
-        })}
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
+                  isActive
+                    ? "bg-teal-50 dark:bg-teal-950/40 text-teal-800 dark:text-teal-300 border border-teal-200 dark:border-teal-800"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900"
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+        </div>
+
+        {/* Wallet & Auth Controls on /app */}
+        <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+          <ConnectButton showBalance={false} chainStatus="icon" />
+          <button
+            onClick={logout}
+            title={t("auth.signOut")}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors cursor-pointer"
+          >
+            <LogOut className="w-3.5 h-3.5 text-slate-500" />
+            <span className="truncate max-w-[120px]">{merchant?.displayName || t("auth.signOut")}</span>
+          </button>
+        </div>
       </div>
 
       <div>{children}</div>
     </div>
+  );
+}
+
+export default function AppLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <Web3Provider>
+      <WrongNetworkBanner />
+      <AppLayoutContent>{children}</AppLayoutContent>
+    </Web3Provider>
   );
 }
