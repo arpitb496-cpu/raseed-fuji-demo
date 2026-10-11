@@ -4,9 +4,15 @@ import { getServerSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 
 import { checkRateLimit } from "@/lib/rate-limit";
+import { verifyRequestOrigin } from "@/lib/auth/csrf";
 
 export async function POST(req: NextRequest) {
   try {
+    const originCheck = verifyRequestOrigin(req);
+    if (!originCheck.valid) {
+      return NextResponse.json({ error: originCheck.reason || "Invalid request origin" }, { status: 403 });
+    }
+
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "anonymous";
     const rl = await checkRateLimit(`auth_verify_${ip}`, 15, 60);
     if (!rl.success) {

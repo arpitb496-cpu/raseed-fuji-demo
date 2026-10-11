@@ -4,6 +4,7 @@ import { requireAuthenticatedMerchant } from "@/lib/auth/authorization";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
 import { verifyRequestOrigin } from "@/lib/auth/csrf";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -76,10 +77,23 @@ export async function PATCH(req: NextRequest) {
   }
 }
 
-export async function DELETE() {
+export async function DELETE(req: NextRequest) {
   try {
+    const originCheck = verifyRequestOrigin(req);
+    if (!originCheck.valid) {
+      return NextResponse.json({ error: originCheck.reason || "Invalid request origin" }, { status: 403 });
+    }
+
     const session = await getServerSession();
     const { merchantId } = requireAuthenticatedMerchant(session);
+
+    const rl = await checkRateLimit(`delete_merchant_${merchantId}`, 3, 3600);
+    if (!rl.success) {
+      return NextResponse.json(
+        { error: "Too many delete attempts. Please wait." },
+        { status: 429 }
+      );
+    }
 
     // Check if merchant has any financial records (PAID / PARTIALLY_PAID invoices or confirmed PaymentEvents)
     const financialRecordsCount = await prisma.invoice.count({

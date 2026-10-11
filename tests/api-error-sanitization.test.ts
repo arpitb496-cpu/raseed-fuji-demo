@@ -136,4 +136,71 @@ describe("API Security & Error Sanitization", () => {
       process.env.CRON_SECRET = origSecret;
     });
   });
+
+  describe("Route-Level Origin Checks (DELETE /api/merchant/profile & POST /api/auth/verify)", () => {
+    it("returns 403 on DELETE /api/merchant/profile when Origin is from another host", async () => {
+      const { DELETE } = await import("@/app/api/merchant/profile/route");
+      const evilReq = new NextRequest("http://localhost:3000/api/merchant/profile", {
+        method: "DELETE",
+        headers: {
+          host: "localhost:3000",
+          origin: "https://evil-attacker.example.com",
+        },
+      });
+      const res = await DELETE(evilReq);
+      expect(res.status).toBe(403);
+      const data = await res.json();
+      expect(data.error).toContain("Origin does not match request host");
+    });
+
+    it("passes origin check on DELETE /api/merchant/profile when Origin is same-origin", async () => {
+      vi.spyOn(prisma.invoice, "count").mockResolvedValue(0);
+      vi.spyOn(prisma, "$transaction").mockResolvedValue({} as unknown as ReturnType<typeof prisma.$transaction>);
+
+      const { DELETE } = await import("@/app/api/merchant/profile/route");
+      const sameReq = new NextRequest("http://localhost:3000/api/merchant/profile", {
+        method: "DELETE",
+        headers: {
+          host: "localhost:3000",
+          origin: "http://localhost:3000",
+        },
+      });
+      const res = await DELETE(sameReq);
+      // Origin check passed (status is not 403)
+      expect(res.status).not.toBe(403);
+    });
+
+    it("returns 403 on POST /api/auth/verify when Origin is from another host", async () => {
+      const { POST } = await import("@/app/api/auth/verify/route");
+      const evilReq = new NextRequest("http://localhost:3000/api/auth/verify", {
+        method: "POST",
+        headers: {
+          host: "localhost:3000",
+          origin: "https://evil-attacker.example.com",
+        },
+        body: JSON.stringify({ message: "test", signature: "0x123" }),
+      });
+      const res = await POST(evilReq);
+      expect(res.status).toBe(403);
+      const data = await res.json();
+      expect(data.error).toContain("Origin does not match request host");
+    });
+
+    it("passes origin check on POST /api/auth/verify when Origin is same-origin", async () => {
+      const { POST } = await import("@/app/api/auth/verify/route");
+      const sameReq = new NextRequest("http://localhost:3000/api/auth/verify", {
+        method: "POST",
+        headers: {
+          host: "localhost:3000",
+          origin: "http://localhost:3000",
+        },
+        body: JSON.stringify({}),
+      });
+      const res = await POST(sameReq);
+      // Origin check passed (returns 400 for missing message/sig, not 403 origin error)
+      expect(res.status).toBe(400);
+      const data = await res.json();
+      expect(data.error).toBe("Missing message or signature");
+    });
+  });
 });
