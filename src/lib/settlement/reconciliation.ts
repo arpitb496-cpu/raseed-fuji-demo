@@ -5,7 +5,7 @@ import { CURRENT_NETWORK } from "@/config/network";
 import { PAID_EVENT_ABI } from "./verification";
 import { recomputeInvoiceSettlement } from "./settlement-engine";
 import crypto from "crypto";
-import type { PublicClient } from "viem";
+import { createPublicClient, http, type PublicClient } from "viem";
 
 import deploymentsData from "../../../contracts/deployments.json";
 
@@ -131,15 +131,50 @@ export async function runReconciliation(options?: {
       : fromBlock + MAX_RECONCILE_BLOCK_RANGE;
 
   // 3. Pre-fetch logs from router address via RPC strictly OUTSIDE the transaction
-  const logs =
-    toBlock >= fromBlock
-      ? await client.getLogs({
+  interface DecodedPaidLog {
+    args: {
+      invoiceId: `0x${string}`;
+      payer: `0x${string}`;
+      merchant: `0x${string}`;
+      amount: bigint;
+      fee: bigint;
+    };
+    transactionHash: `0x${string}`;
+    logIndex: number;
+    blockHash: `0x${string}`;
+    blockNumber: bigint;
+  }
+  let logs: DecodedPaidLog[] = [];
+  if (toBlock >= fromBlock) {
+    try {
+      logs = (await client.getLogs({
+        address: routerAddress as `0x${string}`,
+        event: PAID_EVENT_ABI,
+        fromBlock,
+        toBlock,
+      })) as unknown as DecodedPaidLog[];
+    } catch (err: unknown) {
+      const rpcErr = err as { message?: string; details?: string; code?: number };
+      if (
+        rpcErr?.message?.includes("block range") ||
+        rpcErr?.details?.includes("block range") ||
+        rpcErr?.code === -32600
+      ) {
+        const fallbackClient = createPublicClient({
+          chain: CURRENT_NETWORK.chain,
+          transport: http(CURRENT_NETWORK.rpcUrl),
+        });
+        logs = (await fallbackClient.getLogs({
           address: routerAddress as `0x${string}`,
           event: PAID_EVENT_ABI,
           fromBlock,
           toBlock,
-        })
-      : [];
+        })) as unknown as DecodedPaidLog[];
+      } else {
+        throw err;
+      }
+    }
+  }
 
   const affectedInvoiceIds = new Set<string>();
   let newEventsStored = 0;
@@ -218,6 +253,18 @@ export async function runReconciliation(options?: {
 
       newEventsStored++;
       affectedInvoiceIds.add(invoice.id);
+    }
+
+    // Also include any invoices with recorded payment events that are not yet marked PAID (e.g. previously awaiting block confirmations)
+    const unsettledInvoices = await tx.invoice.findMany({
+      where: {
+        status: { in: [InvoiceStatus.SENT, InvoiceStatus.PARTIALLY_PAID, InvoiceStatus.DRAFT] },
+        paymentEvents: { some: { invalidatedAt: null } },
+      },
+      select: { id: true },
+    });
+    for (const u of unsettledInvoices) {
+      affectedInvoiceIds.add(u.id);
     }
 
     // Update ReconciliationCursor

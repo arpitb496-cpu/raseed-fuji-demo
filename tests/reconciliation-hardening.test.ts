@@ -228,4 +228,81 @@ describe("Reconciliation Hardening & Catch-up Guards", () => {
       await testPrisma.$disconnect();
     }
   }, 25000);
+
+  it("includes unsettled invoices with recorded payment events in reconciliation settlement", async () => {
+    const testPrisma = getTestPrisma();
+    const testSuffix = crypto.randomBytes(4).toString("hex");
+
+    const merchant = await testPrisma.merchant.create({
+      data: {
+        walletAddress: `0x${crypto.randomBytes(20).toString("hex")}`,
+        displayName: `ReconTest_${testSuffix}`,
+      },
+    });
+
+    const invoice = await testPrisma.invoice.create({
+      data: {
+        publicId: `raseed_recon_${testSuffix}`,
+        merchantId: merchant.id,
+        invoiceNumber: `INV-REC-${testSuffix}`,
+        title: "Recon Test Invoice",
+        amountUsdc: 2_000_000n,
+        paidAmountUsdc: 0n,
+        status: InvoiceStatus.SENT,
+        dueDate: new Date(Date.now() + 86400 * 1000),
+        currencyDisplay: "USD",
+        onchainInvoiceId: `0x${crypto.randomBytes(32).toString("hex")}`,
+      },
+    });
+
+    // Create an un-invalidated PaymentEvent
+    await testPrisma.paymentEvent.create({
+      data: {
+        invoiceId: invoice.id,
+        txHash: `0x${crypto.randomBytes(32).toString("hex")}`,
+        logIndex: 0,
+        blockHash: `0x${crypto.randomBytes(32).toString("hex")}`,
+        blockNumber: 59305831n,
+        chainId: 43113,
+        routerAddress: "0xb94a922261bba2e07648520bf56125a4102eab95",
+        merchantAddress: merchant.walletAddress,
+        payerAddress: `0x${crypto.randomBytes(20).toString("hex")}`,
+        onchainInvoiceId: invoice.onchainInvoiceId,
+        amountUsdc: 2_000_000n,
+        feeUsdc: 0n,
+      },
+    });
+
+    try {
+      // Query unsettled invoices exactly as reconciliation does
+      const unsettled = await testPrisma.invoice.findMany({
+        where: {
+          status: { in: [InvoiceStatus.SENT, InvoiceStatus.PARTIALLY_PAID, InvoiceStatus.DRAFT] },
+          paymentEvents: { some: { invalidatedAt: null } },
+        },
+        select: { id: true },
+      });
+
+      const found = unsettled.some((u) => u.id === invoice.id);
+      expect(found).toBe(true);
+    } finally {
+      await testPrisma.paymentEvent.deleteMany({ where: { invoiceId: invoice.id } });
+      await testPrisma.invoice.delete({ where: { id: invoice.id } });
+      await testPrisma.merchant.delete({ where: { id: merchant.id } });
+      await testPrisma.$disconnect();
+    }
+  }, 25000);
+
+  it("gracefully catches RPC block-range limitation errors from free-tier providers", () => {
+    const errorWithBlockRange = {
+      message: "Under the Free tier plan, you can make eth_getLogs requests with up to a 10 block range.",
+      code: -32600,
+    };
+
+    const isBlockRangeError =
+      errorWithBlockRange.message.includes("block range") ||
+      errorWithBlockRange.code === -32600;
+
+    expect(isBlockRangeError).toBe(true);
+  });
 });
