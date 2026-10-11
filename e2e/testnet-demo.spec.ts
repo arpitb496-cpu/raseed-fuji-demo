@@ -57,10 +57,10 @@ test.describe("Phase 7 Testnet Demo E2E Suite", () => {
     }
   });
 
-  test("(c) /pay/<invalid id> renders the uniform 404 page", async ({ page }) => {
+  test("(c) /pay/<invalid id> renders uniform 'not found' response for invalid IDs", async ({ page }) => {
     await page.goto("/pay/raseed_non_existent_id_99999");
     
-    // Expect uniform 404 container
+    // Expect uniform 'not found' container
     await expect(page.locator("h1")).toContainText(/Invoice Not Found/i);
     await expect(page.locator("text=404").first()).toBeVisible();
   });

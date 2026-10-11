@@ -294,8 +294,8 @@ export default function HomePage() {
               {
                 title: "Anti-Enumeration Protections",
                 titleHi: "एंटी-गणना सुरक्षा",
-                desc: "Rate-limited public pay queries with uniform 404 responses for invalid IDs.",
-                descHi: "समान 404 प्रतिक्रियाओं के साथ दर-सीमित सार्वजनिक क्वेरी सुरक्षा।",
+                desc: "Rate-limited public pay queries with uniform 'not found' response for invalid IDs.",
+                descHi: "समान 'not found' प्रतिक्रियाओं के साथ दर-सीमित सार्वजनिक भुगतान क्वेरी सुरक्षा।",
               },
               {
                 title: "Data Deletion & Anonymization",
