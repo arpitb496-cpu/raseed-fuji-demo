@@ -52,3 +52,11 @@
   - Fallback RPC URLs configured in `src/config/network.ts`.
 - **Database Failover**:
   - Connection pooling configured via Prisma with PgBouncer connection strings.
+
+---
+
+## 6. Build & Development Server Isolation Rules
+- **CRITICAL CONCURRENCY HAZARD**: Never run `npm run build` or start a second dev server while `npm run dev` is running.
+- **Root Cause**: Next.js shares the local `.next` artifact/cache directory between dev and build commands. Running `next build` concurrently corrupts compiler manifests, route chunks, and asset mappings in `.next`, which breaks the active dev server.
+- **Rule**: Before running `npm run build`, always stop any active `npm run dev` server (or specify a separate build directory).
+

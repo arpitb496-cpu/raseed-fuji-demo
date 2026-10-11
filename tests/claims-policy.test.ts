@@ -178,4 +178,46 @@ describe("Claims Policy Verification (Scope & Compliance)", () => {
       ).toEqual([]);
     });
   });
+
+  describe("PDF & Invoice/Receipt Templates", () => {
+    const PDF_TEMPLATES = ["src/lib/pdf/generate-invoice-pdf.ts"];
+
+    it.each(PDF_TEMPLATES)("scans %s for forbidden claims (protocol, audited, official, etc.)", (relativeFilePath) => {
+      const absolutePath = path.resolve(process.cwd(), relativeFilePath);
+      expect(fs.existsSync(absolutePath), `File must exist: ${relativeFilePath}`).toBe(true);
+
+      const content = fs.readFileSync(absolutePath, "utf-8");
+      const lines = content.split("\n");
+      const violations: string[] = [];
+
+      lines.forEach((line, lineNum) => {
+        const trimmed = line.trim();
+        // Skip imports, comments, css font declarations, type annotations
+        if (
+          trimmed.startsWith("import") ||
+          trimmed.startsWith("//") ||
+          trimmed.startsWith("/*") ||
+          trimmed.startsWith("*") ||
+          trimmed.startsWith("type ") ||
+          trimmed.startsWith("interface ")
+        ) {
+          return;
+        }
+
+        for (const { name, pattern, allowFilter } of FORBIDDEN_CLAIM_PATTERNS) {
+          if (pattern.test(trimmed)) {
+            const allowed = allowFilter ? allowFilter(trimmed, trimmed) : false;
+            if (!allowed) {
+              violations.push(`${relativeFilePath}:${lineNum + 1}: violates '${name}' -> "${trimmed}"`);
+            }
+          }
+        }
+      });
+
+      expect(
+        violations,
+        `Forbidden claims detected in ${relativeFilePath}:\n${violations.join("\n")}`
+      ).toEqual([]);
+    });
+  });
 });
