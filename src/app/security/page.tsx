@@ -56,6 +56,38 @@ export default function SecurityPage() {
         </div>
       </div>
 
+      <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 text-xs text-slate-600 dark:text-slate-400">
+        <div className="font-semibold text-slate-900 dark:text-white text-sm">
+          {lang === "hi" ? "सुरक्षा नियंत्रण और निगरानी स्थिति" : "Security Controls & Observability Status"}
+        </div>
+        <ul className="space-y-1.5 list-disc list-inside">
+          <li>
+            <strong className="text-slate-800 dark:text-slate-200">
+              {lang === "hi" ? "त्रुटि निगरानी: " : "Error Monitoring: "}
+            </strong>
+            {lang === "hi"
+              ? "PII स्क्रबर लागू किया गया है; त्रुटि निगरानी अभी सक्रिय नहीं है (कोई Sentry.init नहीं)।"
+              : "PII scrubber implemented; error monitoring is NOT active yet (no Sentry.init)."}
+          </li>
+          <li>
+            <strong className="text-slate-800 dark:text-slate-200">
+              {lang === "hi" ? "कंटेंट सुरक्षा नीति (CSP): " : "Content Security Policy (CSP): "}
+            </strong>
+            {lang === "hi"
+              ? "Report-Only, जिसमें 'unsafe-eval'/'unsafe-inline' शामिल है; अभी लागू नहीं किया गया है।"
+              : "Report-Only, includes 'unsafe-eval'/'unsafe-inline'; not yet enforcing."}
+          </li>
+          <li>
+            <strong className="text-slate-800 dark:text-slate-200">
+              {lang === "hi" ? "निर्भरता स्थिति: " : "Dependency Hygiene: "}
+            </strong>
+            {lang === "hi"
+              ? "25 निष्कर्ष (prisma CLI में 3 उच्च, वॉलेट स्टैक में 22 मध्यम)। रनटाइम पर prisma CLI कोड अप्रभावित।"
+              : "25 total vulnerabilities in npm audit (3 high in prisma CLI, 22 moderate in wallet stack); prisma CLI findings not shown reachable at runtime; wallet findings not verified."}
+          </li>
+        </ul>
+      </div>
+
       <div className="p-6 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2 text-xs text-slate-600 dark:text-slate-400">
         <div className="font-semibold text-slate-900 dark:text-white text-sm">
           {lang === "hi" ? "तकनीकी रिपोर्टिंग" : "Technical Reporting"}

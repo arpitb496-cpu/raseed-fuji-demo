@@ -43,3 +43,10 @@ If you discover a security vulnerability, please submit your findings to:
 2. **Deterministic Settlement**: Smart contracts execute atomic token transfers from payer directly to merchant.
 3. **No Key Storage**: We never request, handle, store, or log private keys or seed phrases.
 4. **Verifiable Deployments**: Smart contract verification instructions are documented with reproducible compiler settings and constructor arguments (see `docs/VERIFY_ROUTER.md`).
+
+---
+
+## 5. Security Controls & Hardening Status
+- **Error Monitoring**: PII scrubber implemented; error monitoring is NOT active yet (no Sentry.init).
+- **Content Security Policy (CSP)**: Report-Only, includes 'unsafe-eval'/'unsafe-inline'; not yet enforcing.
+- **Dependency Audit Status**: 25 total vulnerabilities (3 high in the prisma CLI chain, 22 moderate in the wallet stack). Running `npm audit fix --force` would downgrade prisma, so it was NOT run. The 3 high prisma CLI findings are verified not reachable at runtime in our code (`src/` imports only `@prisma/client`); the 22 moderate wallet findings are not verified.

@@ -171,3 +171,10 @@ Raseed uses Prisma with PostgreSQL (e.g. Neon serverless).
   DATABASE_URL="$TEST_DATABASE_URL" DIRECT_URL="$TEST_DATABASE_URL" npx prisma migrate deploy
   ```
 
+---
+
+## 7. Security Hardening & Observability Status
+- **Error Monitoring**: PII scrubber implemented; error monitoring is NOT active yet (no Sentry.init).
+- **Content Security Policy (CSP)**: Report-Only, includes 'unsafe-eval'/'unsafe-inline'; not yet enforcing.
+- **Dependency Hygiene**: 25 vulnerabilities reported by `npm audit --omit=dev` (3 high in prisma CLI chain, 22 moderate in wallet stack). `npm audit fix --force` would downgrade prisma, so it was NOT run. The 3 high prisma CLI findings are verified not reachable at runtime in our code (`src/` imports only `@prisma/client`); the 22 moderate wallet findings are not verified.
+

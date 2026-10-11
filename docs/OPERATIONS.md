@@ -18,6 +18,7 @@
   - Validates RPC connectivity by checking `eth_blockNumber`
   - Returns JSON with system status, active network, and latency.
 - **Sentry Error Monitoring**:
+  - Implementation Status: PII scrubber implemented; error monitoring is NOT active yet (no Sentry.init).
   - Activation: Set `SENTRY_DSN` (server runtime) and `NEXT_PUBLIC_SENTRY_DSN` (client runtime). When either is unset or blank, error reporting is completely disabled (strict no-op).
   - PII Scrubbing Rules:
     - Strips all request bodies (`request.data`).
@@ -28,6 +29,12 @@
     - Redacts RPC URLs containing embedded API keys (`alchemy.com/v2/...`, `infura.io/v3/...`, etc.).
     - Strictly sets `sendDefaultPii: false`.
   - Bundle Size Isolation Note: Full `@sentry/nextjs` automatic wrapper is intentionally omitted from the root next config to avoid injecting client-side telemetry bundles onto public pages (`/`, `/about/how-it-works`, `/security`, `/legal/*`), preserving the Lighthouse 95+ performance budget achieved in Phase 6.1.
+- **Content Security Policy (CSP)**:
+  - Report-Only, includes 'unsafe-eval'/'unsafe-inline'; not yet enforcing.
+- **Dependency Audit Status**:
+  - Output summary: 25 total vulnerabilities (3 high in the prisma CLI chain, 22 moderate in the wallet stack).
+  - `npm audit fix --force` would downgrade prisma, so it was NOT run.
+  - Runtime reachability: The 3 high prisma CLI findings are verified not reachable at runtime in our code; the 22 moderate wallet stack findings are not verified.
 
 ---
 

@@ -6,13 +6,14 @@ This document tracks vulnerability triage across all 25 findings identified via 
 
 ## 1. Full Audit Triage Table (`npm audit --omit=dev`: 25 Findings)
 
-**Triage Status**: 25 findings triaged, none fixed, accepted risk with an upgrade plan (Re-checked in Phase 7 hardening pass: 22 moderate, 3 high; no real secrets found in tracked files).
+**Triage Status**: 25 findings triaged, none fixed, accepted risk with an upgrade plan (25 total: 3 high in the prisma CLI chain, 22 moderate in the wallet stack; `npm audit fix --force` would downgrade prisma, so it was NOT run).
+- Reachability evaluation: The 3 high prisma CLI findings are not shown reachable at runtime in our code (`src/` imports only `@prisma/client`). For the 22 moderate wallet stack findings, runtime exploitability is not verified.
 
 | # | Package | Severity | Dependency Path | Stage | Target | Reachable by Our Code | Fix Path / Mitigation |
 |---|---|---|---|---|---|---|---|
-| 1 | `deepmerge-ts` | High | `prisma` → `@prisma/config` → `deepmerge-ts` | Build/CLI | Server (CLI) | **No** (build/CLI only) | Used strictly by Prisma CLI for merging config schemas. Not in runtime app bundle. Accepted risk. |
-| 2 | `@prisma/config` | High | `prisma` → `@prisma/config` | Build/CLI | Server (CLI) | **No** (build/CLI only) | Prisma CLI configuration parser. Not imported in runtime code. Accepted risk. |
-| 3 | `prisma` | High | Direct dev/build CLI (`prisma`) | Build/CLI | Server (CLI) | **No** (build/CLI only) | Database migration & generation CLI. Runtime uses `@prisma/client` binaries. Accepted risk. |
+| 1 | `deepmerge-ts` | High | `prisma` → `@prisma/config` → `deepmerge-ts` | Build/CLI | Server (CLI) | **No** (build/CLI only; not imported in src/) | Used strictly by Prisma CLI for merging config schemas. Not in runtime app bundle. Accepted risk. |
+| 2 | `@prisma/config` | High | `prisma` → `@prisma/config` | Build/CLI | Server (CLI) | **No** (build/CLI only; not imported in src/) | Prisma CLI configuration parser. Not imported in runtime code. Accepted risk. |
+| 3 | `prisma` | High | Direct dev/build CLI (`prisma`) | Build/CLI | Server (CLI) | **No** (build/CLI only; not imported in src/) | Database migration & generation CLI. Runtime uses `@prisma/client` binaries. Accepted risk. |
 | 4 | `decode-uri-component` | Moderate | `@rainbow-me/rainbowkit` → `wagmi` → `@wagmi/connectors` → `@walletconnect/ethereum-provider` → `query-string` → `decode-uri-component` | Runtime | Client | package used; vulnerable path not shown reachable | Used internally by WalletConnect for URI pairing decode. Input is constrained by WalletConnect client modal. |
 | 5 | `query-string` | Moderate | `...` → `@walletconnect/utils` → `query-string` | Runtime | Client | package used; vulnerable path not shown reachable | Transitive parser within WalletConnect. Resolved in upstream WalletConnect updates. |
 | 6 | `@walletconnect/utils` | Moderate | `...` → `@walletconnect/utils` | Runtime | Client | package used; vulnerable path not shown reachable | WalletConnect internal utility methods. |
