@@ -205,7 +205,7 @@ export async function DELETE(
 
     if (existing.status === InvoiceStatus.PAID || existing._count.paymentEvents > 0) {
       return NextResponse.json(
-        { error: "Cannot delete an invoice that has verified payments" },
+        { error: "Cannot delete an invoice that has recorded on-chain payments" },
         { status: 400 }
       );
     }

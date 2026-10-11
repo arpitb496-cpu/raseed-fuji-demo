@@ -759,7 +759,7 @@ export async function buildReceiptHtml(data: ReceiptPdfData): Promise<string> {
 
   <div style="margin-top: 16px;">
     <div class="verified-seal">
-      ✓ Verified on Avalanche Fuji Testnet — Settled directly via PaymentRouter
+      ✓ Confirmed on Avalanche Fuji Testnet — Settled directly via PaymentRouter
     </div>
   </div>
 

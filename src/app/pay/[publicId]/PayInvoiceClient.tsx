@@ -446,8 +446,8 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
               </h3>
               <p className="text-xs text-slate-300">
                 {lang === "en"
-                  ? "Your transaction has been verified on Avalanche Fuji."
-                  : "आपका लेनदेन Avalanche Fuji पर सत्यापित हो गया है।"}
+                  ? "Your transaction has been confirmed on Avalanche Fuji."
+                  : "आपका लेनदेन Avalanche Fuji पर पुष्ट हो गया है।"}
               </p>
               {txHash && (
                 <div className="pt-2">

@@ -27,7 +27,7 @@
   },
   "auth": {
     "signInTitle": "Merchant Authentication",
-    "signInDesc": "Sign a cryptographically secure message with your wallet to access your invoice portal. No passwords or seed phrases required.",
+    "signInDesc": "Sign a cryptographic SIWE message with your wallet to access your invoice portal. No passwords or seed phrases required.",
     "signInButton": "Sign-In with Ethereum",
     "signing": "Requesting signature in wallet...",
     "verifying": "Verifying signature...",
@@ -117,8 +117,8 @@
     "cancelling": "Cancelling...",
     "cancelledNotice": "This invoice has been cancelled and will not accept payment.",
     "scanQr": "Scan to Pay in USDC",
-    "settlementHistory": "Verified Payment Events",
-    "noPaymentsYet": "No on-chain payments detected yet. Funds will appear here once verified on Avalanche."
+    "settlementHistory": "Recorded Payment Events",
+    "noPaymentsYet": "No on-chain payments detected yet. Funds will appear here once confirmed on Avalanche Fuji."
   },
   "settings": {
     "title": "Merchant Settings",

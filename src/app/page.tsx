@@ -277,8 +277,8 @@ export default function HomePage() {
               {
                 title: "Invoice Management & CSV Export",
                 titleHi: "चालान प्रबंधन और CSV निर्यात",
-                desc: "Create, edit, cancel invoices with formula-injection-safe CSV export.",
-                descHi: "सुरक्षित CSV निर्यात के साथ चालान बनाना, संपादित करना और रद्द करना।",
+                desc: "Create, edit, cancel invoices with formula-injection-protected CSV export.",
+                descHi: "संरक्षित CSV निर्यात के साथ चालान बनाना, संपादित करना और रद्द करना।",
               },
               {
                 title: "Pay Links & Scannable QR Codes",
@@ -340,7 +340,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 5. Fuji Router Contract Address (NO 'verified' wording) */}
+      {/* 5. Fuji Router Contract Address */}
       <section className="py-10 bg-slate-100/60 dark:bg-slate-950/60 border-b border-slate-200 dark:border-slate-800">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-3 text-xs">

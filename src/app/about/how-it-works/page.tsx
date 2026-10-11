@@ -14,7 +14,7 @@ export default function HowItWorksPage() {
           How Raseed Works
         </h1>
         <p className="text-sm text-slate-600 dark:text-slate-400">
-          Non-custodial, peer-to-peer USDC invoicing on Avalanche C-Chain.
+          Non-custodial, peer-to-peer USDC invoicing on Avalanche Fuji testnet.
         </p>
       </div>
 
@@ -34,9 +34,9 @@ export default function HowItWorksPage() {
         </div>
 
         <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
-          <div className="font-semibold text-teal-600 dark:text-teal-400 text-sm">Step 3: Cryptographic Verification & Receipts</div>
+          <div className="font-semibold text-teal-600 dark:text-teal-400 text-sm">Step 3: On-Chain Confirmation &amp; Receipts</div>
           <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-            The server monitors the canonical Avalanche C-Chain blockchain, matches the verified Paid event, updates the invoice status to Paid, and generates downloadable PDF receipts and Snowtrace explorer links.
+            The server monitors the canonical Avalanche Fuji blockchain, matches the confirmed on-chain Paid event, updates the invoice status to Paid, and generates downloadable PDF receipts and Snowtrace explorer links.
           </p>
         </div>
       </div>
