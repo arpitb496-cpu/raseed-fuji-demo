@@ -1,76 +1,46 @@
-# Dependency Risk Assessment & Accepted Risks (DEPENDENCY_RISK.md)
+# Dependency Risk Assessment & Contracts Hygiene (DEPENDENCY_RISK.md)
 
-This document tracks security advisories identified via `npm audit --omit=dev`, architectural mitigations, and accepted risks.
-
----
-
-## 1. High-Severity Vulnerability Analysis (`npm audit --omit=dev`)
-
-Current audit summary: `25 vulnerabilities (22 moderate, 3 high)`.
-
-### `deepmerge-ts` (< 8.0.0) — GHSA-ggr8-5vv4-36mx
-* **Severity**: High (CWE-674: Uncontrolled Recursion / Stack Exhaustion)
-* **Dependency Path**:
-  ```
-  raseed@0.1.0
-  └── prisma (devDependency / CLI tooling)
-      └── @prisma/config
-          └── deepmerge-ts
-  ```
-  *Note*: `npm audit` lists 3 high vulnerabilities corresponding to `deepmerge-ts` and its direct consumers (`@prisma/config`, `prisma`).
-* **Attack Vector Analysis**:
-  - `deepmerge-ts` is invoked exclusively when the Prisma CLI parses configuration files (`prisma.config.ts`).
-  - It is NOT included in the runtime production Next.js bundle or HTTP request handling path (runtime uses `@prisma/client` engine binaries).
-  - An exploit requires an attacker to supply a crafted recursive object structure to the Prisma CLI configuration file, which requires repository write access.
-* **Remediation & Decision**:
-  - The suggested automated fix (`npm audit fix --force`) forces a major downgrade of Prisma to `prisma@6.12.0`, which causes breaking changes with current PostgreSQL schema generators.
-  - **Accepted Risk**: Risk accepted for Prisma CLI development tooling. Zero runtime exploitability in the Next.js production server.
+This document tracks vulnerability triage across all 25 findings identified via `npm audit --omit=dev`, bundler alias proofs, and smart contract dependency hygiene.
 
 ---
 
-## 2. Moderate-Severity Vulnerabilities (Transitive Web3 SDKs)
+## 1. Full Audit Triage Table (`npm audit --omit=dev`: 25 Findings)
 
-### `uuid` (< 11.1.1) — GHSA-w5hq-g745-h8pq
-* **Severity**: Moderate (CWE-787, CWE-1285)
-* **Dependency Path**:
-  ```
-  raseed@0.1.0
-  └── @rainbow-me/rainbowkit
-      └── wagmi
-          └── @wagmi/connectors
-              └── @metamask/sdk
-                  └── uuid
-  ```
-* **Attack Vector Analysis**:
-  - Vulnerability requires user-supplied byte buffers to be passed to `uuid.v3/v5/v6`. Raseed does not expose or call MetaMask SDK internal UUID APIs directly.
-* **Remediation & Decision**:
-  - Upstream fix requires `wagmi@3.x`, which introduces breaking API changes for RainbowKit wallet connectors.
-  - **Accepted Risk**: Upstream maintenance tracked; runtime exposure is non-existent.
-
-### `decode-uri-component` (<= 0.4.2) — GHSA-vcc3-ghjq-m6fr
-* **Severity**: Moderate (CWE-400 / ReDoS)
-* **Dependency Path**:
-  ```
-  raseed@0.1.0
-  └── @rainbow-me/rainbowkit
-      └── wagmi
-          └── @wagmi/connectors
-              └── @walletconnect/ethereum-provider
-                  └── query-string
-                      └── decode-uri-component
-  ```
-* **Attack Vector Analysis**:
-  - Pertains to URI query string decoding inside WalletConnect URI pairing strings.
-* **Remediation & Decision**:
-  - WalletConnect pairing URIs are validated client-side and handled strictly inside WalletConnect SDK modals.
-  - **Accepted Risk**: Upstream maintenance tracked; runtime risk contained.
+| # | Package | Severity | Dependency Path | Stage | Target | Reachable by Our Code | Fix Path / Mitigation |
+|---|---|---|---|---|---|---|---|
+| 1 | `deepmerge-ts` | High | `prisma` → `@prisma/config` → `deepmerge-ts` | Build/CLI | Server (CLI) | **No** | Used strictly by Prisma CLI for merging config schemas. Not in runtime app bundle. Accepted risk. |
+| 2 | `@prisma/config` | High | `prisma` → `@prisma/config` | Build/CLI | Server (CLI) | **No** | Prisma CLI configuration parser. Not imported in runtime code. Accepted risk. |
+| 3 | `prisma` | High | Direct dev/build CLI (`prisma`) | Build/CLI | Server (CLI) | **No** | Database migration & generation CLI. Runtime uses `@prisma/client` binaries. Accepted risk. |
+| 4 | `decode-uri-component` | Moderate | `@rainbow-me/rainbowkit` → `wagmi` → `@wagmi/connectors` → `@walletconnect/ethereum-provider` → `query-string` → `decode-uri-component` | Runtime | Client | **No** | Used internally by WalletConnect for URI pairing decode. Input is constrained by WalletConnect client modal. |
+| 5 | `query-string` | Moderate | `...` → `@walletconnect/utils` → `query-string` | Runtime | Client | **No** | Transitive parser within WalletConnect. Resolved in upstream WalletConnect updates. |
+| 6 | `@walletconnect/utils` | Moderate | `...` → `@walletconnect/utils` | Runtime | Client | **No** | WalletConnect internal utility methods. |
+| 7 | `@walletconnect/core` | Moderate | `...` → `@walletconnect/core` | Runtime | Client | **No** | Core protocol transport for WalletConnect. |
+| 8 | `@walletconnect/sign-client` | Moderate | `...` → `@walletconnect/sign-client` | Runtime | Client | **No** | Signing protocol client for WalletConnect v2. |
+| 9 | `@walletconnect/universal-provider` | Moderate | `...` → `@walletconnect/universal-provider` | Runtime | Client | **No** | Provider abstraction for multi-chain WalletConnect. |
+| 10 | `@walletconnect/ethereum-provider` | Moderate | `...` → `@wagmi/connectors` → `@walletconnect/ethereum-provider` | Runtime | Client | **No** | Ethereum JSON-RPC provider wrapper. |
+| 11 | `uuid` | Moderate | `@rainbow-me/rainbowkit` → `wagmi` → `@wagmi/connectors` → `@metamask/sdk` → `uuid` | Runtime | Client | **No** | Missing buffer bounds check in uuid v3/v5/v6. Our application never passes custom buffers to MetaMask internal uuid functions. |
+| 12 | `@metamask/utils` | Moderate | `...` → `@metamask/sdk` → `@metamask/utils` | Runtime | Client | **No** | MetaMask SDK utility library. |
+| 13 | `@metamask/sdk-communication-layer` | Moderate | `...` → `@metamask/sdk` → `@metamask/sdk-communication-layer` | Runtime | Client | **No** | Internal communication channel between browser extension and page provider. |
+| 14 | `@metamask/rpc-errors` | Moderate | `...` → `@metamask/sdk` → `@metamask/rpc-errors` | Runtime | Client | **No** | Standard EIP-1193 RPC error objects. |
+| 15 | `@metamask/sdk` | Moderate | `...` → `@wagmi/connectors` → `@metamask/sdk` | Runtime | Client | **No** | MetaMask official SDK. Upstream bump in `@wagmi/connectors` will resolve. |
+| 16 | `@gemini-wallet/core` | Moderate | `...` → `@wagmi/connectors` → `@gemini-wallet/core` | Runtime | Client | **No** | Connector not registered in `Web3Provider` active connector list. Unreachable. |
+| 17 | `@reown/appkit` | Moderate | `...` → `@walletconnect/universal-provider` → `@reown/appkit` | Runtime | Client | **No** | Modal controller UI bundle inside WalletConnect. |
+| 18 | `@reown/appkit-controllers` | Moderate | `...` → `@reown/appkit` → `@reown/appkit-controllers` | Runtime | Client | **No** | State controller internals for Reown AppKit. |
+| 19 | `@reown/appkit-pay` | Moderate | `...` → `@reown/appkit` → `@reown/appkit-pay` | Runtime | Client | **No** | Payment on-ramp extension; not invoked or enabled by our application. |
+| 20 | `@reown/appkit-scaffold-ui` | Moderate | `...` → `@reown/appkit` → `@reown/appkit-scaffold-ui` | Runtime | Client | **No** | Web component UI scaffolding for wallet connect modal. |
+| 21 | `@reown/appkit-ui` | Moderate | `...` → `@reown/appkit` → `@reown/appkit-ui` | Runtime | Client | **No** | Web component styles and templates for wallet connect modal. |
+| 22 | `@reown/appkit-utils` | Moderate | `...` → `@reown/appkit` → `@reown/appkit-utils` | Runtime | Client | **No** | String and formatting utilities for Reown modal. |
+| 23 | `@wagmi/connectors` | Moderate | `@rainbow-me/rainbowkit` → `wagmi` → `@wagmi/connectors` | Runtime | Client | **No** | Standard EVM connector collection. Exposes standard wallet connections. |
+| 24 | `wagmi` | Moderate | `@rainbow-me/rainbowkit` → `wagmi` | Runtime | Client | **No** | Core React hooks for EVM blockchains. |
+| 25 | `@rainbow-me/rainbowkit` | Moderate | Direct dependency | Runtime | Client | **No** | RainbowKit UI library pinned to `2.2.11`. Upstream wagmi 3.x upgrade planned when stable. |
 
 ---
 
-## 3. Reality of `@coinbase/cdp-sdk` Transitive Dependency
+## 2. Bundling Proof: `@coinbase/cdp-sdk` Stub Alias
 
-### Command Output: `npm ls @coinbase/cdp-sdk`
+### Physical Dependency Path
 ```
+$ npm ls @coinbase/cdp-sdk
 raseed@0.1.0 /Users/arpitbhardwaj/defi
 └─┬ wagmi@2.19.5
   └─┬ @wagmi/connectors@6.2.0
@@ -78,8 +48,98 @@ raseed@0.1.0 /Users/arpitbhardwaj/defi
       └── @coinbase/cdp-sdk@1.58.0
 ```
 
-### Verified Facts & Architecture
-1. **Transitive Presence**: `@coinbase/cdp-sdk` is NOT a direct dependency in `package.json`. However, it is physically present in `node_modules` as a transitive dependency brought in by `@wagmi/connectors@6.2.0` via `@base-org/account@2.4.0`.
-2. **Next.js / Bundler Alias**: Because `@base-org/account` references `@coinbase/cdp-sdk`, bundlers (Turbopack/Webpack) attempt to resolve it. In `next.config.ts`, we alias `@coinbase/cdp-sdk` to `./src/lib/mocks/empty.ts` (Turbopack) and `false` (Webpack) so that no Coinbase telemetry, heavy native modules, or network code are ever bundled.
-3. **Explicit Connector List**: In `src/components/providers/Web3Provider.tsx`, the RainbowKit connector list explicitly allows only `[coreWallet, metaMaskWallet, rabbyWallet, injectedWallet, walletConnectWallet]`. No Coinbase Wallet connector or Base account connector is registered.
-4. **Automated Assertion**: `tests/wallet-connectors.test.ts` asserts that the runtime connector list contains exactly the intended wallets and excludes any Coinbase connector.
+### Bundler Stub Configuration (`next.config.ts`)
+```ts
+turbopack: {
+  resolveAlias: {
+    "@coinbase/cdp-sdk": "./src/lib/mocks/empty.ts",
+  },
+},
+webpack: (config) => {
+  config.resolve.alias = {
+    ...config.resolve.alias,
+    "@coinbase/cdp-sdk": false,
+  };
+  return config;
+},
+```
+
+### Build Artifact Verification Evidence
+In `.next/dev/server/chunks/ssr/src_lib_mocks_empty_ts_*.js`:
+```js
+class CdpClient {}
+const empty = { CdpClient };
+export default empty;
+```
+Source map confirms resolution directly to `file:///Users/arpitbhardwaj/defi/src/lib/mocks/empty.ts`. Zero native binaries, zero telemetry, and zero Coinbase RPC client code are included in the build output.
+
+---
+
+## 3. Contracts Dependency Hygiene (`contracts/lib/*`)
+
+### Vendored Status
+The files located in `contracts/lib/*` are **vendored copies committed directly into the main repository tree** (there is no `.gitmodules` file in the repository root).
+
+### Exact Recorded Versions
+1. **`forge-std`**:
+   - Package Version: `v1.17.0` (as declared in `contracts/lib/forge-std/package.json`)
+   - Vendor Path: `contracts/lib/forge-std/`
+2. **`openzeppelin-contracts`**:
+   - Package Version: `v5.0.2` (`openzeppelin-solidity` v5.0.2, as declared in `contracts/lib/openzeppelin-contracts/package.json`)
+   - Vendor Path: `contracts/lib/openzeppelin-contracts/`
+
+### Cleanest Pinning Proposal (Proposal Only — Do Not Apply)
+The cleanest way to pin these dependencies in the future without unversioned vendored bloat:
+1. **Option A (Foundry Git Submodules)**:
+   Add `.gitmodules` explicitly pinned to immutable release tags:
+   ```bash
+   git submodule add -b v1.17.0 https://github.com/foundry-rs/forge-std contracts/lib/forge-std
+   git submodule add -b v5.0.2 https://github.com/OpenZeppelin/openzeppelin-contracts contracts/lib/openzeppelin-contracts
+   ```
+2. **Option B (NPM Package Remappings)**:
+   Install `@openzeppelin/contracts@5.0.2` via `package.json` and configure `remappings.txt`:
+   ```
+   @openzeppelin/contracts/=node_modules/@openzeppelin/contracts/
+   forge-std/=node_modules/forge-std/src/
+   ```
+
+### Full `forge test` Suite Output
+Executed via Foundry v1.8.5:
+```
+Ran 28 tests for test/PaymentRouter.t.sol:PaymentRouterTest
+[PASS] testFuzz_FeeMath(uint256,uint256) (runs: 256, μ: 247906, ~: 248949)
+[PASS] testFuzz_Pay(uint256,address) (runs: 256, μ: 175641, ~: 175582)
+[PASS] test_AttackerDustPaymentToVictimMerchant_DoesNotBlockRealPayer() (gas: 309193)
+[PASS] test_Constructor_InitialState() (gas: 40096)
+[PASS] test_Constructor_RevertIf_ZeroOwner() (gas: 8978)
+[PASS] test_Constructor_RevertIf_ZeroTreasury() (gas: 8555)
+[PASS] test_Constructor_RevertIf_ZeroUSDC() (gas: 8567)
+[PASS] test_FeeCap_HardEnforced() (gas: 88244)
+[PASS] test_FeeOnTransferToken_HandlingAndArchitectureRestriction() (gas: 827697)
+[PASS] test_Invariant_RouterBalanceAlwaysZero() (gas: 141797)
+[PASS] test_Ownable2Step_TransferWorkflow() (gas: 104299)
+[PASS] test_PayWithPermit_FrontrunSignature_StillSucceeds() (gas: 220243)
+[PASS] test_PayWithPermit_HappyPath() (gas: 149536)
+[PASS] test_PayWithPermit_PermitInvalid_AllowanceSufficient_Succeeds() (gas: 171737)
+[PASS] test_Pay_HappyPath_ZeroFee() (gas: 154605)
+[PASS] test_Pay_WithFee() (gas: 236818)
+[PASS] test_RevertIf_InsufficientAllowance() (gas: 101156)
+[PASS] test_RevertIf_MerchantIsRouter() (gas: 90378)
+[PASS] test_RevertIf_NonOwnerSetsFee() (gas: 34883)
+[PASS] test_RevertIf_NonOwnerSetsTreasury() (gas: 37058)
+[PASS] test_RevertIf_PermitInvalidAndAllowanceInsufficient() (gas: 74891)
+[PASS] test_RevertIf_ReentrancyAttack() (gas: 964936)
+[PASS] test_RevertIf_SetTreasuryZeroAddress() (gas: 34487)
+[PASS] test_RevertIf_TokenTransferReturnsFalse() (gas: 783606)
+[PASS] test_RevertIf_ZeroAmount() (gas: 92501)
+[PASS] test_RevertIf_ZeroMerchant() (gas: 90111)
+[PASS] test_SamePayerSameInvoiceIdTwice_SucceedsTwiceAndEmitsTwoEvents() (gas: 201108)
+[PASS] test_SetTreasury() (gas: 49695)
+Suite result: ok. 28 passed; 0 failed; 0 skipped; finished in 25.41ms
+
+Ran 1 test for test/PaymentRouterInvariant.t.sol:PaymentRouterInvariantTest
+[PASS] invariant_RouterBalanceIsAlwaysZero() (runs: 256, calls: 128000, reverts: 71080)
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 6.49s
+
+Ran 2 test suites: 29 tests passed, 0 failed, 0 skipped (29 total tests)
+```

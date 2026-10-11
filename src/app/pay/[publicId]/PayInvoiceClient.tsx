@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { useAccount, useSwitchChain, useReadContract, useWriteContract } from "wagmi";
+import { useAccount, useSwitchChain, useReadContract, useWriteContract, usePublicClient } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { ERC20_ABI, PAYMENT_ROUTER_ABI } from "@/config/contracts";
 import { avalancheFuji } from "viem/chains";
@@ -208,7 +208,7 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
       if (publicClient) {
         publicClient
           .waitForTransactionReceipt({ hash: payTx })
-          .then((receipt) => {
+          .then((receipt: { status: string }) => {
             if (receipt.status !== "success") {
               setErrorMessage(
                 lang === "en"
@@ -218,7 +218,7 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
               setPaymentStep("idle");
             }
           })
-          .catch((receiptErr) => {
+          .catch((receiptErr: unknown) => {
             console.warn("Receipt tracking error:", receiptErr);
           });
       }
