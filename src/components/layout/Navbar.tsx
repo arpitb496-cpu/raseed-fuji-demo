@@ -33,7 +33,7 @@ export function Navbar() {
                 <span className="font-bold text-lg tracking-tight text-slate-900 dark:text-white">
                   {BRANDING.name}
                 </span>
-                <span className="text-xs font-medium text-teal-600 dark:text-teal-400 font-serif">
+                <span className="text-xs font-medium text-teal-800 dark:text-teal-300 font-serif">
                   ({BRANDING.devanagariName})
                 </span>
               </div>

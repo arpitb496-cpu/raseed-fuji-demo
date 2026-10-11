@@ -27,25 +27,25 @@ export function Footer() {
             <p className="max-w-md leading-relaxed text-slate-600 dark:text-slate-400">
               {t("footer.tagline")}
             </p>
-            <div className="flex items-center gap-2 text-[11px] text-slate-400">
-              <Shield className="w-3.5 h-3.5 text-teal-600" />
+            <div className="flex items-center gap-2 text-[11px] text-slate-600 dark:text-slate-400 font-medium">
+              <Shield className="w-3.5 h-3.5 text-teal-700 dark:text-teal-400" />
               <span>{t("footer.smartContractsLabel")}</span>
             </div>
           </div>
 
           {/* Protocol Links */}
-          <div className="space-y-2">
-            <h4 className="font-semibold text-slate-900 dark:text-white uppercase tracking-wider text-[11px]">
+          <div className="space-y-3">
+            <h3 className="font-semibold text-slate-900 dark:text-white uppercase tracking-wider text-[11px]">
               {t("footer.protocol")}
-            </h4>
-            <ul className="space-y-1.5">
+            </h3>
+            <ul className="space-y-1">
               <li>
-                <Link href="/about/how-it-works" className="hover:text-teal-600 transition-colors">
+                <Link href="/about/how-it-works" className="inline-flex items-center min-h-[32px] py-1 text-slate-600 dark:text-slate-300 hover:text-teal-700 dark:hover:text-teal-300 transition-colors">
                   {t("nav.howItWorks")}
                 </Link>
               </li>
               <li>
-                <Link href="/security" className="hover:text-teal-600 transition-colors">
+                <Link href="/security" className="inline-flex items-center min-h-[32px] py-1 text-slate-600 dark:text-slate-300 hover:text-teal-700 dark:hover:text-teal-300 transition-colors">
                   {t("nav.security")}
                 </Link>
               </li>
@@ -58,7 +58,7 @@ export function Footer() {
                   }
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:text-teal-600 transition-colors inline-flex items-center gap-1"
+                  className="inline-flex items-center gap-1 min-h-[32px] py-1 text-slate-600 dark:text-slate-300 hover:text-teal-700 dark:hover:text-teal-300 transition-colors"
                 >
                   {t("common.viewOnExplorer")} <ExternalLink className="w-3 h-3" />
                 </a>
@@ -67,23 +67,23 @@ export function Footer() {
           </div>
 
           {/* Legal Disclaimers (Drafts pending lawyer review) */}
-          <div className="space-y-2">
-            <h4 className="font-semibold text-slate-900 dark:text-white uppercase tracking-wider text-[11px]">
+          <div className="space-y-3">
+            <h3 className="font-semibold text-slate-900 dark:text-white uppercase tracking-wider text-[11px]">
               {t("footer.legal")}
-            </h4>
-            <ul className="space-y-1.5">
+            </h3>
+            <ul className="space-y-1">
               <li>
-                <Link href="/legal/terms" className="hover:text-teal-600 transition-colors">
+                <Link href="/legal/terms" className="inline-flex items-center min-h-[32px] py-1 text-slate-600 dark:text-slate-300 hover:text-teal-700 dark:hover:text-teal-300 transition-colors">
                   {t("footer.terms")}
                 </Link>
               </li>
               <li>
-                <Link href="/legal/privacy" className="hover:text-teal-600 transition-colors">
+                <Link href="/legal/privacy" className="inline-flex items-center min-h-[32px] py-1 text-slate-600 dark:text-slate-300 hover:text-teal-700 dark:hover:text-teal-300 transition-colors">
                   {t("footer.privacy")}
                 </Link>
               </li>
               <li>
-                <Link href="/legal/risks" className="hover:text-teal-600 transition-colors">
+                <Link href="/legal/risks" className="inline-flex items-center min-h-[32px] py-1 text-slate-600 dark:text-slate-300 hover:text-teal-700 dark:hover:text-teal-300 transition-colors">
                   {t("footer.risks")}
                 </Link>
               </li>
@@ -93,10 +93,10 @@ export function Footer() {
 
         {/* Disclaimer Notice */}
         <div className="pt-6 border-t border-slate-200/60 dark:border-slate-800/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
-          <p className="text-[11px] max-w-2xl text-slate-400">
+          <p className="text-[11px] max-w-2xl text-slate-600 dark:text-slate-400">
             {t("footer.disclaimer")}
           </p>
-          <div className="text-[11px] text-slate-400">
+          <div className="text-[11px] text-slate-600 dark:text-slate-400">
             {t("footer.copyright")}
           </div>
         </div>

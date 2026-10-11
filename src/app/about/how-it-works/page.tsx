@@ -12,7 +12,7 @@ export default function HowItWorksPage() {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-8">
       <Link
         href="/"
-        className="inline-flex items-center gap-1.5 text-xs text-teal-600 hover:text-teal-700 font-medium focus:outline-none focus:ring-2 focus:ring-teal-500 rounded"
+        className="inline-flex items-center gap-1.5 text-xs text-teal-800 dark:text-teal-300 hover:text-teal-900 dark:hover:text-teal-200 font-medium focus:outline-none focus:ring-2 focus:ring-teal-500 rounded"
       >
         <ArrowLeft className="w-3.5 h-3.5" />
         <span>{lang === "hi" ? "मुखपृष्ठ पर वापस जाएं" : "Back to Home"}</span>
@@ -31,7 +31,7 @@ export default function HowItWorksPage() {
 
       <div className="space-y-6">
         <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
-          <div className="font-semibold text-teal-600 dark:text-teal-400 text-sm">
+          <div className="font-semibold text-teal-800 dark:text-teal-300 text-sm">
             {lang === "hi"
               ? "चरण 1: व्यापारी कनेक्ट होता है और चालान जारी करता है"
               : "Step 1: Merchant Connects & Issues Invoice"}
@@ -44,7 +44,7 @@ export default function HowItWorksPage() {
         </div>
 
         <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
-          <div className="font-semibold text-teal-600 dark:text-teal-400 text-sm">
+          <div className="font-semibold text-teal-800 dark:text-teal-300 text-sm">
             {lang === "hi"
               ? "चरण 2: भुगतानकर्ता कनेक्ट होता है और USDC में भुगतान करता है"
               : "Step 2: Payer Connects & Pays in USDC"}
@@ -57,7 +57,7 @@ export default function HowItWorksPage() {
         </div>
 
         <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
-          <div className="font-semibold text-teal-600 dark:text-teal-400 text-sm">
+          <div className="font-semibold text-teal-800 dark:text-teal-300 text-sm">
             {lang === "hi"
               ? "चरण 3: ऑन-चेन पुष्टिकरण और रसीदें"
               : "Step 3: On-Chain Confirmation & Receipts"}
