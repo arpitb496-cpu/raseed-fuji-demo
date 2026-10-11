@@ -178,8 +178,8 @@ export default function HomePage() {
             </h2>
             <p className="text-xs text-slate-500 max-w-2xl mx-auto">
               {lang === "hi"
-                ? "हम कभी भी आपके पैसे को नहीं छूते। फंड सीधे भुगतानकर्ता से विक्रेता के पास जाता है।"
-                : "Zero custodial risk by design. The application never holds, pools, or delays your funds."}
+                ? "डिज़ाइन से कोई कस्टडी नहीं। एप्लिकेशन कभी भी आपके फंड को नहीं रखता या रोकता नहीं है।"
+                : "No custody by design. The application never holds, pools, or delays your funds."}
             </p>
           </div>
 
@@ -235,14 +235,14 @@ export default function HomePage() {
           <div className="text-center space-y-2">
             <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-[11px] font-semibold border border-emerald-500/20">
               <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>Tested & Operational Today</span>
+              <span>{lang === "hi" ? "Fuji टेस्टनेट पर कार्यरत" : "Working on Fuji testnet"}</span>
             </div>
             <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
               {lang === "hi" ? "आज क्या काम करता है" : "What Works Today"}
             </h2>
             <p className="text-xs text-slate-500 max-w-xl mx-auto">
               {lang === "hi"
-                ? "केवल वास्तविक, परीक्षण की गई कार्यक्षमताएं जो वर्तमान में संचालित हैं।"
+                ? "केवल वास्तविक कार्यक्षमताएं जो Avalanche Fuji टेस्टनेट पर उपलब्ध हैं।"
                 : "Only features that exist in code and pass automated test suites on Avalanche Fuji."}
             </p>
           </div>
