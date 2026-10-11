@@ -74,7 +74,7 @@ async function launchChromium() {
   }
 }
 
-export async function generateInvoicePdfBuffer(data: InvoicePdfData): Promise<Buffer> {
+export async function buildInvoiceHtml(data: InvoicePdfData): Promise<string> {
   const baseUrl = getAppBaseUrl();
   const payUrl = `${baseUrl}/pay/${encodeURIComponent(data.publicId)}`;
   const qrDataUrl = await QRCode.toDataURL(payUrl, { width: 140, margin: 1 });
@@ -403,7 +403,11 @@ export async function generateInvoicePdfBuffer(data: InvoicePdfData): Promise<Bu
   </div>
 </body>
 </html>`;
+  return html;
+}
 
+export async function generateInvoicePdfBuffer(data: InvoicePdfData): Promise<Buffer> {
+  const html = await buildInvoiceHtml(data);
   const browser = await launchChromium();
   try {
     // Security hardened context: JavaScript strictly disabled
@@ -456,7 +460,7 @@ export interface ReceiptPdfData {
   }>;
 }
 
-export async function generateReceiptPdfBuffer(data: ReceiptPdfData): Promise<Buffer> {
+export async function buildReceiptHtml(data: ReceiptPdfData): Promise<string> {
   const fontRegular = NOTO_SANS_DEVANAGARI_REGULAR_BASE64;
   const fontBold = NOTO_SANS_DEVANAGARI_BOLD_BASE64;
 
@@ -764,7 +768,11 @@ export async function generateReceiptPdfBuffer(data: ReceiptPdfData): Promise<Bu
   </div>
 </body>
 </html>`;
+  return html;
+}
 
+export async function generateReceiptPdfBuffer(data: ReceiptPdfData): Promise<Buffer> {
+  const html = await buildReceiptHtml(data);
   const browser = await launchChromium();
   try {
     const context = await browser.newContext({
