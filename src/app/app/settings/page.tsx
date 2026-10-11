@@ -31,6 +31,7 @@ export default function MerchantSettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirmInput, setDeleteConfirmInput] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
@@ -428,14 +429,85 @@ export default function MerchantSettingsPage() {
             <h3 style={{ margin: "0 0 0.75rem 0", color: "#ef4444", fontSize: "1.25rem" }}>
               ⚠️ {t("settings.deleteData")}
             </h3>
-            <p style={{ color: "var(--muted-foreground)", fontSize: "0.875rem", lineHeight: 1.5, marginBottom: "1.5rem" }}>
+            <p style={{ color: "var(--muted-foreground)", fontSize: "0.875rem", lineHeight: 1.5, marginBottom: "1rem" }}>
               {t("settings.deleteConfirm")}
             </p>
+
+            <div
+              style={{
+                background: "rgba(239, 68, 68, 0.08)",
+                border: "1px solid rgba(239, 68, 68, 0.25)",
+                borderRadius: 8,
+                padding: "0.875rem",
+                marginBottom: "1.25rem",
+                fontSize: "0.8125rem",
+                color: "var(--foreground)",
+                lineHeight: 1.5,
+              }}
+            >
+              {locale === "hi" ? (
+                <>
+                  <p style={{ margin: "0 0 0.5rem 0", fontWeight: 600, color: "#ef4444" }}>
+                    चेतावनी (डेटा प्रतिधारण एवं गुमनामी):
+                  </p>
+                  <p style={{ margin: 0 }}>
+                    व्यक्तिगत डेटा (नाम, संपर्क, व्यवसाय विवरण) स्थायी रूप से अज्ञात (anonymized) कर दिया जाएगा और ड्राफ्ट इनवॉइस हटा दिए जाएंगे। वित्तीय लेखांकन एवं कानूनी अनुपालन के लिए भुगतान किए गए रिकॉर्ड और लेनदेन इतिहास सुरक्षित रखे जाएंगे।
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p style={{ margin: "0 0 0.5rem 0", fontWeight: 600, color: "#ef4444" }}>
+                    Notice (Data Retention &amp; Anonymization):
+                  </p>
+                  <p style={{ margin: 0 }}>
+                    Personal data (merchant name, client contacts, business info) will be permanently anonymized and draft invoices deleted. Settled payment events and invoice records are preserved for accounting and tax compliance.
+                  </p>
+                </>
+              )}
+            </div>
+
+            <div style={{ marginBottom: "1.5rem" }}>
+              <label
+                htmlFor="delete-confirm-input"
+                style={{
+                  display: "block",
+                  fontSize: "0.8125rem",
+                  fontWeight: 500,
+                  marginBottom: "0.5rem",
+                  color: "var(--foreground)",
+                }}
+              >
+                {locale === "hi"
+                  ? "पुष्टि करने के लिए नीचे DELETE टाइप करें:"
+                  : "Type DELETE below to confirm:"}
+              </label>
+              <input
+                id="delete-confirm-input"
+                type="text"
+                value={deleteConfirmInput}
+                onChange={(e) => setDeleteConfirmInput(e.target.value)}
+                placeholder="DELETE"
+                autoComplete="off"
+                style={{
+                  width: "100%",
+                  padding: "0.625rem 0.875rem",
+                  borderRadius: 8,
+                  border: "1px solid var(--border)",
+                  background: "var(--input-bg, transparent)",
+                  color: "var(--foreground)",
+                  fontSize: "0.875rem",
+                  outline: "none",
+                }}
+              />
+            </div>
 
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem" }}>
               <button
                 type="button"
-                onClick={() => setShowDeleteModal(false)}
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setDeleteConfirmInput("");
+                }}
                 disabled={isDeleting}
                 style={{
                   padding: "0.5rem 1.25rem",
@@ -452,7 +524,7 @@ export default function MerchantSettingsPage() {
                 id="confirm-delete-data-btn"
                 type="button"
                 onClick={handleDeleteData}
-                disabled={isDeleting}
+                disabled={isDeleting || deleteConfirmInput.trim() !== "DELETE"}
                 style={{
                   padding: "0.5rem 1.25rem",
                   borderRadius: 8,
@@ -460,8 +532,8 @@ export default function MerchantSettingsPage() {
                   background: "#ef4444",
                   color: "#fff",
                   fontWeight: 600,
-                  cursor: isDeleting ? "not-allowed" : "pointer",
-                  opacity: isDeleting ? 0.7 : 1,
+                  cursor: isDeleting || deleteConfirmInput.trim() !== "DELETE" ? "not-allowed" : "pointer",
+                  opacity: isDeleting || deleteConfirmInput.trim() !== "DELETE" ? 0.5 : 1,
                 }}
               >
                 {isDeleting
