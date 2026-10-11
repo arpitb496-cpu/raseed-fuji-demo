@@ -29,11 +29,11 @@ if (process.env.NODE_ENV === "production") {
   validateRateLimiterConfig(true);
 }
 
-// Cache ratelimiters by window duration
-const ratelimiterCache = new Map<number, Ratelimit>();
+// Cache ratelimiters by maxRequests and window duration
+const ratelimiterCache = new Map<string, Ratelimit>();
 
 function getUpstashLimiter(maxRequests: number, windowSeconds: number): Ratelimit {
-  const cacheKey = windowSeconds;
+  const cacheKey = `${maxRequests}_${windowSeconds}`;
   let limiter = ratelimiterCache.get(cacheKey);
   if (!limiter) {
     const redis = new Redis({

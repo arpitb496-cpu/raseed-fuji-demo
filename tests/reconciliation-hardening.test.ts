@@ -1,4 +1,9 @@
 import { describe, it, expect } from "vitest";
+import crypto from "crypto";
+import { getTestPrisma } from "@/lib/db/test-db";
+import { recomputeInvoiceSettlement } from "@/lib/settlement/settlement-engine";
+import { InvoiceStatus } from "@prisma/client";
+import type { PublicClient } from "viem";
 import {
   MAX_RECONCILE_BLOCK_RANGE,
   REORG_LOOKBACK_BLOCKS,
@@ -112,4 +117,115 @@ describe("Reconciliation Hardening & Catch-up Guards", () => {
     expect(count).toBe(0);
     expect(invoiceInDb.status).toBe("PARTIALLY_PAID");
   });
+
+  it("REAL INTEGRATION CONCURRENCY: concurrent settlement vs expiry cron against test DB proves invoice never ends EXPIRED", async () => {
+    const testPrisma = getTestPrisma();
+    await testPrisma.$connect();
+    const secondPrisma = getTestPrisma();
+    await secondPrisma.$connect();
+
+    const walletAddress = ("0x" + crypto.randomBytes(20).toString("hex")).toLowerCase();
+    const merchant = await testPrisma.merchant.create({
+      data: { walletAddress, displayName: "Concurrency Test Merchant" },
+    });
+    const publicId = `raseed_conc_${crypto.randomBytes(18).toString("base64url")}`;
+    const onchainInvoiceId = ("0x" + crypto.randomBytes(32).toString("hex")).toLowerCase();
+
+    // Past due invoice (due 1 hour ago) with 0 paidAmountUsdc, currently in SENT status
+    const invoice = await testPrisma.invoice.create({
+      data: {
+        publicId,
+        merchantId: merchant.id,
+        invoiceNumber: "INV-CONC-001",
+        title: "Concurrent Expiry vs Settlement Test",
+        dueDate: new Date(Date.now() - 3600 * 1000), // Overdue!
+        amountUsdc: 10_000_000n, // 10 USDC
+        paidAmountUsdc: 0n,
+        status: InvoiceStatus.SENT,
+        onchainInvoiceId,
+      },
+    });
+
+    const txHash = ("0x" + crypto.randomBytes(32).toString("hex")).toLowerCase();
+    const blockHash = ("0x" + crypto.randomBytes(32).toString("hex")).toLowerCase();
+
+    // Create a confirmed payment event for this invoice
+    await testPrisma.paymentEvent.create({
+      data: {
+        invoiceId: invoice.id,
+        txHash,
+        logIndex: 0,
+        blockHash,
+        blockNumber: 1000n,
+        chainId: 43113,
+        routerAddress: "0xb94a922261bba2e07648520bf56125a4102eab95",
+        merchantAddress: walletAddress,
+        payerAddress: ("0x" + crypto.randomBytes(20).toString("hex")).toLowerCase(),
+        onchainInvoiceId,
+        amountUsdc: 10_000_000n,
+        feeUsdc: 0n,
+      },
+    });
+
+    const mockClient = {
+      getBlockNumber: async () => 1010n,
+      getBlock: async () => ({ hash: blockHash }),
+    } as unknown as PublicClient;
+
+    try {
+      // Launch two truly concurrent database operations:
+      // Operation 1: Settlement engine recomputing & applying payment
+      const settlementPromise = recomputeInvoiceSettlement(invoice.id, {
+        publicClient: mockClient,
+        prismaClient: testPrisma,
+      });
+
+      // Operation 2: Expiry cron attempting conditional batch expiry in a separate DB connection
+      const expiryCronPromise = secondPrisma.$transaction(async (tx) => {
+        const now = new Date();
+        // Candidate selection
+        const overdueCandidates = await tx.invoice.findMany({
+          where: {
+            status: InvoiceStatus.SENT,
+            dueDate: { lt: now },
+            paidAmountUsdc: 0n,
+          },
+          select: { id: true, merchantId: true, dueDate: true },
+        });
+
+        const target = overdueCandidates.find((c) => c.id === invoice.id);
+        if (target) {
+          // Conditional update matching reconciliation.ts
+          await tx.invoice.updateMany({
+            where: {
+              id: target.id,
+              status: InvoiceStatus.SENT,
+              paidAmountUsdc: 0n,
+              dueDate: { lt: now },
+            },
+            data: { status: InvoiceStatus.EXPIRED },
+          });
+        }
+      });
+
+      await Promise.all([settlementPromise, expiryCronPromise]);
+
+      // Verify the resulting invoice in DB: MUST NEVER BE EXPIRED
+      const finalInvoice = await testPrisma.invoice.findUnique({
+        where: { id: invoice.id },
+      });
+
+      expect(finalInvoice).toBeDefined();
+      expect(finalInvoice!.status).not.toBe(InvoiceStatus.EXPIRED);
+      expect(finalInvoice!.status).toBe(InvoiceStatus.PAID);
+      expect(finalInvoice!.paidAmountUsdc).toBe(10_000_000n);
+    } finally {
+      await testPrisma.paymentEvent.deleteMany({ where: { invoiceId: invoice.id } });
+      await testPrisma.auditLog.deleteMany({ where: { invoiceId: invoice.id } });
+      await testPrisma.invoice.delete({ where: { id: invoice.id } });
+      await testPrisma.merchant.delete({ where: { id: merchant.id } });
+      await secondPrisma.$disconnect();
+      await testPrisma.$disconnect();
+    }
+  }, 25000);
 });
