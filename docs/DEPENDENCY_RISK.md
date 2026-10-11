@@ -6,7 +6,7 @@ This document tracks vulnerability triage across all 25 findings identified via 
 
 ## 1. Full Audit Triage Table (`npm audit --omit=dev`: 25 Findings)
 
-**Triage Status**: 25 findings triaged, none fixed, accepted risk with an upgrade plan.
+**Triage Status**: 25 findings triaged, none fixed, accepted risk with an upgrade plan (Re-verified in Phase 7 hardening pass: 22 moderate, 3 high; no real secrets found in tracked files).
 
 | # | Package | Severity | Dependency Path | Stage | Target | Reachable by Our Code | Fix Path / Mitigation |
 |---|---|---|---|---|---|---|---|
