@@ -14,29 +14,30 @@ export const FORBIDDEN_PLACEHOLDER_SECRETS = [
 ] as const;
 
 export function validateSessionSecret(
-  secret: string = process.env.SESSION_SECRET || "",
+  secret?: string,
   isProduction: boolean = process.env.NODE_ENV === "production"
 ): string {
+  const resolved = secret !== undefined ? secret : (process.env.SESSION_SECRET || "");
   if (isProduction) {
-    if (!secret || secret.trim() === "") {
+    if (!resolved || resolved.trim() === "") {
       throw new Error("SECURITY ERROR: SESSION_SECRET is required in production environment.");
     }
-    if (secret.length < 32) {
+    if (resolved.length < 32) {
       throw new Error("SECURITY ERROR: SESSION_SECRET must be at least 32 characters long in production.");
     }
     for (const placeholder of FORBIDDEN_PLACEHOLDER_SECRETS) {
-      if (secret === placeholder) {
+      if (resolved === placeholder) {
         throw new Error(
           `SECURITY ERROR: SESSION_SECRET cannot use the placeholder value '${placeholder}' in production.`
         );
       }
     }
-    return secret;
+    return resolved;
   }
 
   // Development/Test fallback
-  return secret && secret.length >= 32
-    ? secret
+  return resolved && resolved.length >= 32
+    ? resolved
     : "complex_password_at_least_32_characters_long_for_dev_environment_only!";
 }
 

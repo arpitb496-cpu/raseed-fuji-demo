@@ -41,13 +41,14 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [lang, setLang] = useState<"en" | "hi">("en");
-  const [paymentStep, setPaymentStep] = useState<"idle" | "approving" | "paying" | "reporting" | "confirmed">("idle");
+  const [paymentStep, setPaymentStep] = useState<"idle" | "approving" | "paying" | "waiting_confirmation" | "confirmed">("idle");
   const [txHash, setTxHash] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const { address, isConnected, chain } = useAccount();
   const { switchChain } = useSwitchChain();
   const { writeContractAsync } = useWriteContract();
+  const publicClient = usePublicClient();
 
   useEffect(() => {
     let ignore = false;
@@ -78,10 +79,12 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
       if (res.ok) {
         const data = await res.json();
         setInvoice(data);
+        return data;
       }
     } catch {
       // ignore
     }
+    return null;
   }, [publicId]);
 
   // Read USDC Balance
@@ -122,9 +125,10 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
   const isConnectedSim = mockState ? true : isConnected;
   const isWrongChain = mockState === "wrong_chain" ? true : (isConnectedSim && chain?.id !== (invoice?.network.chainId || avalancheFuji.id));
   const isCancelledOrExpired = (invoice?.status === "CANCELLED" || invoice?.status === "EXPIRED" || mockState === "cancelled" || mockState === "expired");
-  const isAlreadyPaid = mockState === "paid" || invoice?.status === "PAID" || remainingUsdc === 0n;
+  const isDraft = (invoice?.status === "DRAFT" || mockState === "draft");
+  const isAlreadyPaid = mockState === "paid" || invoice?.status === "PAID" || (remainingUsdc === 0n && invoice !== null && invoice.status !== "DRAFT");
   const hasInsufficientBalance = mockState === "insufficient_usdc" ? true : (isConnectedSim && !isWrongChain && userBalance < remainingUsdc);
-  const effectivePaymentStep = mockState === "paying" ? "paying" : paymentStep;
+  const effectivePaymentStep = mockState === "paying" ? "paying" : mockState === "waiting_confirmation" ? "waiting_confirmation" : paymentStep;
 
   const formatUsdc = (micro: bigint | string) => {
     const val = typeof micro === "string" ? BigInt(micro) : micro;
@@ -135,7 +139,7 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
   };
 
   const handlePay = async () => {
-    if (!invoice || !address) return;
+    if (!invoice || !address || isDraft || isCancelledOrExpired) return;
     setErrorMessage(null);
 
     try {
@@ -144,15 +148,29 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
       // 1. Approve exact amount if allowance is insufficient
       if (currentAllowance < neededAmount) {
         setPaymentStep("approving");
-        await writeContractAsync({
+        const approveTx = await writeContractAsync({
           address: invoice.network.usdcAddress,
           abi: ERC20_ABI,
           functionName: "approve",
           args: [invoice.network.routerAddress, neededAmount], // EXACT amount, never infinite
         });
 
-        // Wait a brief moment for state propagation
-        await new Promise((r) => setTimeout(r, 2000));
+        if (!publicClient) {
+          throw new Error("Blockchain client is unavailable.");
+        }
+
+        const approveReceipt = await publicClient.waitForTransactionReceipt({
+          hash: approveTx,
+        });
+
+        if (approveReceipt.status !== "success") {
+          throw new Error(
+            lang === "en"
+              ? "USDC approval transaction reverted on-chain."
+              : "USDC स्वीकृति लेनदेन ब्लॉकचेन पर विफल (reverted) हो गया।"
+          );
+        }
+
         await refetchAllowance();
       }
 
@@ -171,32 +189,80 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
 
       setTxHash(payTx);
 
+      // Transition immediately to "Submitted, waiting for confirmations" state
+      setPaymentStep("waiting_confirmation");
+
       // 3. Report payment transaction hash to server verification
-      setPaymentStep("reporting");
-      const reportRes = await fetch(`/api/pay/${publicId}/report`, {
+      fetch(`/api/pay/${publicId}/report`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           publicId: invoice.publicId,
           txHash: payTx,
         }),
+      }).catch((err) => {
+        console.warn("Async report notification error:", err);
       });
 
-      if (!reportRes.ok) {
-        const reportData = await reportRes.json().catch(() => ({}));
-        console.warn("Report received non-ok response, cron will reconcile:", reportData);
+      // 4. Concurrently monitor tx receipt to detect reverted transactions
+      if (publicClient) {
+        publicClient
+          .waitForTransactionReceipt({ hash: payTx })
+          .then((receipt) => {
+            if (receipt.status !== "success") {
+              setErrorMessage(
+                lang === "en"
+                  ? "Payment transaction reverted on-chain."
+                  : "भुगतान लेनदेन ब्लॉकचेन पर विफल (reverted) हो गया।"
+              );
+              setPaymentStep("idle");
+            }
+          })
+          .catch((receiptErr) => {
+            console.warn("Receipt tracking error:", receiptErr);
+          });
       }
 
-      setPaymentStep("confirmed");
-      await refreshInvoice();
-      await refetchBalance();
+      // 5. Poll GET /api/pay/[publicId] every 5s (max ~3 min) until server returns PAID or PARTIALLY_PAID
+      let attempts = 0;
+      const maxAttempts = 36;
+      const pollTimer = setInterval(async () => {
+        attempts++;
+        try {
+          const res = await fetch(`/api/pay/${publicId}`);
+          if (res.ok) {
+            const updated = (await res.json()) as PublicInvoiceData;
+            setInvoice(updated);
+            if (updated.status === "PAID" || updated.status === "PARTIALLY_PAID") {
+              clearInterval(pollTimer);
+              setPaymentStep("confirmed");
+              await refetchBalance();
+              return;
+            }
+          }
+        } catch {
+          // ignore network hiccups
+        }
+
+        if (attempts >= maxAttempts) {
+          clearInterval(pollTimer);
+          setPaymentStep("idle");
+          setErrorMessage(
+            lang === "en"
+              ? "Transaction submitted. Settlement confirmation is taking longer than expected; background reconciliation will update status shortly."
+              : "लेनदेन प्रस्तुत किया गया। सत्यापन में अपेक्षा से अधिक समय लग रहा है; पृष्ठभूमि मिलान द्वारा जल्द ही स्थिति अपडेट की जाएगी।"
+          );
+        }
+      }, 5000);
     } catch (err: unknown) {
       console.error("Payment flow failed:", err);
       const msg = err instanceof Error ? err.message : String(err);
       if (msg.includes("User rejected") || msg.includes("denied")) {
-        setErrorMessage(lang === "en" ? "Transaction cancelled in wallet." : "वॉलेट में लेनदेन रद्द कर दिया गया।");
+        setErrorMessage(
+          lang === "en" ? "Transaction cancelled in wallet." : "वॉलेट में लेनदेन रद्द कर दिया गया।"
+        );
       } else {
-        setErrorMessage(msg.slice(0, 150));
+        setErrorMessage(msg.slice(0, 160));
       }
       setPaymentStep("idle");
     }
@@ -368,8 +434,22 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
                   : "यह चालान अब सक्रिय नहीं है और नया भुगतान स्वीकार नहीं कर सकता।"}
               </p>
             </div>
+          ) : isDraft ? (
+            <div className="p-6 rounded-xl bg-amber-500/10 border border-amber-500/30 text-center space-y-2" data-testid="draft-blocked-notice">
+              <div className="w-10 h-10 rounded-full bg-amber-500/20 text-amber-300 flex items-center justify-center font-bold text-lg mx-auto">
+                !
+              </div>
+              <h3 className="text-base font-bold text-amber-300">
+                {lang === "en" ? "Invoice Not Yet Issued" : "चालान अभी जारी नहीं किया गया है"}
+              </h3>
+              <p className="text-xs text-amber-300/90 max-w-md mx-auto">
+                {lang === "en"
+                  ? "This invoice is in draft status and has not yet been issued by the merchant. Payments cannot be accepted until issued."
+                  : "यह चालान अभी ड्राफ्ट स्थिति में है और व्यापारी द्वारा जारी नहीं किया गया है। जारी किए जाने तक भुगतान स्वीकार नहीं किया जा सकता।"}
+              </p>
+            </div>
           ) : effectivePaymentStep === "confirmed" || isAlreadyPaid ? (
-            <div className="p-6 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-center space-y-3">
+            <div className="p-6 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-center space-y-3" data-testid="payment-confirmed-notice">
               <div className="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl mx-auto">
                 ✓
               </div>
@@ -390,6 +470,30 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
                     className="inline-flex items-center gap-1.5 text-xs text-emerald-400 hover:text-emerald-300 underline font-mono"
                   >
                     {lang === "en" ? "View on Snowtrace Explorer ↗" : "Snowtrace एक्सप्लोरर पर देखें ↗"}
+                  </a>
+                </div>
+              )}
+            </div>
+          ) : effectivePaymentStep === "waiting_confirmation" ? (
+            <div className="p-6 rounded-xl bg-amber-500/10 border border-amber-500/30 text-center space-y-3" data-testid="payment-waiting-notice">
+              <div className="animate-spin rounded-full h-10 w-10 border-2 border-amber-400 border-t-transparent mx-auto" />
+              <h3 className="text-lg font-bold text-amber-200">
+                {lang === "en" ? "Submitted, waiting for confirmations..." : "प्रस्तुत किया गया, पुष्टि की प्रतीक्षा की जा रही है..."}
+              </h3>
+              <p className="text-xs text-amber-300/80 max-w-md mx-auto">
+                {lang === "en"
+                  ? "Transaction broadcast to Avalanche Fuji. Polling server for block confirmations..."
+                  : "लेनदेन Avalanche Fuji पर प्रसारित किया गया। ब्लॉक पुष्टि के लिए सर्वर से सत्यापन की प्रतीक्षा की जा रही है..."}
+              </p>
+              {txHash && (
+                <div className="pt-1">
+                  <a
+                    href={`${invoice.network.explorerUrl}/tx/${txHash}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 text-xs text-amber-400 hover:text-amber-300 underline font-mono"
+                  >
+                    {lang === "en" ? "View Transaction on Snowtrace ↗" : "Snowtrace पर लेनदेन देखें ↗"}
                   </a>
                 </div>
               )}
@@ -457,11 +561,6 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-2 border-slate-950 border-t-transparent" />
                     <span>{lang === "en" ? "Executing payment on-chain..." : "ऑन-चेन भुगतान निष्पादित किया जा रहा है..."}</span>
-                  </>
-                ) : effectivePaymentStep === "reporting" ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-slate-950 border-t-transparent" />
-                    <span>{lang === "en" ? "Verifying receipt with server..." : "सर्वर से रसीद सत्यापित की जा रही है..."}</span>
                   </>
                 ) : (
                   <span>
