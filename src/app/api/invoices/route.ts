@@ -10,6 +10,7 @@ import {
   evaluateInvoiceStatus,
 } from "@/lib/invoice-utils";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { verifyRequestOrigin } from "@/lib/auth/csrf";
 import { InvoiceStatus, type Invoice, type InvoiceItem } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
@@ -90,6 +91,11 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const originCheck = verifyRequestOrigin(req);
+    if (!originCheck.valid) {
+      return NextResponse.json({ error: "Invalid request origin" }, { status: 403 });
+    }
+
     const session = await getServerSession();
     const { merchantId } = requireAuthenticatedMerchant(session);
 

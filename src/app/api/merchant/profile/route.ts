@@ -3,6 +3,7 @@ import { getServerSession } from "@/lib/auth/session";
 import { requireAuthenticatedMerchant } from "@/lib/auth/authorization";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
+import { verifyRequestOrigin } from "@/lib/auth/csrf";
 
 export const dynamic = "force-dynamic";
 
@@ -40,6 +41,11 @@ export async function GET() {
 
 export async function PATCH(req: NextRequest) {
   try {
+    const originCheck = verifyRequestOrigin(req);
+    if (!originCheck.valid) {
+      return NextResponse.json({ error: "Invalid request origin" }, { status: 403 });
+    }
+
     const session = await getServerSession();
     const { merchantId } = requireAuthenticatedMerchant(session);
 

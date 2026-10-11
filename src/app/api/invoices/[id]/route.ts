@@ -4,6 +4,7 @@ import { requireAuthenticatedMerchant, assertInvoiceOwnership } from "@/lib/auth
 import { prisma } from "@/lib/db";
 import { evaluateInvoiceStatus } from "@/lib/invoice-utils";
 import { InvoiceStatus } from "@prisma/client";
+import { verifyRequestOrigin } from "@/lib/auth/csrf";
 
 export const dynamic = "force-dynamic";
 
@@ -86,6 +87,11 @@ export async function PATCH(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const originCheck = verifyRequestOrigin(req);
+    if (!originCheck.valid) {
+      return NextResponse.json({ error: "Invalid request origin" }, { status: 403 });
+    }
+
     const session = await getServerSession();
     const { merchantId } = requireAuthenticatedMerchant(session);
     const { id } = await context.params;
@@ -185,6 +191,11 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const originCheck = verifyRequestOrigin(req);
+    if (!originCheck.valid) {
+      return NextResponse.json({ error: "Invalid request origin" }, { status: 403 });
+    }
+
     const session = await getServerSession();
     const { merchantId } = requireAuthenticatedMerchant(session);
     const { id } = await context.params;
