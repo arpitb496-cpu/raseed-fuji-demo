@@ -346,8 +346,8 @@ export default function MerchantSettingsPage() {
             </h2>
             <p style={{ color: "var(--muted-foreground)", fontSize: "0.875rem", margin: "0 0 1.25rem 0" }}>
               {locale === "hi"
-                ? "आप किसी भी समय अपने सभी इनवॉइस, ऑडिट रिकॉर्ड और प्रोफ़ाइल डेटा का पूरा बैकअप डाउनलोड कर सकते हैं या अपना खाता स्थायी रूप से हटा सकते हैं।"
-                : "Download a portable backup of your complete invoice history, audit logs, and account records, or permanently delete your stored profile."}
+                ? "आप किसी भी समय अपने सभी इनवॉइस, ऑडिट रिकॉर्ड और प्रोफ़ाइल डेटा का पूरा बैकअप डाउनलोड कर सकते हैं या व्यक्तिगत डेटा को अज्ञात कर ड्राफ्ट इनवॉइस हटा सकते हैं।"
+                : "Download a portable backup of your complete invoice history, audit logs, and account records, or anonymize your personal data and delete draft invoices."}
             </p>
 
             <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
@@ -538,11 +538,11 @@ export default function MerchantSettingsPage() {
               >
                 {isDeleting
                   ? locale === "hi"
-                    ? "हटाया जा रहा है..."
-                    : "Deleting..."
+                    ? "प्रक्रिया जारी है..."
+                    : "Processing..."
                   : locale === "hi"
-                  ? "हां, सब कुछ हटाएं"
-                  : "Yes, Delete Everything"}
+                  ? "डेटा अज्ञात करें और ड्राफ्ट हटाएं"
+                  : "Anonymize Data & Delete Drafts"}
               </button>
             </div>
           </div>

@@ -133,7 +133,7 @@
     "dataPrivacy": "Data Management & Privacy",
     "exportData": "Export All Merchant Data (JSON)",
     "deleteData": "Delete Account & Invoices",
-    "deleteConfirm": "WARNING: This permanently removes your merchant profile, invoices, and audit logs. This action cannot be undone. Are you sure?",
+    "deleteConfirm": "This permanently anonymizes your personal data and deletes draft invoices. Settled payment records are kept. This cannot be undone.",
     "saveProfile": "Save Changes",
     "saving": "Saving..."
   },
