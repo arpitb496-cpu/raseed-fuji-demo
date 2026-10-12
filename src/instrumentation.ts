@@ -11,5 +11,9 @@ export async function register() {
     // 2. Upstash Redis rate limiter production guard
     const { validateRateLimiterConfig } = await import("@/lib/rate-limit");
     validateRateLimiterConfig();
+
+    // 3. WalletConnect project ID production guard
+    const { validateWalletConnectConfig } = await import("@/config/walletconnect");
+    validateWalletConnectConfig();
   }
 }

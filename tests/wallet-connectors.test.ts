@@ -29,4 +29,41 @@ describe("Wallet Connectors Security & Compliance", () => {
     // Verify key Avalanche-supported wallets
     expect(combined).toMatch(/metamask|core|rabby|walletconnect|injected/);
   });
+
+  describe("WalletConnect Project ID Startup Guard", () => {
+    it("throws clear error in production if project ID is missing or empty", async () => {
+      const { validateWalletConnectConfig } = await import("@/config/walletconnect");
+      expect(() => validateWalletConnectConfig(undefined, true)).toThrowError(
+        /CONFIGURATION ERROR: NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID is required in production/
+      );
+      expect(() => validateWalletConnectConfig("", true)).toThrowError(
+        /CONFIGURATION ERROR: NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID is required in production/
+      );
+    });
+
+    it("throws clear error in production if project ID equals the hardcoded sample ID", async () => {
+      const { validateWalletConnectConfig, DEFAULT_WALLETCONNECT_PROJECT_ID } = await import(
+        "@/config/walletconnect"
+      );
+      expect(() => validateWalletConnectConfig(DEFAULT_WALLETCONNECT_PROJECT_ID, true)).toThrowError(
+        /must not use the hardcoded sample ID/
+      );
+    });
+
+    it("succeeds in production when valid custom project ID is provided", async () => {
+      const { validateWalletConnectConfig } = await import("@/config/walletconnect");
+      const validId = "abcd1234ef567890abcd1234ef567890";
+      expect(validateWalletConnectConfig(validId, true)).toBe(validId);
+    });
+
+    it("falls back to sample ID in development", async () => {
+      const { validateWalletConnectConfig, DEFAULT_WALLETCONNECT_PROJECT_ID } = await import(
+        "@/config/walletconnect"
+      );
+      expect(validateWalletConnectConfig(undefined, false)).toBe(DEFAULT_WALLETCONNECT_PROJECT_ID);
+      expect(validateWalletConnectConfig(DEFAULT_WALLETCONNECT_PROJECT_ID, false)).toBe(
+        DEFAULT_WALLETCONNECT_PROJECT_ID
+      );
+    });
+  });
 });
