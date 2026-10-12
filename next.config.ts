@@ -10,7 +10,18 @@ const nextConfig: NextConfig = {
     "playwright-core",
   ],
   outputFileTracingIncludes: {
-    "/api/invoices/**": ["./node_modules/@sparticuz/chromium/bin/**/*"],
+    "/api/invoices/[id]/pdf": [
+      "./node_modules/playwright-core/**",
+      "./node_modules/@sparticuz/chromium/bin/**",
+    ],
+    "/api/invoices/[id]/receipt": [
+      "./node_modules/playwright-core/**",
+      "./node_modules/@sparticuz/chromium/bin/**",
+    ],
+    "/api/invoices/**": [
+      "./node_modules/playwright-core/**",
+      "./node_modules/@sparticuz/chromium/bin/**",
+    ],
   },
   turbopack: {
     resolveAlias: {
