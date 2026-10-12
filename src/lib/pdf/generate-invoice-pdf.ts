@@ -761,7 +761,7 @@ export async function buildReceiptHtml(data: ReceiptPdfData): Promise<string> {
 
   <div style="margin-top: 16px;">
     <div class="confirmed-seal">
-      ✓ Confirmed on Avalanche Fuji Testnet — Settled directly via PaymentRouter (${getRequiredConfirmations()} on-chain confirmations)
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#065f46" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: -1px; margin-right: 4px;"><polyline points="20 6 9 17 4 12"></polyline></svg>Confirmed on Avalanche Fuji Testnet — Settled directly via PaymentRouter (${getRequiredConfirmations()} on-chain confirmations)
     </div>
   </div>
 

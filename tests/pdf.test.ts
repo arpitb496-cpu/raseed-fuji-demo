@@ -167,6 +167,8 @@ describe("Serverless Hindi PDF Generation & Security Hardening", () => {
 
       const defaultHtml = await buildReceiptHtml(receiptData);
       expect(defaultHtml).toContain("(3 on-chain confirmations)");
+      expect(defaultHtml).toContain("<svg width=\"12\" height=\"12\"");
+      expect(defaultHtml).not.toContain("✓");
 
       process.env.CONFIRMATIONS = "5";
       const customHtml = await buildReceiptHtml(receiptData);
