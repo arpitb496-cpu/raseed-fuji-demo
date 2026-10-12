@@ -114,5 +114,21 @@ describe("Rate Limiter (Upstash Production Guard & Dev Fallback)", () => {
       expect(resBlocked.success).toBe(false);
       expect(resBlocked.remaining).toBe(0);
     });
+
+    it("enforces merchant profile DELETE rate limit (max 3 per hour, 4th returns 429)", async () => {
+      const merchantId = `m_${Date.now()}_del_rate`;
+      const key = `delete_merchant_${merchantId}`;
+
+      // First 3 delete attempts within the hour succeed
+      for (let i = 0; i < 3; i++) {
+        const res = await checkRateLimit(key, 3, 3600);
+        expect(res.success).toBe(true);
+      }
+
+      // 4th delete attempt within the hour is blocked
+      const resBlocked = await checkRateLimit(key, 3, 3600);
+      expect(resBlocked.success).toBe(false);
+      expect(resBlocked.remaining).toBe(0);
+    });
   });
 });

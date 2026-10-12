@@ -4,11 +4,13 @@ import { verifyRequestOrigin } from "@/lib/auth/csrf";
 import { prisma } from "@/lib/db";
 
 // Hoisted mocks for internal error simulation
+const mockGetServerSession = vi.fn().mockResolvedValue({
+  merchantId: "merchant_test_123",
+  address: "0x1111111111111111111111111111111111111111",
+  destroy: vi.fn(),
+});
 vi.mock("@/lib/auth/session", () => ({
-  getServerSession: async () => ({
-    merchantId: "merchant_test_123",
-    address: "0x1111111111111111111111111111111111111111",
-  }),
+  getServerSession: () => mockGetServerSession(),
 }));
 
 const mockReconcile = vi.fn();
@@ -201,6 +203,40 @@ describe("API Security & Error Sanitization", () => {
       expect(res.status).toBe(400);
       const data = await res.json();
       expect(data.error).toBe("Missing message or signature");
+    });
+
+    it("returns 429 when merchant calls DELETE /api/merchant/profile for the 4th time in an hour", async () => {
+      vi.spyOn(prisma.invoice, "count").mockResolvedValue(0);
+      vi.spyOn(prisma, "$transaction").mockResolvedValue({} as unknown as ReturnType<typeof prisma.$transaction>);
+
+      const dynamicMerchantId = `m_del_429_${Date.now()}`;
+      mockGetServerSession.mockResolvedValue({
+        merchantId: dynamicMerchantId,
+        address: "0x1111111111111111111111111111111111111111",
+        destroy: vi.fn(),
+      });
+
+      const { DELETE } = await import("@/app/api/merchant/profile/route");
+      const makeReq = () =>
+        new NextRequest("http://localhost:3000/api/merchant/profile", {
+          method: "DELETE",
+          headers: {
+            host: "localhost:3000",
+            origin: "http://localhost:3000",
+          },
+        });
+
+      // First 3 attempts within limit succeed
+      for (let i = 0; i < 3; i++) {
+        const res = await DELETE(makeReq());
+        expect(res.status).not.toBe(429);
+      }
+
+      // 4th attempt within the hour is blocked with 429
+      const res4 = await DELETE(makeReq());
+      expect(res4.status).toBe(429);
+      const data = await res4.json();
+      expect(data.error).toBe("Too many delete attempts. Please wait.");
     });
   });
 });
