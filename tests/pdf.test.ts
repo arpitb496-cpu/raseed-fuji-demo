@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { generateInvoicePdfBuffer, escapeHtml } from "@/lib/pdf/generate-invoice-pdf";
+import { generateInvoicePdfBuffer, escapeHtml, buildReceiptHtml } from "@/lib/pdf/generate-invoice-pdf";
 import { chromium as playwrightChromium } from "playwright-core";
 
 describe("Serverless Hindi PDF Generation & Security Hardening", () => {
@@ -138,4 +138,45 @@ describe("Serverless Hindi PDF Generation & Security Hardening", () => {
     },
     30000
   );
+
+  it("renders receipt confirmation count matching default and configured CONFIRMATIONS environment variable", async () => {
+    const originalEnv = process.env.CONFIRMATIONS;
+    try {
+      delete process.env.CONFIRMATIONS;
+      const receiptData = {
+        receiptNumber: "REC-CONFIRM-001",
+        invoiceNumber: "INV-CONFIRM-001",
+        publicId: "raseed_confirm_test_1",
+        title: "Confirmation Test",
+        merchantDisplayName: "Test Merchant",
+        merchantWallet: "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
+        totalInvoiceAmountUsdc: 1_000_000n,
+        totalPaidAmountUsdc: 1_000_000n,
+        status: "PAID",
+        createdAt: new Date(),
+        paymentEvents: [
+          {
+            txHash: "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+            payerAddress: "0x1111111111111111111111111111111111111111",
+            amountUsdc: 1_000_000n,
+            blockNumber: 12345n,
+            confirmedAt: new Date(),
+          },
+        ],
+      };
+
+      const defaultHtml = await buildReceiptHtml(receiptData);
+      expect(defaultHtml).toContain("(3 on-chain confirmations)");
+
+      process.env.CONFIRMATIONS = "5";
+      const customHtml = await buildReceiptHtml(receiptData);
+      expect(customHtml).toContain("(5 on-chain confirmations)");
+    } finally {
+      if (originalEnv !== undefined) {
+        process.env.CONFIRMATIONS = originalEnv;
+      } else {
+        delete process.env.CONFIRMATIONS;
+      }
+    }
+  });
 });

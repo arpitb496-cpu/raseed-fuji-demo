@@ -6,6 +6,7 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { ERC20_ABI, PAYMENT_ROUTER_ABI } from "@/config/contracts";
 import { avalancheFuji } from "viem/chains";
 import { formatUnambiguousDate } from "@/lib/utils/date";
+import { DEFAULT_CONFIRMATIONS } from "@/config/settlement";
 
 interface PublicInvoiceData {
   publicId: string;
@@ -258,8 +259,8 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
             if (!cancelled) {
               setReportStatusMessage(
                 lang === "en"
-                  ? "Waiting for blockchain block confirmations (at least 3 confirmations required)..."
-                  : "ब्लॉकचेन ब्लॉक पुष्टि की प्रतीक्षा है (कम से कम 3 पुष्टि आवश्यक)..."
+                  ? `Waiting for blockchain block confirmations (at least ${DEFAULT_CONFIRMATIONS} confirmations required)...`
+                  : `ब्लॉकचेन ब्लॉक पुष्टि की प्रतीक्षा है (कम से कम ${DEFAULT_CONFIRMATIONS} पुष्टि आवश्यक)...`
               );
             }
           }

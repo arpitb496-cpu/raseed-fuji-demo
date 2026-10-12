@@ -3,8 +3,10 @@ import { InvoiceStatus, type PrismaClient, type Prisma } from "@prisma/client";
 import { getServerPublicClient } from "@/lib/blockchain/client";
 import type { PublicClient } from "viem";
 
+import { DEFAULT_CONFIRMATIONS, getRequiredConfirmations } from "@/config/settlement";
+export { DEFAULT_CONFIRMATIONS, getRequiredConfirmations };
+
 export const DUST_MICRO_USDC = 10_000n; // 0.01 USDC = 10,000 micro-units
-export const DEFAULT_CONFIRMATIONS = 3;
 
 export interface SettlementResult {
   invoiceId: string;
@@ -30,8 +32,7 @@ export async function recomputeInvoiceSettlement(
 ): Promise<SettlementResult> {
   const db = options?.prismaClient || prisma;
   const confirmations = BigInt(
-    options?.confirmations ??
-      (process.env.CONFIRMATIONS ? parseInt(process.env.CONFIRMATIONS, 10) : DEFAULT_CONFIRMATIONS)
+    options?.confirmations ?? getRequiredConfirmations()
   );
 
   // 1. Fetch current payment event block numbers OUTSIDE any transaction to determine RPC requirements

@@ -4,6 +4,7 @@ import { INDICATIVE_USD_TO_INR_RATE } from "@/config/constants";
 import { getAppBaseUrl } from "@/config/url";
 import { CURRENT_NETWORK } from "@/config/network";
 import { formatUnambiguousDate } from "@/lib/utils/date";
+import { getRequiredConfirmations } from "@/config/settlement";
 import {
   NOTO_SANS_DEVANAGARI_REGULAR_BASE64,
   NOTO_SANS_DEVANAGARI_BOLD_BASE64,
@@ -760,7 +761,7 @@ export async function buildReceiptHtml(data: ReceiptPdfData): Promise<string> {
 
   <div style="margin-top: 16px;">
     <div class="confirmed-seal">
-      ✓ Confirmed on Avalanche Fuji Testnet — Settled directly via PaymentRouter (3 on-chain confirmations)
+      ✓ Confirmed on Avalanche Fuji Testnet — Settled directly via PaymentRouter (${getRequiredConfirmations()} on-chain confirmations)
     </div>
   </div>
 
