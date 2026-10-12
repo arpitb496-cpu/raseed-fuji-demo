@@ -2,16 +2,16 @@ import { describe, it, expect } from "vitest";
 import fs from "fs";
 import path from "path";
 
-describe("Delete Flow Safety & Confirmation Step", () => {
+describe("Delete Flow Safety & Confirmation Step (Static Code Inspection Checks)", () => {
   const settingsPagePath = path.resolve(__dirname, "../src/app/app/settings/page.tsx");
   const deleteRoutePath = path.resolve(__dirname, "../src/app/api/merchant/profile/route.ts");
 
-  it("verifies DELETE handler in /api/merchant/profile destroys session on success", () => {
+  it("statically verifies DELETE handler in /api/merchant/profile destroys session on success", () => {
     const routeContent = fs.readFileSync(deleteRoutePath, "utf-8");
     expect(routeContent).toContain("session.destroy()");
   });
 
-  it("verifies settings page enforces typing DELETE to enable confirm button", () => {
+  it("statically verifies settings page enforces typing DELETE to enable confirm button", () => {
     const settingsContent = fs.readFileSync(settingsPagePath, "utf-8");
 
     // 1. Input element with id delete-confirm-input
