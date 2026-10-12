@@ -56,12 +56,19 @@ describe("Security Headers Configuration (next.config.ts)", () => {
       expect(hsts).toBeDefined();
       expect(hsts).toContain("max-age=");
       expect(hsts).toContain("includeSubDomains");
+
+      // In production: CSP connect-src strictly omits localhost / 127.0.0.1
+      const csp = headersMap.get("content-security-policy-report-only") || headersMap.get("content-security-policy");
+      expect(csp).toBeDefined();
+      expect(csp).not.toContain("http://localhost");
+      expect(csp).not.toContain("ws://localhost");
+      expect(csp).not.toContain("ws://127.0.0.1");
     } finally {
       (process.env as Record<string, string | undefined>).NODE_ENV = origEnv;
     }
   });
 
-  it("omits Strict-Transport-Security in non-production local development", async () => {
+  it("omits Strict-Transport-Security in non-production local development and includes localhost CSP", async () => {
     const origEnv = process.env.NODE_ENV;
     try {
       (process.env as Record<string, string | undefined>).NODE_ENV = "development";
@@ -72,6 +79,13 @@ describe("Security Headers Configuration (next.config.ts)", () => {
         rootRule?.headers.map((h) => [h.key.toLowerCase(), h.value])
       );
       expect(headersMap.get("strict-transport-security")).toBeUndefined();
+
+      // In development: CSP connect-src permits local dev endpoints
+      const csp = headersMap.get("content-security-policy-report-only") || headersMap.get("content-security-policy");
+      expect(csp).toBeDefined();
+      expect(csp).toContain("http://localhost:*");
+      expect(csp).toContain("ws://localhost:*");
+      expect(csp).toContain("ws://127.0.0.1:*");
     } finally {
       (process.env as Record<string, string | undefined>).NODE_ENV = origEnv;
     }

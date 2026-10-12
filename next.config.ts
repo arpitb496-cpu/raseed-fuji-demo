@@ -57,7 +57,9 @@ const nextConfig: NextConfig = {
           "style-src 'self' 'unsafe-inline'",
           "img-src 'self' data: blob: https:",
           "font-src 'self' data:",
-          "connect-src 'self' https://api.avax-test.network https://api.avax.network https://*.walletconnect.com https://*.walletconnect.org wss://*.walletconnect.com wss://*.walletconnect.org https://api.web3modal.org https://pulse.walletconnect.org http://localhost:* ws://localhost:* ws://127.0.0.1:*",
+          `connect-src 'self' https://api.avax-test.network https://api.avax.network https://*.walletconnect.com https://*.walletconnect.org wss://*.walletconnect.com wss://*.walletconnect.org https://api.web3modal.org https://pulse.walletconnect.org${
+            !isProd ? " http://localhost:* ws://localhost:* ws://127.0.0.1:*" : ""
+          }`,
           "frame-ancestors 'none'",
         ].join("; "),
       },
