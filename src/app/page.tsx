@@ -354,7 +354,16 @@ export default function HomePage() {
             </div>
 
             <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              Contract bytecode is deployed on Avalanche Fuji. Source code verification on Snowtrace explorer is pending. Contract handles testnet USDC routing only.
+              Contract source code is{" "}
+              <a
+                href="https://testnet.snowtrace.io/address/0xb94A922261bBa2e07648520bf56125a4102eaB95#code"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-teal-800 dark:text-teal-300 hover:underline font-medium"
+              >
+                verified on Snowtrace (Fuji testnet)
+              </a>
+              . Contract handles testnet USDC routing only.
             </p>
           </div>
         </div>

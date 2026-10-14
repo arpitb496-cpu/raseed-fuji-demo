@@ -42,7 +42,7 @@ If you discover a security vulnerability, please submit your findings to:
 1. **Zero Fund Custody**: Neither Raseed web servers nor the `PaymentRouter` smart contract ever hold user or merchant funds.
 2. **Deterministic Settlement**: Smart contracts execute atomic token transfers from payer directly to merchant.
 3. **No Key Storage**: We never request, handle, store, or log private keys or seed phrases.
-4. **Verifiable Deployments**: Smart contract verification instructions are documented with reproducible compiler settings and constructor arguments (see `docs/VERIFY_ROUTER.md`).
+4. **Verifiable Deployments**: Smart contract source code is [verified on Snowtrace (Fuji testnet)](https://testnet.snowtrace.io/address/0xb94A922261bBa2e07648520bf56125a4102eaB95#code); reproducible compiler settings and constructor arguments are documented in `docs/VERIFY_ROUTER.md`.
 
 ---
 

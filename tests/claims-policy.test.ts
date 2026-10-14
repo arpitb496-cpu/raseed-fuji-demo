@@ -48,9 +48,9 @@ const FORBIDDEN_CLAIM_PATTERNS: Array<{ name: string; pattern: RegExp; allowFilt
   },
   {
     name: "verified",
-    // Disallow claiming protocol, contract or platform is verified; allow technical pending notices
+    // Disallow claiming protocol, contract or platform is verified; allow technical pending notices or Snowtrace verification
     pattern: /\b(?:verified|सत्यापित)\b/i,
-    allowFilter: (_m, full) => /\b(?:verification\s+pending|pending\s+verification|not\s+verified|unverified)\b/i.test(full),
+    allowFilter: (_m, full) => /\b(?:verification\s+pending|pending\s+verification|not\s+verified|unverified|verified\s+on\s+Snowtrace)\b/i.test(full),
   },
   {
     name: "official",

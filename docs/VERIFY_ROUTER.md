@@ -4,7 +4,7 @@ This document provides the exact, non-broadcast command and configuration parame
 
 > **CRITICAL POLICY NOTICE**:
 > 1. **Do NOT run anything that needs a private key**. Contract verification requires **zero private keys**, zero accounts, and zero gas. It is a purely public metadata and bytecode submission.
-> 2. **Current Verification Status**: Router `0xb94A922261bBa2e07648520bf56125a4102eaB95` currently displays only bytecode on Snowtrace. Until verification is manually run and confirmed, **no UI or documentation in this repository may claim "verified on Snowtrace"**.
+> 2. **Current Verification Status**: Router `0xb94A922261bBa2e07648520bf56125a4102eaB95` is [verified on Snowtrace (Fuji testnet)](https://testnet.snowtrace.io/address/0xb94A922261bBa2e07648520bf56125a4102eaB95#code).
 
 ---
 
