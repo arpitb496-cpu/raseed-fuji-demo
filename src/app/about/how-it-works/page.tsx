@@ -20,7 +20,7 @@ export default function HowItWorksPage() {
 
       <div className="space-y-3">
         <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
-          {lang === "hi" ? "रसीद कैसे काम करता है" : "How Raseed Works"}
+          {lang === "hi" ? "CryptoDao कैसे काम करता है" : "How CryptoDao Works"}
         </h1>
         <p className="text-sm text-slate-600 dark:text-slate-400">
           {lang === "hi"

@@ -109,7 +109,7 @@ export function useAuth() {
       const siweMessage = new SiweMessage({
         domain,
         address,
-        statement: "Sign in with Ethereum to access your Raseed merchant dashboard. No funds will be moved.",
+        statement: "Sign in with Ethereum to access your CryptoDao merchant dashboard. No funds will be moved.",
         uri: origin,
         version: "1",
         chainId: chainId || 43113,

@@ -1,8 +1,8 @@
 // Central Branding Configuration
 
 export const BRANDING = {
-  name: "Raseed",
-  devanagariName: "रसीद",
+  name: "CryptoDao",
+  devanagariName: "",
   tagline: "Direct, non-custodial stablecoin payments on Avalanche.",
   description: "Peer-to-peer USDC invoicing and payment links. No custody, zero intermediary lockup.",
   domain: process.env.NEXT_PUBLIC_APP_URL ? new URL(process.env.NEXT_PUBLIC_APP_URL).hostname : "localhost:3000",

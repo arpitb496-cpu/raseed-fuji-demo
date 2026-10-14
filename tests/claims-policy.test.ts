@@ -103,6 +103,12 @@ const FORBIDDEN_CLAIM_PATTERNS: Array<{ name: string; pattern: RegExp; allowFilt
     name: "no fees / zero fees",
     pattern: /\b(?:no\s+fees?|zero\s+fees?|शून्य\s+शुल्क|कोई\s+शुल्क\s+नहीं)\b/i,
   },
+  {
+    name: "dao",
+    pattern: /\b(?:dao)\b/i,
+    allowFilter: (_m, full) =>
+      /\bCryptoDao is a project name\. It is not a DAO and has no token or on-chain governance\./i.test(full),
+  },
 ];
 
 describe("Claims Policy Verification (Scope & Compliance)", () => {
@@ -293,7 +299,18 @@ describe("Claims Policy Verification (Scope & Compliance)", () => {
       expect(protocolRule?.allowFilter?.("protocol", "Protocol fee is zero forever")).toBe(false);
     });
 
-    it("fails on forbidden words: audited, guaranteed, safe, stateless, no fees, zero fees", () => {
+    it("allows the exact CryptoDao disclaimer sentence and rejects other DAO claims", () => {
+      const sentence =
+        "CryptoDao is a project name. It is not a DAO and has no token or on-chain governance.";
+      const daoRule = FORBIDDEN_CLAIM_PATTERNS.find((r) => r.name === "dao");
+      expect(daoRule).toBeDefined();
+      expect(daoRule?.pattern.test(sentence)).toBe(true);
+      expect(daoRule?.allowFilter?.("dao", sentence)).toBe(true);
+      expect(daoRule?.pattern.test("CryptoDao")).toBe(false);
+      expect(daoRule?.allowFilter?.("dao", "Join our DAO governance")).toBe(false);
+    });
+
+    it("fails on forbidden words: audited, guaranteed, safe, stateless, no fees, zero fees, dao", () => {
       const forbiddenSamples = [
         { word: "audited", text: "Our smart contract is fully audited." },
         { word: "guaranteed", text: "Guaranteed instant settlement." },
@@ -301,6 +318,7 @@ describe("Claims Policy Verification (Scope & Compliance)", () => {
         { word: "stateless", text: "The PaymentRouter is completely stateless." },
         { word: "no fees / zero fees", text: "Enjoy no fees on all transactions." },
         { word: "no fees / zero fees", text: "Zero fees for life." },
+        { word: "dao", text: "Join our community DAO today." },
       ];
 
       for (const sample of forbiddenSamples) {

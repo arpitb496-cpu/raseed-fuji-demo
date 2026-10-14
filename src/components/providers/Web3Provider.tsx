@@ -26,7 +26,7 @@ const connectors = connectorsForWallets(
     },
   ],
   {
-    appName: "Raseed",
+    appName: "CryptoDao",
     projectId,
   }
 );

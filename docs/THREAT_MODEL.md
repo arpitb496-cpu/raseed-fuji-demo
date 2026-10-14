@@ -1,7 +1,7 @@
 # Threat Model & Attack Surface Analysis (THREAT_MODEL.md)
 
 ## 1. Scope & Primary Assets
-Raseed is a non-custodial stablecoin invoicing app on Avalanche C-Chain. The system handles:
+CryptoDao is a non-custodial stablecoin invoicing app on Avalanche C-Chain. The system handles:
 1. **Payer Funds**: Native USDC held by payers in self-custody wallets.
 2. **Merchant Receivables**: USDC directed to merchant payout addresses.
 3. **Invoice Metadata**: Line items, amounts, merchant and optional client details.

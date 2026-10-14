@@ -108,7 +108,7 @@ if (ACTIVE_NETWORK_KEY === "mainnet") {
     process.env.NEXT_PUBLIC_ALLOW_MAINNET !== "true"
   ) {
     throw new Error(
-      "MAINNET GUARD: Raseed is configured strictly as a TESTNET-ONLY DEMO on Avalanche Fuji for partnership and grant reviews. Refusing to run against mainnet unless ALLOW_MAINNET=true is explicitly configured."
+      "MAINNET GUARD: CryptoDao is configured strictly as a TESTNET-ONLY DEMO on Avalanche Fuji for partnership and grant reviews. Refusing to run against mainnet unless ALLOW_MAINNET=true is explicitly configured."
     );
   }
   assertNetworkRouterValid("mainnet");

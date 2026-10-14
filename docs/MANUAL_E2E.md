@@ -86,7 +86,7 @@ This guide documents the complete end-to-end testing procedure on **Avalanche Fu
      - Settled amount (`+1.00 USDC`)
      - Snowtrace transaction link
 2. **Download Bilingual Demo Receipt**:
-   - Click the **Download Receipt / रसीद** button.
+   - Click the **Download Receipt** button.
    - Open the generated PDF:
      - Check that all merchant and payer fields are escaped.
      - Check bilingual headings: *PAYMENT RECEIPT (TESTNET) / भुगतान रसीद (टेस्टनेट)*.

@@ -22,8 +22,8 @@ export default function TermsPage() {
         <AlertCircle className="w-5 h-5 shrink-0" />
         <p className="font-medium">
           {lang === "hi"
-            ? "डेमो सूचना (DEMO NOTICE): यह पृष्ठ एक टेस्टनेट डेमो सूचना है, अंतिम कानूनी शर्तें नहीं। रसीद केवल तकनीकी मूल्यांकन और साझेदारी चर्चाओं के लिए एवलांच फूजी टेस्टनेट पर संचालित है। इसमें कोई वास्तविक धन शामिल नहीं है, और यह सॉफ्टवेयर वित्तीय या कानूनी सलाह नहीं देता है।"
-            : "DEMO NOTICE — NOT FINAL LEGAL TERMS: This page is a testnet demo notice, not final legal terms. Raseed is operating strictly on Avalanche Fuji testnet for evaluation and partnership discussions. No real funds are involved, and this software does not constitute financial or legal advice."}
+            ? "डेमो सूचना (DEMO NOTICE): यह पृष्ठ एक टेस्टनेट डेमो सूचना है, अंतिम कानूनी शर्तें नहीं। CryptoDao केवल तकनीकी मूल्यांकन और साझेदारी चर्चाओं के लिए एवलांच फूजी टेस्टनेट पर संचालित है। इसमें कोई वास्तविक धन शामिल नहीं है, और यह सॉफ्टवेयर वित्तीय या कानूनी सलाह नहीं देता है।"
+            : "DEMO NOTICE — NOT FINAL LEGAL TERMS: This page is a testnet demo notice, not final legal terms. CryptoDao is operating strictly on Avalanche Fuji testnet for evaluation and partnership discussions. No real funds are involved, and this software does not constitute financial or legal advice."}
         </p>
       </div>
 
@@ -37,8 +37,8 @@ export default function TermsPage() {
         </h2>
         <p>
           {lang === "hi"
-            ? "रसीद एवलांच फूजी टेस्टनेट पर पीयर-टू-पीयर स्टेबलकॉइन चालान के लिए प्रायोगिक, गैर-कस्टोडियल सॉफ्टवेयर इंटरफेस प्रदान करता है। रसीद उपयोगकर्ता फंड की कस्टडी नहीं लेता है, एस्क्रो एजेंट, मनी ट्रांसमीटर या बैंक के रूप में कार्य नहीं करता है, और कभी भी निजी कुंजियां नहीं रखता है।"
-            : "Raseed provides experimental, non-custodial software interfaces for peer-to-peer testnet stablecoin invoicing on Avalanche Fuji. Raseed does not take custody of user funds, does not act as an escrow agent, money transmitter, bank, or custodian, and never possesses private keys."}
+            ? "CryptoDao एवलांच फूजी टेस्टनेट पर पीयर-टू-पीयर स्टेबलकॉइन चालान के लिए प्रायोगिक, गैर-कस्टोडियल सॉफ्टवेयर इंटरफेस प्रदान करता है। CryptoDao उपयोगकर्ता फंड की कस्टडी नहीं लेता है, एस्क्रो एजेंट, मनी ट्रांसमीटर या बैंक के रूप में कार्य नहीं करता है, और कभी भी निजी कुंजियां नहीं रखता है।"
+            : "CryptoDao provides experimental, non-custodial software interfaces for peer-to-peer testnet stablecoin invoicing on Avalanche Fuji. CryptoDao does not take custody of user funds, does not act as an escrow agent, money transmitter, bank, or custodian, and never possesses private keys."}
         </p>
       </section>
 
@@ -59,8 +59,8 @@ export default function TermsPage() {
         </h2>
         <p>
           {lang === "hi"
-            ? "रसीद वित्तीय या कानूनी सलाह प्रदान नहीं करता है। स्टेबलकॉइन संदर्भ दरें केवल सांकेतिक हैं। डेमो सॉफ्टवेयर बिना किसी वारंटी के 'जैसा है' (as-is) आधार पर प्रदान किया जाता है।"
-            : "Raseed does not offer financial or legal advice. Stablecoin reference rates are indicative only. The demo software is provided \"as is\" without warranties of any kind."}
+            ? "CryptoDao वित्तीय या कानूनी सलाह प्रदान नहीं करता है। स्टेबलकॉइन संदर्भ दरें केवल सांकेतिक हैं। डेमो सॉफ्टवेयर बिना किसी वारंटी के 'जैसा है' (as-is) आधार पर प्रदान किया जाता है।"
+            : "CryptoDao does not offer financial or legal advice. Stablecoin reference rates are indicative only. The demo software is provided \"as is\" without warranties of any kind."}
         </p>
       </section>
     </div>

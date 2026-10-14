@@ -25,8 +25,8 @@ export default function SecurityPage() {
         </h1>
         <p className="text-sm text-slate-600 dark:text-slate-400">
           {lang === "hi"
-            ? "शून्य कस्टडी और प्रत्यक्ष पीयर-टू-पीयर लेनदेन के लिए रसीद का तकनीकी डिज़ाइन।"
-            : "How Raseed is architected for zero custody and peer-to-peer transaction integrity on Avalanche Fuji."}
+            ? "शून्य कस्टडी और प्रत्यक्ष पीयर-टू-पीयर लेनदेन के लिए CryptoDao का तकनीकी डिज़ाइन।"
+            : "How CryptoDao is architected for zero custody and peer-to-peer transaction integrity on Avalanche Fuji."}
         </p>
       </div>
 

@@ -18,7 +18,7 @@ export function Footer() {
           <div className="md:col-span-2 space-y-3">
             <div className="flex items-center gap-2">
               <span className="font-bold text-base text-slate-900 dark:text-white">
-                {BRANDING.name} ({BRANDING.devanagariName})
+                {BRANDING.name}
               </span>
               <span className="bg-teal-100 dark:bg-teal-950/60 text-teal-800 dark:text-teal-300 text-[10px] px-2 py-0.5 rounded-full font-medium">
                 {CURRENT_NETWORK.name}

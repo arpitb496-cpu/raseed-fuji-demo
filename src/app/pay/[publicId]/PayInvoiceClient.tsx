@@ -437,10 +437,10 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
         <div className="flex items-center justify-between border-b border-slate-800/80 pb-4">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-bold text-lg">
-              र
+              C
             </div>
             <div>
-              <span className="font-semibold text-white tracking-tight">Raseed Pay</span>
+              <span className="font-semibold text-white tracking-tight">CryptoDao Pay</span>
               <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
                 Avalanche Fuji
               </span>

@@ -48,7 +48,7 @@ export default function HomePage() {
               <Sparkles className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
               <span>
                 {lang === "hi"
-                  ? "एवलांच फूजी टेस्टनेट पर गैर-कस्टोडियल रसीदें"
+                  ? "एवलांच फूजी टेस्टनेट पर गैर-कस्टोडियल चालान"
                   : "Non-Custodial USDC Invoicing on Avalanche Fuji"}
               </span>
             </span>
@@ -404,7 +404,7 @@ export default function HomePage() {
                 <span>No Mainnet Deployment</span>
               </div>
               <p className="text-slate-600 dark:text-slate-400 text-[11px] leading-relaxed">
-                Raseed is strictly deployed on Avalanche Fuji testnet. Mainnet deployment scripts are disabled behind safety gates until audit and grant milestones are met.
+                CryptoDao is strictly deployed on Avalanche Fuji testnet. Mainnet deployment scripts are disabled behind safety gates until audit and grant milestones are met.
               </p>
             </div>
 
@@ -452,7 +452,7 @@ export default function HomePage() {
               },
               {
                 title: "Additional EVM Chain Deployments (e.g., Arbitrum, Optimism)",
-                desc: "Deploying PaymentRouter across other EVM-compatible Layer 2 ecosystems (Solana is not planned).",
+                desc: "Deploying PaymentRouter across other EVM-compatible Layer 2 ecosystems. Solana support is planned, not built. It would require a separate non-EVM program.",
                 status: "planned, not built",
               },
               {

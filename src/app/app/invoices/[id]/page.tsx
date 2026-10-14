@@ -247,7 +247,7 @@ export default function InvoiceDetailPage({
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/50 dark:bg-emerald-950/20 text-xs font-semibold text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100/50 dark:hover:bg-emerald-900/30 cursor-pointer"
             >
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Download Receipt / रसीद</span>
+              <span>Download Receipt</span>
             </a>
           )}
 

@@ -16,24 +16,24 @@ const isDemoInviteMode = process.env.DEMO_INVITE_MODE === "true";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://raseed.app"),
-  title: `${BRANDING.name} (${BRANDING.devanagariName}) | Non-Custodial Stablecoin Invoicing`,
+  title: `${BRANDING.name} | Non-Custodial Stablecoin Invoicing`,
   description: BRANDING.description,
   keywords: ["USDC invoicing", "Avalanche Fuji", "non-custodial payments", "crypto invoices India", "stablecoin payment link"],
-  authors: [{ name: "Raseed Contributors" }],
+  authors: [{ name: "CryptoDao Contributors" }],
   alternates: {
     canonical: "/",
   },
   openGraph: {
-    title: `${BRANDING.name} (${BRANDING.devanagariName}) | Non-Custodial Stablecoin Invoicing`,
+    title: `${BRANDING.name} | Non-Custodial Stablecoin Invoicing`,
     description: BRANDING.description,
     url: "/",
-    siteName: "Raseed",
+    siteName: "CryptoDao",
     locale: "en_US",
     type: "website",
   },
   twitter: {
     card: "summary",
-    title: `${BRANDING.name} (${BRANDING.devanagariName}) | Non-Custodial Stablecoin Invoicing`,
+    title: `${BRANDING.name} | Non-Custodial Stablecoin Invoicing`,
     description: BRANDING.description,
   },
   robots: isDemoInviteMode

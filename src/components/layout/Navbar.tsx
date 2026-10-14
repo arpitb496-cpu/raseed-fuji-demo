@@ -27,9 +27,6 @@ export function Navbar() {
                 <span className="font-bold text-lg tracking-tight text-slate-900 dark:text-white">
                   {BRANDING.name}
                 </span>
-                <span className="text-xs font-medium text-teal-800 dark:text-teal-300 font-serif">
-                  ({BRANDING.devanagariName})
-                </span>
               </div>
               <span className="text-[10px] text-slate-600 dark:text-slate-400 -mt-0.5 hidden sm:inline">
                 Non-Custodial USDC Invoicing

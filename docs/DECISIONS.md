@@ -1,11 +1,11 @@
 # Architecture & Product Decisions (DECISIONS.md)
 
-This document records the architectural, technical, product, and security decisions for **Raseed**.
+This document records the architectural, technical, product, and security decisions for **CryptoDao**.
 
 ---
 
 ## 1. Product Name & Branding
-* **Decision**: The project name is configured as **Raseed** (रसीद), the widely recognized Hindustani term for receipt/invoice, reflecting an India-first cross-border payment experience.
+* **Decision**: The project name is configured as **CryptoDao** (display branding). CryptoDao is a project name. It is not a DAO and has no token or on-chain governance.
 * **Modularity**: Brand identity is isolated in `src/config/branding.ts` (App Name, Tagline, Logo, Symbol, Support Links). Changing the product name in this single file propagates across UI, legal copy, and meta tags.
 * **Alternatives Evaluated**:
   * *Challan* (often carries punitive connotations in India).

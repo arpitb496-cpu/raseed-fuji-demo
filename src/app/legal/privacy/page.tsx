@@ -22,8 +22,8 @@ export default function PrivacyPage() {
         <AlertCircle className="w-5 h-5 shrink-0" />
         <p className="font-medium">
           {lang === "hi"
-            ? "डेमो सूचना (DEMO NOTICE): यह पृष्ठ एक टेस्टनेट डेमो सूचना है, अंतिम कानूनी शर्तें नहीं। रसीद विशेष रूप से मूल्यांकन और साझेदारी चर्चाओं के लिए एवलांच फूजी टेस्टनेट पर कॉन्फ़िगर किया गया है। कोई वास्तविक धन शामिल नहीं है।"
-            : "DEMO NOTICE — NOT FINAL LEGAL TERMS: This page is a testnet demo notice, not final legal terms. Raseed is configured strictly for evaluation and partnership discussions on Avalanche Fuji testnet. No real funds are involved."}
+            ? "डेमो सूचना (DEMO NOTICE): यह पृष्ठ एक टेस्टनेट डेमो सूचना है, अंतिम कानूनी शर्तें नहीं। CryptoDao विशेष रूप से मूल्यांकन और साझेदारी चर्चाओं के लिए एवलांच फूजी टेस्टनेट पर कॉन्फ़िगर किया गया है। कोई वास्तविक धन शामिल नहीं है।"
+            : "DEMO NOTICE — NOT FINAL LEGAL TERMS: This page is a testnet demo notice, not final legal terms. CryptoDao is configured strictly for evaluation and partnership discussions on Avalanche Fuji testnet. No real funds are involved."}
         </p>
       </div>
 
@@ -37,8 +37,8 @@ export default function PrivacyPage() {
         </h2>
         <p>
           {lang === "hi"
-            ? "रसीद सख्त डेटा न्यूनीकरण का पालन करता है। हम पासवर्ड, पहचान दस्तावेज, फोन नंबर या व्यक्तिगत पहचान संख्या एकत्र नहीं करते हैं। चालान पर ग्राहक का नाम और ईमेल पूरी तरह वैकल्पिक हैं।"
-            : "Raseed adheres to strict data minimization. We do not collect passwords, identity documents, phone numbers, or national identification numbers. Client names and emails on invoices are strictly optional."}
+            ? "CryptoDao सख्त डेटा न्यूनीकरण का पालन करता है। हम पासवर्ड, पहचान दस्तावेज, फोन नंबर या व्यक्तिगत पहचान संख्या एकत्र नहीं करते हैं। चालान पर ग्राहक का नाम और ईमेल पूरी तरह वैकल्पिक हैं।"
+            : "CryptoDao adheres to strict data minimization. We do not collect passwords, identity documents, phone numbers, or national identification numbers. Client names and emails on invoices are strictly optional."}
         </p>
       </section>
 

@@ -1,4 +1,4 @@
-# Raseed (रसीद)
+# CryptoDao
 
 > **Non-custodial, peer-to-peer stablecoin invoicing and payment links on Avalanche C-Chain.**  
 > Zero custody. Direct settlement. Atomic on-chain routing.
@@ -7,14 +7,14 @@
 
 ## 1. Architecture Overview
 
-Raseed connects merchants and payers directly without intermediaries holding custody of user assets. Payments are routed atomically from payer to merchant using native Circle USDC.
+CryptoDao connects merchants and payers directly without intermediaries holding custody of user assets. Payments are routed atomically from payer to merchant using native Circle USDC.
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor Merchant
     actor Payer
-    participant WebApp as Raseed Web App
+    participant WebApp as CryptoDao Web App
     participant Server as Verification API / DB
     participant Router as PaymentRouter (Contract)
     participant USDC as Circle USDC (ERC20)
@@ -108,7 +108,7 @@ defi/
 │   │   ├── common/                # Buttons, inputs, modals, toasts, language selector
 │   │   └── layout/                # Navbar, footer, network banner, test-mode ribbon
 │   ├── config/
-│   │   ├── branding.ts            # Central branding configuration (Product name: Raseed)
+│   │   ├── branding.ts            # Central branding configuration (Product name: CryptoDao)
 │   │   ├── network.ts             # Avalanche Fuji & Mainnet RPC, contracts & USDC addresses
 │   │   ├── constants.ts           # Financial constants (MIN_INVOICE_USDC, DUST_THRESHOLD)
 │   │   └── env.ts                 # Validated environment configuration (Zod)
@@ -151,7 +151,7 @@ When a transaction hash is submitted or reconciled by the background engine:
 
 ## 6. Database Migrations & Deployment
 
-Raseed uses Prisma with PostgreSQL (e.g. Neon serverless).
+CryptoDao uses Prisma with PostgreSQL (e.g. Neon serverless).
 
 ### Migration Commands
 - **Remote / Non-Local / Production / Staging Databases**:

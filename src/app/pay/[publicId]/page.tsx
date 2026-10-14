@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import PayInvoiceClient from "./PayInvoiceClient";
 
 export const metadata: Metadata = {
-  title: "Pay Invoice | Raseed (रसीद)",
+  title: "Pay Invoice | CryptoDao",
   description: "Non-custodial USDC invoice payment settlement directly on Avalanche Fuji testnet.",
   robots: {
     index: false,
@@ -10,15 +10,15 @@ export const metadata: Metadata = {
     nocache: true,
   },
   openGraph: {
-    title: "Pay Invoice | Raseed (रसीद)",
+    title: "Pay Invoice | CryptoDao",
     description: "Non-custodial USDC invoice payment settlement on Avalanche Fuji testnet.",
-    siteName: "Raseed",
+    siteName: "CryptoDao",
     locale: "en_US",
     type: "website",
   },
   twitter: {
     card: "summary",
-    title: "Pay Invoice | Raseed (रसीद)",
+    title: "Pay Invoice | CryptoDao",
     description: "Non-custodial USDC invoice settlement on Avalanche Fuji testnet.",
   },
 };

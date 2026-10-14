@@ -26,7 +26,7 @@ describe("SIWE Authentication & Session Security", () => {
     const siweMessage = new SiweMessage({
       domain,
       address: testAccount.address,
-      statement: "Sign in with Ethereum to Raseed (Avalanche Fuji testnet demo)",
+      statement: "Sign in with Ethereum to CryptoDao (Avalanche Fuji testnet demo)",
       uri: origin,
       version: "1",
       chainId: 43113,
@@ -50,7 +50,7 @@ describe("SIWE Authentication & Session Security", () => {
     const siweMessage = new SiweMessage({
       domain: "localhost:3000",
       address: testAccount.address,
-      statement: "Sign in with Ethereum to Raseed (Avalanche Fuji testnet demo)",
+      statement: "Sign in with Ethereum to CryptoDao (Avalanche Fuji testnet demo)",
       uri: "http://localhost:3000",
       version: "1",
       chainId: 43113,
@@ -71,7 +71,7 @@ describe("SIWE Authentication & Session Security", () => {
     const siweMessage = new SiweMessage({
       domain: "localhost:3000",
       address: testAccount.address, // Claims to be testAccount
-      statement: "Sign in with Ethereum to Raseed (Avalanche Fuji testnet demo)",
+      statement: "Sign in with Ethereum to CryptoDao (Avalanche Fuji testnet demo)",
       uri: "http://localhost:3000",
       version: "1",
       chainId: 43113,

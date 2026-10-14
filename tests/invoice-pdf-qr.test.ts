@@ -178,7 +178,7 @@ describe("Invoice & Receipt PDF Verification (Section J & Phase 5.7 Item C)", ()
         const extractedText = extractTextFromPdf(pdfBuffer);
         expect(extractedText).toContain("डेमो चालान (Demo Invoice)");
         expect(extractedText).toContain("टेस्टनेट डेमो");
-        expect(extractedText).toContain("रसीद");
+        expect(extractedText).toContain("CRYPTODAO");
         expect(extractedText).toContain("भुगतान");
         expect(extractedText).toContain("चालान");
         expect(extractedText).not.toContain("official");
@@ -219,7 +219,7 @@ describe("Invoice & Receipt PDF Verification (Section J & Phase 5.7 Item C)", ()
       const html = await buildInvoiceHtml(mockInvoice);
       expect(html).toContain("डेमो चालान (Demo Invoice)");
       expect(html).toContain("टेस्टनेट डेमो");
-      expect(html).toContain("रसीद");
+      expect(html).toContain("CRYPTODAO");
       expect(html).toContain("भुगतान");
       expect(html).toContain("चालान");
       expect(html).not.toContain("official");

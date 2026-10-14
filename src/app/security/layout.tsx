@@ -1,22 +1,22 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Security Architecture | Raseed (रसीद)",
+  title: "Security Architecture | CryptoDao",
   description: "Non-custodial architecture, zero fund custody, and atomic payment routing on Avalanche Fuji testnet.",
   alternates: {
     canonical: "/security",
   },
   openGraph: {
-    title: "Security Architecture | Raseed (रसीद)",
+    title: "Security Architecture | CryptoDao",
     description: "Non-custodial architecture, zero fund custody, and atomic payment routing on Avalanche Fuji testnet.",
     url: "/security",
-    siteName: "Raseed",
+    siteName: "CryptoDao",
     locale: "en_US",
     type: "website",
   },
   twitter: {
     card: "summary",
-    title: "Security Architecture | Raseed (रसीद)",
+    title: "Security Architecture | CryptoDao",
     description: "Non-custodial architecture and technical principles on Avalanche Fuji testnet.",
   },
 };

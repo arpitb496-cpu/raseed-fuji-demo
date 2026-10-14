@@ -22,8 +22,8 @@ export default function RisksPage() {
         <AlertTriangle className="w-5 h-5 shrink-0" />
         <p className="font-medium">
           {lang === "hi"
-            ? "डेमो सूचना (DEMO NOTICE): यह एक टेस्टनेट डेमो सूचना है, अंतिम कानूनी शर्तें नहीं। रसीद केवल तकनीकी मूल्यांकन और साझेदारी चर्चाओं के लिए एवलांच फूजी टेस्टनेट पर संचालित है। कोई वास्तविक धन शामिल नहीं है।"
-            : "DEMO NOTICE — NOT FINAL LEGAL TERMS: This is a testnet demo notice, not final legal terms. Raseed is configured strictly on Avalanche Fuji testnet for evaluation and partnership discussions. No real funds are involved."}
+            ? "डेमो सूचना (DEMO NOTICE): यह एक टेस्टनेट डेमो सूचना है, अंतिम कानूनी शर्तें नहीं। CryptoDao केवल तकनीकी मूल्यांकन और साझेदारी चर्चाओं के लिए एवलांच फूजी टेस्टनेट पर संचालित है। कोई वास्तविक धन शामिल नहीं है।"
+            : "DEMO NOTICE — NOT FINAL LEGAL TERMS: This is a testnet demo notice, not final legal terms. CryptoDao is configured strictly on Avalanche Fuji testnet for evaluation and partnership discussions. No real funds are involved."}
         </p>
       </div>
 
@@ -37,8 +37,8 @@ export default function RisksPage() {
         </h2>
         <p>
           {lang === "hi"
-            ? "आप अपनी निजी कुंजियों और सीड वाक्यांशों की गोपनीयता बनाए रखने के लिए पूरी तरह जिम्मेदार हैं। एवलांच फूजी टेस्टनेट पर पुष्ट होने के बाद रसीद के पास खोई हुई कुंजियों को पुनः प्राप्त करने या लेनदेन को उलटने की कोई क्षमता नहीं है।"
-            : "You are solely responsible for maintaining the confidentiality of your private keys and seed phrases. Raseed has no ability to recover lost keys, cancel sent transactions, or reverse transfers once confirmed on Avalanche Fuji testnet."}
+            ? "आप अपनी निजी कुंजियों और सीड वाक्यांशों की गोपनीयता बनाए रखने के लिए पूरी तरह जिम्मेदार हैं। एवलांच फूजी टेस्टनेट पर पुष्ट होने के बाद CryptoDao के पास खोई हुई कुंजियों को पुनः प्राप्त करने या लेनदेन को उलटने की कोई क्षमता नहीं है।"
+            : "You are solely responsible for maintaining the confidentiality of your private keys and seed phrases. CryptoDao has no ability to recover lost keys, cancel sent transactions, or reverse transfers once confirmed on Avalanche Fuji testnet."}
         </p>
       </section>
 

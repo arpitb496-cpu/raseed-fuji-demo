@@ -8,7 +8,7 @@
 
 ## 1. Core Mandate
 
-Raseed is scoped strictly as a **Testnet-Only Demo** deployed on the **Avalanche Fuji Testnet** (`chainId: 43113`). 
+CryptoDao is scoped strictly as a **Testnet-Only Demo** deployed on the **Avalanche Fuji Testnet** (`chainId: 43113`). 
 
 - **Purpose**: Facilitate technical evaluation, architecture walkthroughs, grant committee assessments, and institutional partnership conversations.
 - **No Public Launch**: The application is **NOT** launched to the public consumer market.
