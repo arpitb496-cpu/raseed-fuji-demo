@@ -46,7 +46,7 @@ export default function SecurityPage() {
         <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
           <div className="flex items-center gap-2 font-semibold text-slate-900 dark:text-white text-sm">
             <Layers className="w-4 h-4 text-teal-600" />
-            <span>{lang === "hi" ? "स्टेटलेस एंटी-ग्रीफिंग" : "Stateless Anti-Griefing Routing"}</span>
+            <span>{lang === "hi" ? "एंटी-ग्रीफिंग डायरेक्ट रूटिंग" : "Anti-Griefing Direct Routing"}</span>
           </div>
           <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
             {lang === "hi"

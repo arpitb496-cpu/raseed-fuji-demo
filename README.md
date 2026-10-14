@@ -1,7 +1,7 @@
 # Raseed (रसीद)
 
 > **Non-custodial, peer-to-peer stablecoin invoicing and payment links on Avalanche C-Chain.**  
-> Zero custody. Direct settlement. Stateless on-chain router. Cryptographic verification.
+> Zero custody. Direct settlement. Atomic on-chain routing. Cryptographic verification.
 
 ---
 
@@ -50,7 +50,7 @@ sequenceDiagram
 
 | Component | Technology | Rationale |
 |---|---|---|
-| **Smart Contracts** | Solidity `^0.8.24`, Foundry, OpenZeppelin | Stateless, gas-efficient, zero-custody router with invariant tests and Slither audits. Keeps no per-invoice state, preventing griefing. |
+| **Smart Contracts** | Solidity `^0.8.24`, Foundry, OpenZeppelin | Non-custodial, gas-efficient router with invariant tests and Slither audits. Never holds funds: transfers tokens atomically from payer to merchant and keeps no token balance or per-invoice settlement state, preventing griefing. |
 | **Blockchain** | Avalanche C-Chain (Fuji Testnet & Mainnet) | Sub-second deterministic finality, sub-cent gas fees, native Circle USDC support. |
 | **Frontend** | Next.js (App Router), TypeScript, Tailwind CSS | High performance, accessible, server-side rendering for invoices & metadata. |
 | **Web3 Client** | Wagmi, Viem, RainbowKit | Type-safe Ethereum interactions, robust connector management, exact allowance requests. |
@@ -126,10 +126,10 @@ defi/
 
 ---
 
-## 4. Stateless On-Chain Settlement Spec (Anti-Griefing)
+## 4. Anti-Griefing On-Chain Settlement Spec
 
 1. **Zero Fund Custody**: The `PaymentRouter` smart contract holds zero balances at all times. Transfers execute directly from the payer to the merchant's wallet (and platform treasury if a fee is active) atomically.
-2. **Stateless Idempotency**: The smart contract does NOT maintain an on-chain `isPaid[invoiceId]` mapping. Because smart contracts cannot know off-chain invoice total amounts, enforcing a single-payment invariant on-chain allows an attacker to front-run and brick any invoice by calling `pay(invoiceId, merchant, 1)`.
+2. **No Per-Invoice Settlement State**: The smart contract does NOT maintain an on-chain `isPaid[invoiceId]` mapping. Because smart contracts cannot know off-chain invoice total amounts, enforcing a single-payment invariant on-chain allows an attacker to front-run and brick any invoice by calling `pay(invoiceId, merchant, 1)`.
 3. **Cumulative Off-Chain Settlement**: The off-chain engine monitors canonical `Paid` events emitted by `PaymentRouter` and aggregates confirmed payment amounts for each `(merchant, onchainInvoiceId)`. Invoices transition from `SENT` to `PARTIALLY_PAID`, and finally to `PAID` once the cumulative sum meets or exceeds `amountUsdc`.
 
 ---

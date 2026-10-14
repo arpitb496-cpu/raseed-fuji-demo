@@ -48,8 +48,8 @@ export default function RisksPage() {
         </h2>
         <p>
           {lang === "hi"
-            ? "जबकि PaymentRouter को स्टेटलेस बनाया गया है, सभी स्मार्ट अनुबंधों में सॉफ्टवेयर दोषों या RPC बाधाओं के तकनीकी जोखिम होते हैं। फूजी टेस्टनेट पर अनुबंध केवल टेस्टनेट टोकन के साथ परीक्षण उद्देश्यों के लिए हैं। सॉफ्टवेयर वित्तीय सलाह के बिना 'जैसा है' आधार पर प्रदान किया जाता है।"
-            : "While PaymentRouter is designed to be minimal and stateless, all smart contracts carry technical risks of software defects or RPC disruption. Contracts deployed on Fuji testnet are for testing purposes only with testnet tokens. Software is provided strictly as-is without financial or legal advice."}
+            ? "जबकि PaymentRouter कभी फंड नहीं रखता और टोकन को सीधे स्थानांतरित करता है, सभी स्मार्ट अनुबंधों में सॉफ्टवेयर दोषों या RPC बाधाओं के तकनीकी जोखिम होते हैं। फूजी टेस्टनेट पर अनुबंध केवल टेस्टनेट टोकन के साथ परीक्षण उद्देश्यों के लिए हैं। सॉफ्टवेयर वित्तीय सलाह के बिना 'जैसा है' आधार पर प्रदान किया जाता है।"
+            : "While PaymentRouter is designed to never hold funds and transfers tokens atomically from payer to merchant, all smart contracts carry technical risks of software defects or RPC disruption. Contracts deployed on Fuji testnet are for testing purposes only with testnet tokens. Software is provided strictly as-is without financial or legal advice."}
         </p>
       </section>
 

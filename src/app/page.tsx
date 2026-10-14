@@ -207,8 +207,8 @@ export default function HomePage() {
               </h3>
               <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                 {lang === "hi"
-                  ? "PaymentRouter कॉन्ट्रैक्ट स्टेटलेस है। यह किसी भी समय कोई टोकन बैलेंस या उपयोगकर्ता फंड नहीं रखता।"
-                  : "The PaymentRouter smart contract is stateless. It transfers funds instantaneously and maintains a zero token balance."}
+                  ? "PaymentRouter कॉन्ट्रैक्ट कभी भी फंड नहीं रखता। यह टोकन को भुगतानकर्ता से विक्रेता तक सीधे स्थानांतरित करता है और शून्य बैलेंस रखता है।"
+                  : "The PaymentRouter smart contract never holds funds: it transfers tokens atomically from payer to merchant and keeps no token balance."}
               </p>
             </div>
 
@@ -363,7 +363,7 @@ export default function HomePage() {
               >
                 verified on Snowtrace (Fuji testnet)
               </a>
-              . Contract handles testnet USDC routing only.
+              . Contract handles testnet USDC routing only. Protocol fee is currently 0%. The contract owner can set a fee for future payments, capped in code at 1%.
             </p>
           </div>
         </div>

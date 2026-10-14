@@ -91,7 +91,7 @@ const FORBIDDEN_CLAIM_PATTERNS: Array<{ name: string; pattern: RegExp; allowFilt
   {
     name: "protocol",
     pattern: /\b(?:protocol|प्रोटोकॉल)\b/i,
-    allowFilter: (_m, full) => /\b(?:WalletConnect(?:\s+protocol|\s+v2)?|protocol\s+transport|protocol\s+client)\b/i.test(full),
+    allowFilter: (_m, full) => /\b(?:WalletConnect(?:\s+protocol|\s+v2)?|protocol\s+transport|protocol\s+client|protocol\s+fee)\b/i.test(full),
   },
 ];
 

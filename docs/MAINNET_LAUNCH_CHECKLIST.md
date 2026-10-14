@@ -6,6 +6,7 @@ This checklist tracks requirements before flipping `NEXT_PUBLIC_NETWORK=mainnet`
 
 ## 1. Smart Contract Governance & Ownership
 - [ ] **Contract Ownership Transfer**: Transfer `PaymentRouter` ownership to a multi-signature wallet (e.g., 3-of-5 multisig) on Avalanche C-Chain.
+- [ ] Replace single-wallet owner with a multisig before mainnet.
 - [ ] **Zero Dev Keys**: Verify that no deployer private key retains admin authority or fee withdrawal rights.
 - [ ] **Fee Cap Verification**: Re-verify on-chain that `feeBps` is set to agreed initial rate (default `0`) and cannot exceed 100 bps (1%).
 - [ ] **Snowtrace Verification**: Contract source code published and matched with pinned Solidity version `0.8.24` and exact compiler optimizations.

@@ -61,7 +61,7 @@
 
 ## 5. Incident Response Playbook
 - **Suspected Contract Anomaly**:
-  - Since the contract is stateless and non-custodial, no funds are at risk of being locked or stolen from the contract itself.
+  - Since the contract never holds funds and is non-custodial, no funds are at risk of being locked or stolen from the contract itself.
   - The frontend can be switched to maintenance mode or have specific pay links disabled via `NEXT_PUBLIC_MAINTENANCE_MODE=true`.
 - **RPC Outage**:
   - Fallback RPC URLs configured in `src/config/network.ts`.
