@@ -1,7 +1,7 @@
 # Raseed (रसीद)
 
 > **Non-custodial, peer-to-peer stablecoin invoicing and payment links on Avalanche C-Chain.**  
-> Zero custody. Direct settlement. Atomic on-chain routing. Cryptographic verification.
+> Zero custody. Direct settlement. Atomic on-chain routing.
 
 ---
 
@@ -50,7 +50,7 @@ sequenceDiagram
 
 | Component | Technology | Rationale |
 |---|---|---|
-| **Smart Contracts** | Solidity `^0.8.24`, Foundry, OpenZeppelin | Non-custodial, gas-efficient router with invariant tests and Slither audits. Never holds funds: transfers tokens atomically from payer to merchant and keeps no token balance or per-invoice settlement state, preventing griefing. |
+| **Smart Contracts** | Solidity `^0.8.24`, Foundry, OpenZeppelin | Non-custodial, gas-efficient router with invariant tests and Slither static analysis run by the team (not an independent audit). Never holds funds: transfers tokens atomically from payer to merchant and keeps no token balance or per-invoice settlement state, preventing griefing. |
 | **Blockchain** | Avalanche C-Chain (Fuji Testnet & Mainnet) | Sub-second deterministic finality, sub-cent gas fees, native Circle USDC support. |
 | **Frontend** | Next.js (App Router), TypeScript, Tailwind CSS | High performance, accessible, server-side rendering for invoices & metadata. |
 | **Web3 Client** | Wagmi, Viem, RainbowKit | Type-safe Ethereum interactions, robust connector management, exact allowance requests. |

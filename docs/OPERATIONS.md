@@ -8,7 +8,7 @@
   - Server-only backend RPC: `FUJI_RPC_URL`, `MAINNET_RPC_URL` (never bundled to browser; fallback to `deployments.json`)
   - Client public RPC: `NEXT_PUBLIC_FUJI_RPC_URL`, `NEXT_PUBLIC_MAINNET_RPC_URL` (public rate-limited RPCs only)
 - **Monitoring & Logging**: Sentry (error tracking), privacy-respecting analytics
-- **Cron Jobs**: Vercel Cron for payment reconciliation (`/api/cron/reconcile`)
+- **Cron Jobs**: Vercel Cron for payment reconciliation (`/api/cron/reconcile`, daily `0 3 * * *`; not tested on Vercel yet)
 
 ---
 
@@ -51,6 +51,7 @@
 
 ## 4. Background Payment Reconciliation
 - **Route**: `POST /api/cron/reconcile` (authenticated via `CRON_SECRET` bearer header).
+- **Schedule**: Daily at 03:00 UTC (`0 3 * * *` configured in `vercel.json` for Vercel Hobby plan limits; not every 5 minutes). Note that the cron job has not been tested on Vercel yet.
 - **Behavior**:
   - Queries `PaymentRouter` contract event logs (`Paid`) for the previous 500 blocks.
   - Looks up pending/sent invoices matching the on-chain `invoiceId`.

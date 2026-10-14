@@ -91,7 +91,17 @@ const FORBIDDEN_CLAIM_PATTERNS: Array<{ name: string; pattern: RegExp; allowFilt
   {
     name: "protocol",
     pattern: /\b(?:protocol|प्रोटोकॉल)\b/i,
-    allowFilter: (_m, full) => /\b(?:WalletConnect(?:\s+protocol|\s+v2)?|protocol\s+transport|protocol\s+client|protocol\s+fee)\b/i.test(full),
+    allowFilter: (_m, full) =>
+      /\b(?:WalletConnect(?:\s+protocol|\s+v2)?|protocol\s+transport|protocol\s+client)\b/i.test(full) ||
+      /\bProtocol fee is currently 0%\. The contract owner can set a fee for future payments, capped in code at 1%\./i.test(full),
+  },
+  {
+    name: "stateless",
+    pattern: /\b(?:stateless|स्टेटलेस)\b/i,
+  },
+  {
+    name: "no fees / zero fees",
+    pattern: /\b(?:no\s+fees?|zero\s+fees?|शून्य\s+शुल्क|कोई\s+शुल्क\s+नहीं)\b/i,
   },
 ];
 
@@ -266,5 +276,40 @@ describe("Claims Policy Verification (Scope & Compliance)", () => {
         ).toEqual([]);
       }
     );
+  });
+
+  describe("Pattern Enforcement & allowFilter Tightening", () => {
+    it("allows the exact protocol fee disclosure sentence", () => {
+      const sentence =
+        "Protocol fee is currently 0%. The contract owner can set a fee for future payments, capped in code at 1%.";
+      const protocolRule = FORBIDDEN_CLAIM_PATTERNS.find((r) => r.name === "protocol");
+      expect(protocolRule?.pattern.test(sentence)).toBe(true);
+      expect(protocolRule?.allowFilter?.("protocol", sentence)).toBe(true);
+    });
+
+    it("rejects generic or marketing protocol claims", () => {
+      const protocolRule = FORBIDDEN_CLAIM_PATTERNS.find((r) => r.name === "protocol");
+      expect(protocolRule?.allowFilter?.("protocol", "The leading invoicing protocol")).toBe(false);
+      expect(protocolRule?.allowFilter?.("protocol", "Protocol fee is zero forever")).toBe(false);
+    });
+
+    it("fails on forbidden words: audited, guaranteed, safe, stateless, no fees, zero fees", () => {
+      const forbiddenSamples = [
+        { word: "audited", text: "Our smart contract is fully audited." },
+        { word: "guaranteed", text: "Guaranteed instant settlement." },
+        { word: "safe", text: "Safe and secure payment routing." },
+        { word: "stateless", text: "The PaymentRouter is completely stateless." },
+        { word: "no fees / zero fees", text: "Enjoy no fees on all transactions." },
+        { word: "no fees / zero fees", text: "Zero fees for life." },
+      ];
+
+      for (const sample of forbiddenSamples) {
+        const rule = FORBIDDEN_CLAIM_PATTERNS.find((r) => r.name === sample.word);
+        expect(rule, `Rule for ${sample.word} should exist`).toBeDefined();
+        expect(rule!.pattern.test(sample.text)).toBe(true);
+        const allowed = rule!.allowFilter ? rule!.allowFilter(sample.word, sample.text) : false;
+        expect(allowed, `Expected "${sample.text}" to be rejected by rule "${sample.word}"`).toBe(false);
+      }
+    });
   });
 });
