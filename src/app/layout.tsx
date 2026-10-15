@@ -15,7 +15,7 @@ export const viewport: Viewport = {
 const isDemoInviteMode = process.env.DEMO_INVITE_MODE === "true";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://raseed.app"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
   title: `${BRANDING.name} | Non-Custodial Stablecoin Invoicing`,
   description: BRANDING.description,
   keywords: ["USDC invoicing", "Avalanche Fuji", "non-custodial payments", "crypto invoices India", "stablecoin payment link"],

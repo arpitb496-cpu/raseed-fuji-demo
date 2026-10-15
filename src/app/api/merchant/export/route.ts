@@ -41,7 +41,7 @@ export async function GET() {
       (_key, value) => (typeof value === "bigint" ? value.toString() : value),
       2
     );
-    const filename = `raseed-merchant-export-${merchant.walletAddress.slice(0, 8)}-${Date.now()}.json`;
+    const filename = `cryptodao-merchant-export-${merchant.walletAddress.slice(0, 8)}-${Date.now()}.json`;
 
     return new NextResponse(payload, {
       status: 200,

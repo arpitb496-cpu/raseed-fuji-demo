@@ -8,7 +8,6 @@ export const BRANDING = {
   domain: process.env.NEXT_PUBLIC_APP_URL ? new URL(process.env.NEXT_PUBLIC_APP_URL).hostname : "localhost:3000",
   supportEmail: process.env.SUPPORT_CONTACT_EMAIL || "",
   securityEmail: process.env.SECURITY_CONTACT_EMAIL || "",
-  githubUrl: "https://github.com/raseed-protocol/raseed",
   docsUrl: "/about/how-it-works",
   securityUrl: "/security",
   termsUrl: "/legal/terms",

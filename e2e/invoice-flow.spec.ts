@@ -50,7 +50,7 @@ test.describe("Merchant Invoice Flow E2E Smoke Test", () => {
     const downloadPromise = page.waitForEvent("download");
     await page.click('a[href="/api/invoices/export"]');
     const download = await downloadPromise;
-    expect(download.suggestedFilename()).toBe("raseed_invoices.csv");
+    expect(download.suggestedFilename()).toBe("cryptodao_invoices.csv");
 
     // 7. Cancel the invoice
     // Go to the newly created invoice detail page
