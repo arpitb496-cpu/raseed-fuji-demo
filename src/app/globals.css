@@ -1,43 +1,49 @@
 @import "tailwindcss";
 
-:root {
-  --background: #FBFBF9;
-  --foreground: #0F172A;
-  --surface: #FFFFFF;
-  --surface-border: #E2E8F0;
-  --muted: #64748B;
-  --primary: #0D9488;
-  --primary-hover: #0F766E;
-  --primary-light: #F0FDFA;
-  --accent-gold: #D97706;
-  --danger: #E11D48;
-  --danger-light: #FFF1F2;
-  --success: #059669;
-  --success-light: #ECFDF5;
+@theme {
+  --color-pearl-bg: #F2F4FB;
+  --color-pearl-surface: #FFFFFF;
+  --color-pearl-ink: #161A3A;
+  --color-pearl-muted: #4B517D;
+  --color-pearl-subtle: #5B6190;
+  --color-pearl-indigo: #4338CA;
+  --color-pearl-indigo-hover: #2E259B;
+  --color-pearl-coral: #FF6B57;
+  --color-pearl-coral-hover: #E85542;
+  --color-pearl-success-text: #0B6B3A;
+  --color-pearl-success-bg: #D9F5E6;
+  --color-pearl-warning-text: #9A4B00;
+  --color-pearl-warning-bg: #FFE9D1;
+  --color-pearl-border: #E6E9F5;
+
+  --shadow-pearl-card: 0 2px 8px rgba(40, 50, 120, 0.08);
+  --shadow-pearl-hero: 0 16px 32px rgba(67, 56, 202, 0.28);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0B0F17;
-    --foreground: #F8FAFC;
-    --surface: #131B2E;
-    --surface-border: #1E293B;
-    --muted: #94A3B8;
-    --primary: #14B8A6;
-    --primary-hover: #2DD4BF;
-    --primary-light: #132A32;
-    --accent-gold: #F59E0B;
-    --danger: #F43F5E;
-    --danger-light: #331520;
-    --success: #10B981;
-    --success-light: #064E3B;
-  }
+:root {
+  --background: #F2F4FB;
+  --foreground: #161A3A;
+  --surface: #FFFFFF;
+  --surface-border: #E6E9F5;
+  --card-bg: #FFFFFF;
+  --muted-foreground: #4B517D;
+  --ink: #161A3A;
+  --muted: #4B517D;
+  --subtle: #5B6190;
+  --primary: #4338CA;
+  --primary-hover: #2E259B;
+  --accent-coral: #FF6B57;
+  --success-text: #0B6B3A;
+  --success-bg: #D9F5E6;
+  --warning-text: #9A4B00;
+  --warning-bg: #FFE9D1;
+  --border: #E6E9F5;
 }
 
 body {
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: #F2F4FB;
+  color: #161A3A;
+  font-family: var(--font-bricolage), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
@@ -54,7 +60,7 @@ body {
 
 /* Accessibility: Visible focus outline for keyboard navigation */
 :focus-visible {
-  outline: 2px solid var(--primary);
+  outline: 2px solid #4338CA;
   outline-offset: 2px;
 }
 
@@ -63,7 +69,7 @@ a:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid var(--primary);
+  outline: 2px solid #4338CA;
   outline-offset: 2px;
 }
 

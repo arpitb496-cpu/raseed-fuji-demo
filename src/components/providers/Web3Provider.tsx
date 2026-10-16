@@ -53,10 +53,9 @@ export function Web3Provider({ children }: { children: React.ReactNode }) {
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider
           theme={lightTheme({
-            accentColor: "#0F766E", // Teal fintech accent with >4.5:1 contrast against white
+            accentColor: "#4338CA",
             accentColorForeground: "white",
-            borderRadius: "medium",
-            fontStack: "system",
+            borderRadius: "large",
           })}
           modalSize="compact"
         >

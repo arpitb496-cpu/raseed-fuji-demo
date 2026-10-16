@@ -7,6 +7,7 @@ import { ERC20_ABI, PAYMENT_ROUTER_ABI } from "@/config/contracts";
 import { avalancheFuji } from "viem/chains";
 import { formatUnambiguousDate } from "@/lib/utils/date";
 import { DEFAULT_CONFIRMATIONS } from "@/config/settlement";
+import { ShieldCheck, Loader2 } from "lucide-react";
 
 interface PublicInvoiceData {
   publicId: string;
@@ -410,38 +411,49 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-4">
-        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-emerald-500" />
+      <div className="min-h-screen bg-[#F2F4FB] text-[#161A3A] flex items-center justify-center p-4">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="w-8 h-8 text-[#4338CA] animate-spin" />
+          <p className="text-xs text-[#5B6190]">Loading invoice...</p>
+        </div>
       </div>
     );
   }
 
   if (notFound || !invoice) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-16 h-16 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center text-2xl font-bold mb-4">
-          404
+      <div className="min-h-screen bg-[#F2F4FB] text-[#161A3A] flex flex-col items-center justify-center p-6 text-center">
+        <div className="p-8 max-w-md w-full rounded-[28px] bg-white border border-[#E6E9F5] shadow-[0_2px_8px_rgba(40,50,120,0.08)] flex flex-col items-center">
+          <div className="w-16 h-16 rounded-[22px] bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center text-2xl font-bold mb-4">
+            404
+          </div>
+          <h1 className="text-2xl font-extrabold text-[#161A3A] mb-2">Invoice Not Found</h1>
+          <p className="text-[#4B517D] text-sm">
+            The requested payment link is invalid, expired, or has been removed.
+          </p>
         </div>
-        <h1 className="text-2xl font-bold mb-2">Invoice Not Found</h1>
-        <p className="text-slate-400 max-w-md text-sm">
-          The requested payment link is invalid, expired, or has been removed.
-        </p>
       </div>
     );
   }
 
+  // Step indicator state
+  const step2Done = currentAllowance >= remainingUsdc || isAlreadyPaid || effectivePaymentStep === "confirmed" || effectivePaymentStep === "waiting_confirmation" || effectivePaymentStep === "paying";
+  const step2Active = isConnectedSim && !step2Done && (effectivePaymentStep === "approving" || currentAllowance < remainingUsdc);
+  const step3Done = isAlreadyPaid || effectivePaymentStep === "confirmed";
+  const step3Active = isConnectedSim && !step3Done && step2Done;
+
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 py-10 px-4 sm:px-6">
+    <div className="min-h-screen bg-[#F2F4FB] text-[#161A3A] py-10 px-4 sm:px-6">
       <div className="max-w-2xl mx-auto space-y-6">
         {/* Header Bar */}
-        <div className="flex items-center justify-between border-b border-slate-800/80 pb-4">
+        <div className="flex items-center justify-between border-b border-[#E6E9F5] pb-4">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-bold text-lg">
+            <div className="w-10 h-10 rounded-[14px] bg-[#4338CA] text-white flex items-center justify-center font-bold text-lg shadow-sm">
               C
             </div>
             <div>
-              <span className="font-semibold text-white tracking-tight">CryptoDao Pay</span>
-              <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
+              <span className="font-extrabold text-[#161A3A] tracking-tight">CryptoDao Pay</span>
+              <span className="ml-2 text-xs px-2.5 py-0.5 rounded-full bg-indigo-50 text-[#4338CA] border border-indigo-100 font-semibold">
                 Avalanche Fuji
               </span>
             </div>
@@ -450,11 +462,100 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setLang(lang === "en" ? "hi" : "en")}
-              className="text-xs px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700 hover:border-slate-500 transition text-slate-300"
+              className="text-xs px-3 py-2 min-h-[44px] rounded-[14px] bg-white border border-[#E6E9F5] text-[#4B517D] hover:bg-[#F2F4FB] transition font-semibold cursor-pointer"
             >
               {lang === "en" ? "हिन्दी" : "English"}
             </button>
             <ConnectButton showBalance={false} />
+          </div>
+        </div>
+
+        {/* Step Indicator (Connect, Approve, Pay) */}
+        <div className="bg-white rounded-[22px] border border-[#E6E9F5] p-4 shadow-[0_2px_8px_rgba(40,50,120,0.06)]">
+          <div className="flex items-center justify-between max-w-md mx-auto">
+            {/* Step 1: Connect */}
+            <div className="flex items-center gap-2">
+              <div
+                className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
+                  isConnectedSim
+                    ? "bg-[#D9F5E6] text-[#0B6B3A]"
+                    : "bg-[#4338CA] text-white shadow-xs"
+                }`}
+              >
+                {isConnectedSim ? "✓" : "1"}
+              </div>
+              <span
+                className={`text-xs font-semibold ${
+                  isConnectedSim ? "text-[#0B6B3A]" : "text-[#161A3A]"
+                }`}
+              >
+                {lang === "en" ? "Connect" : "कनेक्ट"}
+              </span>
+            </div>
+
+            <div
+              className={`flex-1 h-0.5 mx-3 transition-colors ${
+                isConnectedSim ? "bg-[#0B6B3A]/40" : "bg-[#E6E9F5]"
+              }`}
+            />
+
+            {/* Step 2: Approve */}
+            <div className="flex items-center gap-2">
+              <div
+                className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
+                  step2Done
+                    ? "bg-[#D9F5E6] text-[#0B6B3A]"
+                    : step2Active
+                    ? "bg-[#4338CA] text-white animate-pulse"
+                    : "bg-[#F2F4FB] text-[#5B6190]"
+                }`}
+              >
+                {step2Done ? "✓" : "2"}
+              </div>
+              <span
+                className={`text-xs font-semibold ${
+                  step2Done
+                    ? "text-[#0B6B3A]"
+                    : step2Active
+                    ? "text-[#4338CA]"
+                    : "text-[#5B6190]"
+                }`}
+              >
+                {lang === "en" ? "Approve" : "स्वीकृति"}
+              </span>
+            </div>
+
+            <div
+              className={`flex-1 h-0.5 mx-3 transition-colors ${
+                step2Done ? "bg-[#0B6B3A]/40" : "bg-[#E6E9F5]"
+              }`}
+            />
+
+            {/* Step 3: Pay */}
+            <div className="flex items-center gap-2">
+              <div
+                className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
+                  step3Done
+                    ? "bg-[#D9F5E6] text-[#0B6B3A]"
+                    : step3Active
+                    ? "bg-[#4338CA] text-white animate-pulse"
+                    : "bg-[#F2F4FB] text-[#5B6190]"
+                }`}
+              >
+                {step3Done ? "✓" : "3"}
+              </div>
+              <span
+                className={`text-xs font-semibold ${
+                  step3Done
+                    ? "text-[#0B6B3A]"
+                    : step3Active
+                    ? "text-[#4338CA]"
+                    : "text-[#5B6190]"
+                }`}
+              >
+                {lang === "en" ? "Pay" : "भुगतान"}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -463,73 +564,72 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
           role="banner"
           aria-label="Testnet demo notice"
           data-testid="pay-testnet-notice"
-          className="bg-amber-500/10 border border-amber-500/30 text-amber-300 rounded-xl px-4 py-2 text-xs flex flex-wrap items-center justify-between gap-2"
+          className="bg-[#FFE9D1] border border-[#FED7AA] text-[#9A4B00] rounded-[18px] px-4 py-2.5 text-xs flex flex-wrap items-center justify-between gap-2 shadow-xs"
         >
-          <div className="flex items-center gap-2 font-medium">
-            <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shrink-0" />
+          <div className="flex items-center gap-2 font-semibold">
+            <span className="w-2 h-2 rounded-full bg-[#9A4B00] animate-pulse shrink-0" />
             <span>Testnet Demo — No Real Money</span>
-            <span className="text-amber-500/40">|</span>
-            <span className="text-amber-300/80">टेस्टनेट डेमो — कोई वास्तविक धन नहीं</span>
+            <span className="text-[#9A4B00]/40">|</span>
+            <span className="text-[#9A4B00]/90">टेस्टनेट डेमो — कोई वास्तविक धन नहीं</span>
           </div>
-          <span className="text-[11px] text-amber-400/80 font-mono">Avalanche Fuji</span>
+          <span className="text-[11px] font-mono text-[#9A4B00] font-semibold">Avalanche Fuji</span>
         </div>
 
-        {/* Invoice Summary Card */}
-        <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-6 sm:p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl -z-10 pointer-events-none" />
-
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800/60 pb-6 mb-6">
+        {/* White Rounded Invoice Card */}
+        <div className="bg-white border border-[#E6E9F5] rounded-[28px] p-6 sm:p-8 shadow-[0_4px_24px_rgba(40,50,120,0.08)] relative overflow-hidden space-y-6">
+          {/* Header Merchant & Due Date */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E6E9F5] pb-6">
             <div>
-              <span className="text-xs uppercase tracking-wider text-slate-400 font-medium">
+              <span className="text-xs uppercase tracking-wider text-[#5B6190] font-semibold">
                 {lang === "en" ? "Payment to" : "भुगतान प्राप्तकर्ता"}
               </span>
-              <h2 className="text-xl font-bold text-white mt-0.5">
+              <h2 className="text-xl sm:text-2xl font-extrabold text-[#161A3A] mt-0.5">
                 {invoice.merchant.businessName || invoice.merchant.displayName}
               </h2>
-              <p className="text-xs font-mono text-slate-400 mt-1">
+              <p className="text-xs font-mono text-[#5B6190] mt-1 break-all">
                 {invoice.merchant.walletAddress}
               </p>
             </div>
 
             <div className="text-left sm:text-right">
               <span
-                className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
+                className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border ${
                   invoice.status === "PAID"
-                    ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
+                    ? "bg-[#D9F5E6] text-[#0B6B3A] border-[#A7F3D0]"
                     : invoice.status === "PARTIALLY_PAID"
-                    ? "bg-amber-500/10 text-amber-400 border border-amber-500/30"
-                    : "bg-blue-500/10 text-blue-400 border border-blue-500/30"
+                    ? "bg-[#FFE9D1] text-[#9A4B00] border-[#FED7AA]"
+                    : "bg-indigo-50 text-[#4338CA] border-indigo-100"
                 }`}
               >
                 {invoice.status}
               </span>
-              <p className="text-xs text-slate-400 mt-1.5">
+              <p className="text-xs text-[#5B6190] mt-1.5 font-medium">
                 {lang === "en" ? "Due:" : "अंतिम तिथि:"}{" "}
                 {formatUnambiguousDate(invoice.dueDate, lang)}
               </p>
             </div>
           </div>
 
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-white">{invoice.title}</h1>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#161A3A] tracking-tight">{invoice.title}</h1>
             {invoice.notes && (
-              <p className="text-sm text-slate-400 mt-1 whitespace-pre-wrap">{invoice.notes}</p>
+              <p className="text-sm text-[#4B517D] mt-1.5 whitespace-pre-wrap">{invoice.notes}</p>
             )}
           </div>
 
           {/* Line items table */}
-          <div className="border border-slate-800/80 rounded-xl overflow-hidden mb-6 bg-slate-950/40">
-            <div className="grid grid-cols-12 text-xs font-semibold uppercase text-slate-400 px-4 py-2.5 bg-slate-900/60 border-b border-slate-800/60">
+          <div className="border border-[#E6E9F5] rounded-[20px] overflow-hidden bg-[#F2F4FB]/50">
+            <div className="grid grid-cols-12 text-xs font-semibold uppercase text-[#5B6190] px-4 py-3 bg-[#F2F4FB] border-b border-[#E6E9F5]">
               <div className="col-span-7">{lang === "en" ? "Item" : "विवरण"}</div>
               <div className="col-span-2 text-center">{lang === "en" ? "Qty" : "मात्रा"}</div>
               <div className="col-span-3 text-right">{lang === "en" ? "Price" : "मूल्य"}</div>
             </div>
-            <div className="divide-y divide-slate-800/40">
+            <div className="divide-y divide-[#E6E9F5]">
               {invoice.items.map((item, idx) => (
                 <div key={idx} className="grid grid-cols-12 text-sm px-4 py-3 items-center">
-                  <div className="col-span-7 font-medium text-slate-200">{item.description}</div>
-                  <div className="col-span-2 text-center text-slate-400">{item.quantity}</div>
-                  <div className="col-span-3 text-right font-mono text-slate-300">
+                  <div className="col-span-7 font-medium text-[#161A3A]">{item.description}</div>
+                  <div className="col-span-2 text-center text-[#5B6190]">{item.quantity}</div>
+                  <div className="col-span-3 text-right font-mono text-[#161A3A]">
                     {formatUsdc(item.unitAmountUsdc)} USDC
                   </div>
                 </div>
@@ -537,66 +637,81 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
             </div>
           </div>
 
-          {/* Total & Remaining breakdown */}
-          <div className="bg-slate-950/60 border border-slate-800 rounded-xl p-5 space-y-2 mb-6">
-            <div className="flex justify-between text-sm text-slate-400">
+          {/* Big Total & Remaining breakdown */}
+          <div className="bg-[#F2F4FB]/70 border border-[#E6E9F5] rounded-[22px] p-6 space-y-2.5">
+            <div className="flex justify-between text-sm text-[#5B6190]">
               <span>{lang === "en" ? "Invoice Total" : "कुल राशि"}</span>
-              <span className="font-mono text-slate-200">{formatUsdc(invoice.amountUsdc)} USDC</span>
+              <span className="font-mono font-medium text-[#161A3A]">{formatUsdc(invoice.amountUsdc)} USDC</span>
             </div>
             {BigInt(invoice.paidAmountUsdc) > 0n && (
-              <div className="flex justify-between text-sm text-emerald-400">
+              <div className="flex justify-between text-sm text-[#0B6B3A] font-medium">
                 <span>{lang === "en" ? "Already Paid" : "पूर्व भुगतान"}</span>
                 <span className="font-mono">-{formatUsdc(invoice.paidAmountUsdc)} USDC</span>
               </div>
             )}
-            <div className="pt-2 border-t border-slate-800 flex justify-between items-baseline">
-              <span className="text-base font-semibold text-white">
+            <div className="pt-3 border-t border-[#E6E9F5] flex justify-between items-baseline">
+              <span className="text-base font-bold text-[#161A3A]">
                 {lang === "en" ? "Remaining Balance" : "शेष देय राशि"}
               </span>
-              <span className="text-2xl font-bold font-mono text-emerald-400">
-                {formatUsdc(invoice.remainingUsdc)} USDC
+              <span className="text-3xl sm:text-4xl font-extrabold font-mono text-[#161A3A]">
+                {formatUsdc(invoice.remainingUsdc)} <span className="text-base font-normal text-[#5B6190]">USDC</span>
               </span>
+            </div>
+          </div>
+
+          {/* Green "exact approval, never unlimited" info box */}
+          <div className="bg-[#D9F5E6] border border-[#A7F3D0] text-[#0B6B3A] rounded-[20px] p-4 text-xs font-medium flex items-center gap-3 shadow-xs">
+            <ShieldCheck className="w-5 h-5 shrink-0 text-[#0B6B3A]" />
+            <div>
+              <div className="font-bold text-[#0B6B3A]">
+                {lang === "en" ? "Exact approval, never unlimited" : "सटीक स्वीकृति, कभी असीमित नहीं"}
+              </div>
+              <div className="text-[11px] text-[#0B6B3A]/90 mt-0.5">
+                {lang === "en"
+                  ? "Allowance requests are strictly capped to the exact invoice amount. No unlimited token access."
+                  : "स्वीकृति अनुरोध केवल चालान की सटीक राशि तक सीमित हैं। कोई असीमित टोकन पहुंच नहीं।"}
+              </div>
             </div>
           </div>
 
           {/* Payment actions & confirmation */}
           {isCancelledOrExpired ? (
-            <div className="p-6 rounded-xl bg-rose-500/10 border border-rose-500/30 text-center space-y-2">
-              <div className="w-10 h-10 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center font-bold text-lg mx-auto">
+            <div className="p-6 rounded-[22px] bg-rose-50 border border-rose-200 text-center space-y-2">
+              <div className="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center font-bold text-lg mx-auto">
                 ✕
               </div>
-              <h3 className="text-base font-bold text-rose-300">
+              <h3 className="text-base font-bold text-rose-800">
                 {lang === "en" ? "Invoice Cancelled or Expired" : "चालान रद्द या समाप्त हो चुका है"}
               </h3>
-              <p className="text-xs text-rose-300/80">
+              <p className="text-xs text-rose-700/80">
                 {lang === "en"
                   ? "This invoice is no longer active and cannot accept new payments."
                   : "यह चालान अब सक्रिय नहीं है और नया भुगतान स्वीकार नहीं कर सकता।"}
               </p>
             </div>
           ) : isDraft ? (
-            <div className="p-6 rounded-xl bg-amber-500/10 border border-amber-500/30 text-center space-y-2" data-testid="draft-blocked-notice">
-              <div className="w-10 h-10 rounded-full bg-amber-500/20 text-amber-300 flex items-center justify-center font-bold text-lg mx-auto">
+            <div className="p-6 rounded-[22px] bg-[#FFE9D1] border border-[#FED7AA] text-center space-y-2" data-testid="draft-blocked-notice">
+              <div className="w-10 h-10 rounded-full bg-amber-100 text-[#9A4B00] flex items-center justify-center font-bold text-lg mx-auto">
                 !
               </div>
-              <h3 className="text-base font-bold text-amber-300">
+              <h3 className="text-base font-bold text-[#9A4B00]">
                 {lang === "en" ? "Invoice Not Yet Issued" : "चालान अभी जारी नहीं किया गया है"}
               </h3>
-              <p className="text-xs text-amber-300/90 max-w-md mx-auto">
+              <p className="text-xs text-[#9A4B00]/90 max-w-md mx-auto">
                 {lang === "en"
                   ? "This invoice is in draft status and has not yet been issued by the merchant. Payments cannot be accepted until issued."
                   : "यह चालान अभी ड्राफ्ट स्थिति में है और व्यापारी द्वारा जारी नहीं किया गया है। जारी किए जाने तक भुगतान स्वीकार नहीं किया जा सकता।"}
               </p>
             </div>
           ) : effectivePaymentStep === "confirmed" || isAlreadyPaid ? (
-            <div className="p-6 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-center space-y-3" data-testid="payment-confirmed-notice">
-              <div className="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl mx-auto">
+            <div className="p-6 rounded-[22px] bg-[#D9F5E6] border border-[#A7F3D0] text-center space-y-3" data-testid="payment-confirmed-notice">
+              <div className="w-12 h-12 rounded-full bg-[#0B6B3A]/10 text-[#0B6B3A] flex items-center justify-center text-xl font-bold mx-auto">
                 ✓
               </div>
-              <h3 className="text-lg font-bold text-white">
+              <h3 className="text-lg font-bold text-[#0B6B3A]">
                 {lang === "en" ? "Payment Completed Successfully!" : "भुगतान सफलतापूर्वक संपन्न हुआ!"}
               </h3>
-              <p className="text-xs text-slate-300">
+              <p className="text-xs text-[#0B6B3A]/90">
                 {lang === "en"
                   ? "Your transaction has been confirmed on Avalanche Fuji."
                   : "आपका लेनदेन Avalanche Fuji पर पुष्ट हो गया है।"}
@@ -607,7 +722,7 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
                     href={`${invoice.network.explorerUrl}/tx/${txHash}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs text-emerald-400 hover:text-emerald-300 underline font-mono"
+                    className="inline-flex items-center gap-1.5 text-xs text-[#0B6B3A] hover:underline font-mono font-bold"
                   >
                     {lang === "en" ? "View on Snowtrace Explorer ↗" : "Snowtrace एक्सप्लोरर पर देखें ↗"}
                   </a>
@@ -615,18 +730,18 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
               )}
             </div>
           ) : effectivePaymentStep === "waiting_confirmation" ? (
-            <div className="p-6 rounded-xl bg-amber-500/10 border border-amber-500/30 text-center space-y-3" data-testid="payment-waiting-notice">
-              <div className="animate-spin rounded-full h-10 w-10 border-2 border-amber-400 border-t-transparent mx-auto" />
-              <h3 className="text-lg font-bold text-amber-200">
+            <div className="p-6 rounded-[22px] bg-[#FFE9D1] border border-[#FED7AA] text-center space-y-3" data-testid="payment-waiting-notice">
+              <div className="animate-spin rounded-full h-10 w-10 border-3 border-[#9A4B00] border-t-transparent mx-auto" />
+              <h3 className="text-lg font-bold text-[#9A4B00]">
                 {lang === "en" ? "Submitted, waiting for confirmations..." : "प्रस्तुत किया गया, पुष्टि की प्रतीक्षा की जा रही है..."}
               </h3>
-              <p className="text-xs text-amber-300/80 max-w-md mx-auto">
+              <p className="text-xs text-[#9A4B00]/90 max-w-md mx-auto">
                 {lang === "en"
                   ? "Transaction broadcast to Avalanche Fuji. Polling server for block confirmations..."
                   : "लेनदेन Avalanche Fuji पर प्रसारित किया गया। ब्लॉक पुष्टि के लिए सर्वर से सत्यापन की प्रतीक्षा की जा रही है..."}
               </p>
               {reportStatusMessage && (
-                <div className="p-2.5 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-200 text-xs font-mono max-w-md mx-auto" data-testid="report-status-message">
+                <div className="p-3 rounded-[14px] bg-white/70 border border-[#FED7AA] text-[#9A4B00] text-xs font-mono max-w-md mx-auto" data-testid="report-status-message">
                   {reportStatusMessage}
                 </div>
               )}
@@ -636,13 +751,13 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
                     href={`${invoice.network.explorerUrl}/tx/${txHash || pendingTxHash}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs text-amber-400 hover:text-amber-300 underline font-mono"
+                    className="inline-flex items-center gap-1.5 text-xs text-[#9A4B00] hover:underline font-mono font-bold"
                   >
                     {lang === "en" ? "View Transaction on Snowtrace ↗" : "Snowtrace पर लेनदेन देखें ↗"}
                   </a>
                 </div>
               )}
-              <div className="pt-2 border-t border-amber-500/20">
+              <div className="pt-2 border-t border-[#FED7AA]/60">
                 <button
                   type="button"
                   onClick={() =>
@@ -652,7 +767,7 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
                         : "लंबित लेनदेन स्थिति हटा दी गई। आप पुनः भुगतान का प्रयास कर सकते हैं।"
                     )
                   }
-                  className="text-xs text-amber-300/80 hover:text-amber-200 underline transition cursor-pointer"
+                  className="text-xs text-[#9A4B00] hover:underline transition cursor-pointer font-semibold min-h-[44px] inline-flex items-center"
                   data-testid="clear-pending-tx-btn"
                 >
                   {lang === "en"
@@ -662,8 +777,8 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
               </div>
             </div>
           ) : !isConnectedSim ? (
-            <div className="text-center p-6 bg-slate-950/40 border border-slate-800 rounded-xl space-y-3">
-              <p className="text-sm text-slate-400">
+            <div className="text-center p-6 bg-[#F2F4FB]/80 border border-[#E6E9F5] rounded-[22px] space-y-4">
+              <p className="text-sm text-[#4B517D]">
                 {lang === "en"
                   ? "Connect your Web3 wallet to settle this invoice in native USDC."
                   : "मूल USDC में इस चालान का भुगतान करने के लिए अपना वॉलेट कनेक्ट करें।"}
@@ -673,30 +788,30 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
               </div>
             </div>
           ) : isWrongChain ? (
-            <div className="p-5 rounded-xl bg-amber-500/10 border border-amber-500/30 space-y-3">
-              <p className="text-sm text-amber-300 font-medium">
+            <div className="p-6 rounded-[22px] bg-[#FFE9D1] border border-[#FED7AA] space-y-3">
+              <p className="text-sm text-[#9A4B00] font-bold">
                 {lang === "en"
                   ? "Wrong network detected. Please switch your wallet to Avalanche Fuji."
                   : "गलत नेटवर्क का पता चला। कृपया Avalanche Fuji पर स्विच करें।"}
               </p>
               <button
                 onClick={() => switchChain({ chainId: avalancheFuji.id })}
-                className="w-full py-2.5 rounded-xl bg-amber-500 text-slate-950 font-semibold text-sm hover:bg-amber-400 transition"
+                className="w-full py-3 min-h-[48px] rounded-[18px] bg-[#4338CA] text-white font-bold text-sm hover:bg-[#2E259B] transition shadow-xs cursor-pointer"
               >
                 {lang === "en" ? "Switch to Avalanche Fuji" : "Avalanche Fuji पर स्विच करें"}
               </button>
             </div>
           ) : hasInsufficientBalance ? (
-            <div className="p-5 rounded-xl bg-rose-500/10 border border-rose-500/30 space-y-2">
+            <div className="p-6 rounded-[22px] bg-rose-50 border border-rose-200 space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-rose-300 font-medium">
+                <span className="text-rose-700 font-bold">
                   {lang === "en" ? "Insufficient USDC balance" : "अपर्याप्त USDC शेष"}
                 </span>
-                <span className="font-mono text-slate-400">
+                <span className="font-mono text-[#4B517D] font-semibold">
                   {lang === "en" ? "Balance:" : "शेष:"} {formatUsdc(userBalance)} USDC
                 </span>
               </div>
-              <p className="text-xs text-rose-300/80">
+              <p className="text-xs text-rose-700/80">
                 {lang === "en"
                   ? `You need ${formatUsdc(remainingUsdc)} USDC to settle this invoice.`
                   : `इस चालान के भुगतान के लिए आपको ${formatUsdc(remainingUsdc)} USDC की आवश्यकता है।`}
@@ -705,24 +820,25 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
           ) : (
             <div className="space-y-4">
               {errorMessage && (
-                <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs">
+                <div className="p-4 rounded-[18px] bg-rose-50 border border-rose-200 text-rose-700 text-xs">
                   {errorMessage}
                 </div>
               )}
 
+              {/* Large Indigo Pay Button */}
               <button
                 onClick={handlePay}
                 disabled={effectivePaymentStep !== "idle" || !!pendingTxHash}
-                className="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-slate-950 font-bold text-base transition shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2"
+                className="w-full py-4 min-h-[52px] rounded-[20px] bg-[#4338CA] hover:bg-[#2E259B] disabled:opacity-50 text-white font-bold text-base transition-all shadow-[0_8px_20px_rgba(67,56,202,0.25)] flex items-center justify-center gap-2 cursor-pointer"
               >
                 {effectivePaymentStep === "approving" ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-slate-950 border-t-transparent" />
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
                     <span>{lang === "en" ? "Approving exact USDC amount..." : "सटीक USDC स्वीकृत किया जा रहा है..."}</span>
                   </>
                 ) : effectivePaymentStep === "paying" ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-slate-950 border-t-transparent" />
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
                     <span>{lang === "en" ? "Executing payment on-chain..." : "ऑन-चेन भुगतान निष्पादित किया जा रहा है..."}</span>
                   </>
                 ) : (
@@ -734,7 +850,8 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
                 )}
               </button>
 
-              <p className="text-center text-xs text-slate-500">
+              {/* Small router/disclosure text */}
+              <p className="text-center text-xs text-[#5B6190]">
                 {lang === "en"
                   ? "Exact allowance only. Zero custody. Direct settlement via PaymentRouter."
                   : "केवल सटीक अनुमति। शून्य हिरासत। PaymentRouter के माध्यम से सीधा निपटान।"}

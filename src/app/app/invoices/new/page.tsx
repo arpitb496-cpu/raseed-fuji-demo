@@ -104,22 +104,22 @@ export default function NewInvoicePage() {
     <div className="max-w-3xl mx-auto space-y-6">
       <Link
         href="/app/invoices"
-        className="inline-flex items-center gap-1.5 text-xs text-teal-600 hover:text-teal-700 font-medium"
+        className="inline-flex items-center gap-1.5 text-xs text-[#4338CA] hover:text-[#2E259B] font-semibold min-h-[44px]"
       >
         <ArrowLeft className="w-3.5 h-3.5" /> {t("invoiceDetail.backToList")}
       </Link>
 
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#161A3A]">
           {t("newInvoice.heading")}
         </h1>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+        <p className="text-xs text-[#5B6190] mt-1 font-medium">
           {t("newInvoice.subheading")}
         </p>
       </div>
 
       {error && (
-        <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
+        <div className="p-4 rounded-[18px] bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
           <AlertCircle className="w-4 h-4 shrink-0" />
           <span>{error}</span>
         </div>
@@ -127,9 +127,9 @@ export default function NewInvoicePage() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Main Details Card */}
-        <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 space-y-4 shadow-xs">
+        <div className="p-6 sm:p-8 rounded-[24px] bg-white border border-[#E6E9F5] space-y-5 shadow-[0_2px_8px_rgba(40,50,120,0.08)]">
           <div>
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+            <label className="block text-xs font-semibold text-[#161A3A] mb-1.5">
               {t("newInvoice.titleLabel")} *
             </label>
             <input
@@ -141,13 +141,13 @@ export default function NewInvoicePage() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder={t("newInvoice.titlePlaceholder")}
-              className="w-full px-3.5 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="w-full px-4 py-3 min-h-[48px] text-xs rounded-[16px] bg-[#F2F4FB]/50 border border-[#E6E9F5] text-[#161A3A] placeholder-[#5B6190] focus:outline-none focus:ring-2 focus:ring-[#4338CA] transition-all"
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-xs font-semibold text-[#161A3A] mb-1.5">
                 {t("newInvoice.dueDateLabel")} *
               </label>
               <input
@@ -155,12 +155,12 @@ export default function NewInvoicePage() {
                 required
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
-                className="w-full px-3.5 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full px-4 py-3 min-h-[48px] text-xs rounded-[16px] bg-[#F2F4FB]/50 border border-[#E6E9F5] text-[#161A3A] focus:outline-none focus:ring-2 focus:ring-[#4338CA] transition-all"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-xs font-semibold text-[#161A3A] mb-1.5">
                 {t("newInvoice.clientNameLabel")}
               </label>
               <input
@@ -169,12 +169,12 @@ export default function NewInvoicePage() {
                 value={clientName}
                 onChange={(e) => setClientName(e.target.value)}
                 placeholder={t("newInvoice.clientNamePlaceholder")}
-                className="w-full px-3.5 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full px-4 py-3 min-h-[48px] text-xs rounded-[16px] bg-[#F2F4FB]/50 border border-[#E6E9F5] text-[#161A3A] placeholder-[#5B6190] focus:outline-none focus:ring-2 focus:ring-[#4338CA] transition-all"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-xs font-semibold text-[#161A3A] mb-1.5">
                 {t("newInvoice.clientEmailLabel")}
               </label>
               <input
@@ -182,24 +182,24 @@ export default function NewInvoicePage() {
                 value={clientEmail}
                 onChange={(e) => setClientEmail(e.target.value)}
                 placeholder={t("newInvoice.clientEmailPlaceholder")}
-                className="w-full px-3.5 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full px-4 py-3 min-h-[48px] text-xs rounded-[16px] bg-[#F2F4FB]/50 border border-[#E6E9F5] text-[#161A3A] placeholder-[#5B6190] focus:outline-none focus:ring-2 focus:ring-[#4338CA] transition-all"
               />
             </div>
           </div>
         </div>
 
         {/* Line Items Card */}
-        <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 space-y-4 shadow-xs">
+        <div className="p-6 sm:p-8 rounded-[24px] bg-white border border-[#E6E9F5] space-y-4 shadow-[0_2px_8px_rgba(40,50,120,0.08)]">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-slate-900 dark:text-white">
+            <h2 className="text-sm font-bold text-[#161A3A]">
               {t("newInvoice.lineItems")}
             </h2>
             <button
               type="button"
               onClick={handleAddItem}
-              className="text-xs font-semibold text-teal-600 hover:text-teal-700 cursor-pointer"
+              className="text-xs font-bold text-[#4338CA] hover:text-[#2E259B] cursor-pointer min-h-[44px] flex items-center px-2"
             >
-              {t("newInvoice.addItem")}
+              + {t("newInvoice.addItem")}
             </button>
           </div>
 
@@ -209,7 +209,7 @@ export default function NewInvoicePage() {
               return (
                 <div
                   key={idx}
-                  className="p-3 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700 flex flex-col sm:flex-row items-stretch sm:items-center gap-3"
+                  className="p-3.5 rounded-[18px] bg-[#F2F4FB]/60 border border-[#E6E9F5] flex flex-col sm:flex-row items-stretch sm:items-center gap-3"
                 >
                   <div className="flex-1">
                     <input
@@ -219,11 +219,11 @@ export default function NewInvoicePage() {
                       placeholder={t("newInvoice.itemDesc")}
                       value={item.description}
                       onChange={(e) => handleItemChange(idx, "description", e.target.value)}
-                      className="w-full px-3 py-1.5 text-xs rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                      className="w-full px-3.5 py-2.5 min-h-[44px] text-xs rounded-[14px] bg-white border border-[#E6E9F5] text-[#161A3A] placeholder-[#5B6190] focus:outline-none focus:ring-2 focus:ring-[#4338CA]"
                     />
                   </div>
 
-                  <div className="w-20">
+                  <div className="w-full sm:w-24">
                     <input
                       id={`item-qty-${idx}`}
                       type="number"
@@ -232,11 +232,11 @@ export default function NewInvoicePage() {
                       max={10000}
                       value={item.quantity}
                       onChange={(e) => handleItemChange(idx, "quantity", e.target.value)}
-                      className="w-full px-3 py-1.5 text-xs text-center rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                      className="w-full px-3 py-2.5 min-h-[44px] text-xs text-center rounded-[14px] bg-white border border-[#E6E9F5] text-[#161A3A] focus:outline-none focus:ring-2 focus:ring-[#4338CA]"
                     />
                   </div>
 
-                  <div className="w-32">
+                  <div className="w-full sm:w-36">
                     <div className="relative">
                       <input
                         id={`item-price-${idx}`}
@@ -246,15 +246,15 @@ export default function NewInvoicePage() {
                         min={0.01}
                         value={item.unitPriceUsdc}
                         onChange={(e) => handleItemChange(idx, "unitPriceUsdc", e.target.value)}
-                        className="w-full pl-3 pr-8 py-1.5 text-xs text-right rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        className="w-full pl-3 pr-10 py-2.5 min-h-[44px] text-xs text-right rounded-[14px] bg-white border border-[#E6E9F5] text-[#161A3A] focus:outline-none focus:ring-2 focus:ring-[#4338CA]"
                       />
-                      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-[#5B6190]">
                         USDC
                       </span>
                     </div>
                   </div>
 
-                  <div className="w-24 text-right font-semibold text-xs text-slate-800 dark:text-slate-200">
+                  <div className="w-full sm:w-24 text-right font-bold text-xs text-[#161A3A]">
                     ${lineTotal.toFixed(2)}
                   </div>
 
@@ -262,7 +262,7 @@ export default function NewInvoicePage() {
                     type="button"
                     disabled={items.length <= 1}
                     onClick={() => handleRemoveItem(idx)}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 disabled:opacity-20 cursor-pointer"
+                    className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-[12px] text-[#5B6190] hover:text-rose-600 disabled:opacity-20 cursor-pointer transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -272,15 +272,15 @@ export default function NewInvoicePage() {
           </div>
 
           {/* Total Calculation */}
-          <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div className="text-xs text-slate-500">
+          <div className="pt-4 border-t border-[#E6E9F5] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="text-xs text-[#5B6190]">
               {t("newInvoice.minUsdcNotice")}
             </div>
             <div className="text-right">
-              <div className="text-lg font-bold text-slate-900 dark:text-white">
-                {totalUsdc.toFixed(2)} <span className="text-xs font-normal text-slate-500">USDC</span>
+              <div className="text-xl font-extrabold text-[#161A3A]">
+                {totalUsdc.toFixed(2)} <span className="text-xs font-normal text-[#5B6190]">USDC</span>
               </div>
-              <div className="text-[11px] text-slate-400">
+              <div className="text-[11px] text-[#5B6190]">
                 ~₹{approxInr} INR indicative
               </div>
             </div>
@@ -288,11 +288,11 @@ export default function NewInvoicePage() {
         </div>
 
         {/* Notes Card */}
-        <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 space-y-2 shadow-xs">
-          <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+        <div className="p-6 sm:p-8 rounded-[24px] bg-white border border-[#E6E9F5] space-y-2 shadow-[0_2px_8px_rgba(40,50,120,0.08)]">
+          <label className="block text-xs font-semibold text-[#161A3A]">
             {t("newInvoice.notesLabel")}
           </label>
-          <p className="text-[11px] text-slate-500 dark:text-slate-400">
+          <p className="text-[11px] text-[#5B6190]">
             {t("newInvoice.notesSubtext")}
           </p>
           <textarea
@@ -301,7 +301,7 @@ export default function NewInvoicePage() {
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder={t("newInvoice.notesPlaceholder")}
-            className="w-full px-3.5 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500"
+            className="w-full px-4 py-3 text-xs rounded-[16px] bg-[#F2F4FB]/50 border border-[#E6E9F5] text-[#161A3A] placeholder-[#5B6190] focus:outline-none focus:ring-2 focus:ring-[#4338CA] transition-all"
           />
         </div>
 
@@ -311,7 +311,7 @@ export default function NewInvoicePage() {
             id="create-invoice-submit-btn"
             type="submit"
             disabled={isSubmitting || totalUsdc < MIN_INVOICE_AMOUNT_FLOAT}
-            className="px-6 py-3 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-semibold text-xs shadow-sm transition-all cursor-pointer disabled:opacity-50 flex items-center gap-2"
+            className="px-6 py-3.5 min-h-[48px] rounded-[18px] bg-[#4338CA] hover:bg-[#2E259B] text-white font-semibold text-xs shadow-sm transition-all cursor-pointer disabled:opacity-50 flex items-center gap-2"
           >
             {isSubmitting ? (
               <>

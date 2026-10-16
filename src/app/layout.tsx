@@ -1,10 +1,20 @@
 import type { Metadata, Viewport } from "next";
+import { Bricolage_Grotesque } from "next/font/google";
 import "./globals.css";
 import { I18nProvider } from "@/lib/i18n";
 import { TestnetDemoBanner } from "@/components/common/TestnetDemoBanner";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { BRANDING } from "@/config/branding";
+
+const bricolageGrotesque =
+  typeof Bricolage_Grotesque === "function"
+    ? Bricolage_Grotesque({
+        subsets: ["latin"],
+        variable: "--font-bricolage",
+        display: "swap",
+      })
+    : { className: "", variable: "" };
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -59,8 +69,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className="min-h-screen flex flex-col bg-[#FBFBF9] dark:bg-[#0B0F17] text-slate-900 dark:text-slate-100 antialiased selection:bg-teal-500 selection:text-white">
+    <html lang="en" className={bricolageGrotesque.variable} suppressHydrationWarning>
+      <body className={`${bricolageGrotesque.className} min-h-screen flex flex-col bg-[#F2F4FB] text-[#161A3A] antialiased selection:bg-[#4338CA] selection:text-white`}>
         <I18nProvider>
           <TestnetDemoBanner />
           <Navbar />
