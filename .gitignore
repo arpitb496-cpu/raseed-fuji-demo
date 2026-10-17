@@ -35,3 +35,6 @@ keystores/
 .DS_Store
 
 contracts/broadcast/
+
+# Design references and screenshots
+/design-ref/
