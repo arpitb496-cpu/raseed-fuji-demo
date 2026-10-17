@@ -191,7 +191,8 @@ export default function DashboardPage() {
         ) : (
           invoices.map((inv) => {
             const badge = getBadgeStyle(inv.status);
-            const badgeNumber = inv.invoiceNumber.replace("INV-", "#");
+            const numMatch = inv.invoiceNumber.match(/\d+$/);
+            const badgeNumber = numMatch ? `#${parseInt(numMatch[0], 10)}` : `#${inv.invoiceNumber.replace(/^INV-/, "")}`;
 
             return (
               <Link
@@ -200,7 +201,7 @@ export default function DashboardPage() {
                 style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 20, background: "#FFFFFF", boxShadow: "0 2px 8px rgba(40,50,120,0.06)", textDecoration: "none", color: "inherit" }}
               >
                 {/* Colored #N Badge */}
-                <div style={{ width: 38, height: 38, borderRadius: 12, background: badge.bg, color: badge.color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
+                <div style={{ minWidth: 42, height: 38, padding: "0 8px", borderRadius: 12, background: badge.bg, color: badge.color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, flexShrink: 0 }}>
                   {badgeNumber}
                 </div>
                 {/* Title and Status */}

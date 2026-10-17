@@ -135,29 +135,20 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
     query: { enabled: !!address && !!invoice },
   });
 
-  const [mockState] = useState<string | null>(() => {
-    if (typeof window !== "undefined" && process.env.NODE_ENV !== "production") {
-      return new URLSearchParams(window.location.search).get("mockState");
-    }
-    return null;
-  });
-
-  const rawRemainingUsdc = invoice ? BigInt(invoice.remainingUsdc) : 0n;
-  const remainingUsdc = mockState === "paid" ? 0n : (mockState === "approve" || mockState === "unpaid" ? (rawRemainingUsdc > 0n ? rawRemainingUsdc : 1_000_000n) : rawRemainingUsdc);
-  const userBalance = mockState === "insufficient_usdc" ? 500_000n : (mockState === "approve" ? 10_000_000n : (typeof usdcBalanceRaw === "bigint" ? usdcBalanceRaw : 0n));
+  const remainingUsdc = invoice ? BigInt(invoice.remainingUsdc) : 0n;
+  const userBalance = typeof usdcBalanceRaw === "bigint" ? usdcBalanceRaw : 0n;
   const currentAllowance = typeof allowanceRaw === "bigint" ? allowanceRaw : 0n;
 
-  const isConnectedSim = mockState ? true : isConnected;
-  const isWrongChain = mockState === "wrong_chain" ? true : (mockState === "approve" ? false : (isConnectedSim && chain?.id !== (invoice?.network.chainId || avalancheFuji.id)));
-  const isCancelledOrExpired = (invoice?.status === "CANCELLED" || invoice?.status === "EXPIRED" || mockState === "cancelled" || mockState === "expired");
-  const isDraft = (invoice?.status === "DRAFT" || mockState === "draft") && mockState !== "approve" && mockState !== "unpaid";
-  const isAlreadyPaid = (mockState === "paid" || invoice?.status === "PAID" || (remainingUsdc === 0n && invoice !== null && invoice.status !== "DRAFT")) && mockState !== "approve" && mockState !== "unpaid";
-  const hasInsufficientBalance = mockState === "insufficient_usdc" ? true : (isConnectedSim && !isWrongChain && userBalance < remainingUsdc);
-  const effectivePaymentStep = mockState === "paying" ? "paying" : (mockState === "waiting_confirmation" || (pendingTxHash && !isAlreadyPaid)) ? "waiting_confirmation" : (mockState === "approve" ? "idle" : paymentStep);
+  const isWrongChain = isConnected && chain?.id !== (invoice?.network.chainId || avalancheFuji.id);
+  const isCancelledOrExpired = invoice?.status === "CANCELLED" || invoice?.status === "EXPIRED";
+  const isDraft = invoice?.status === "DRAFT";
+  const isAlreadyPaid = invoice?.status === "PAID" || (remainingUsdc === 0n && invoice !== null && invoice.status !== "DRAFT");
+  const hasInsufficientBalance = isConnected && !isWrongChain && userBalance < remainingUsdc;
+  const effectivePaymentStep = (pendingTxHash && !isAlreadyPaid) ? "waiting_confirmation" : paymentStep;
 
   // 3-step indicator derived flags
-  const step1Done = isConnectedSim && !isWrongChain;
-  const step1Active = !isConnectedSim || isWrongChain;
+  const step1Done = isConnected && !isWrongChain;
+  const step1Active = !isConnected || isWrongChain;
   const step2Done = step1Done && currentAllowance >= remainingUsdc && remainingUsdc > 0n;
   const step2Active = step1Done && !step2Done;
   const step3Done = isAlreadyPaid || effectivePaymentStep === "confirmed";
@@ -347,7 +338,7 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
           address: invoice.network.usdcAddress,
           abi: ERC20_ABI,
           functionName: "approve",
-          args: [invoice.network.routerAddress, neededAmount],
+          args: [invoice.network.routerAddress, neededAmount], // EXACT amount, never infinite
         });
 
         if (!publicClient) {
@@ -388,20 +379,35 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
         localStorage.setItem(pendingTxStorageKey, payTx);
       }
 
+      // Transition immediately to "Submitted, waiting for confirmations" state
       setPaymentStep("waiting_confirmation");
+
+      // Concurrently monitor tx receipt to detect reverted transactions
+      if (publicClient) {
+        publicClient
+          .waitForTransactionReceipt({ hash: payTx })
+          .then((receipt: { status: string }) => {
+            if (receipt.status !== "success") {
+              clearPendingTx(
+                lang === "en"
+                  ? "Payment transaction reverted on-chain. You may try again."
+                  : "भुगतान लेनदेन ब्लॉकचेन पर विफल (reverted) हो गया। आप पुनः प्रयास कर सकते हैं।"
+              );
+            }
+          })
+          .catch((receiptErr: unknown) => {
+            console.warn("Receipt tracking error:", receiptErr);
+          });
+      }
     } catch (err: unknown) {
-      console.debug("Payment flow error:", err);
+      console.error("Payment flow failed:", err);
       const msg = err instanceof Error ? err.message : String(err);
       if (msg.includes("User rejected") || msg.includes("denied")) {
         setErrorMessage(
           lang === "en" ? "Transaction cancelled in wallet." : "वॉलेट में लेनदेन रद्द कर दिया गया।"
         );
       } else {
-        setErrorMessage(
-          lang === "en"
-            ? "Waiting for blockchain confirmations. This can take a minute."
-            : "ब्लॉकचेन पुष्टि की प्रतीक्षा की जा रही है। इसमें एक मिनट लग सकता है।"
-        );
+        setErrorMessage(msg.slice(0, 160));
       }
       setPaymentStep("idle");
     }
@@ -615,25 +621,30 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
               {lang === "en" ? "Payment to" : "भुगतान प्राप्तकर्ता"}
             </div>
             <div style={{ fontSize: 12, fontWeight: 500, padding: "4px 10px", borderRadius: 999, background: "#FFE9D1", color: "#9A4B00" }}>
-              {mockState === "approve" ? "Sent" : (invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1).toLowerCase())}
+              {invoice.status}
             </div>
           </div>
           <div style={{ fontSize: 20, fontWeight: 700, color: "#161A3A" }}>
             {formatAddress(invoice.merchant.walletAddress)}
           </div>
           <div style={{ height: 1, background: "#E6E9F5" }} />
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 15 }}>
-            <span style={{ color: "#3A4070" }}>{invoice.title}</span>
-            <span style={{ fontWeight: 700 }}>{formatUsdc(invoice.amountUsdc)} USDC</span>
-          </div>
-          {invoice.items && invoice.items.length > 0 && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 6, padding: "2px 0" }}>
+          {invoice.items && invoice.items.length > 0 ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {invoice.items.map((it, idx) => (
-                <div key={idx} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "#5B6190" }}>
-                  <span>{it.description} × {it.quantity}</span>
-                  <span style={{ fontFamily: "monospace" }}>{formatUsdc(it.unitAmountUsdc)} USDC</span>
+                <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 15 }}>
+                  <span style={{ color: "#3A4070" }}>
+                    {it.description}{it.quantity > 1 ? ` × ${it.quantity}` : ""}
+                  </span>
+                  <span style={{ fontWeight: 700, color: "#161A3A" }}>
+                    {formatUsdc(BigInt(it.unitAmountUsdc) * BigInt(it.quantity))} USDC
+                  </span>
                 </div>
               ))}
+            </div>
+          ) : (
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 15 }}>
+              <span style={{ color: "#3A4070" }}>{invoice.title}</span>
+              <span style={{ fontWeight: 700, color: "#161A3A" }}>{formatUsdc(invoice.amountUsdc)} USDC</span>
             </div>
           )}
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
@@ -695,7 +706,7 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
       {/* Sticky Bottom Indigo Payment Button (58px) + Chain Info */}
       <div style={{ position: "fixed", left: 0, right: 0, bottom: 20, maxWidth: 480, margin: "0 auto", padding: "0 20px", display: "flex", flexDirection: "column", gap: 8, zIndex: 40, pointerEvents: "none" }}>
         <div style={{ pointerEvents: "auto" }}>
-          {!isConnectedSim ? (
+          {!isConnected ? (
             <ConnectButton.Custom>
               {({ openConnectModal }) => (
                 <button
@@ -719,7 +730,7 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
             <button
               type="button"
               onClick={handlePay}
-              disabled={effectivePaymentStep !== "idle" || !!pendingTxHash || hasInsufficientBalance || isCancelledOrExpired || isDraft}
+              disabled={effectivePaymentStep !== "idle" || !!pendingTxHash}
               style={{
                 width: "100%",
                 minHeight: 58,
@@ -733,8 +744,8 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
                 fontSize: 17,
                 boxShadow: "0 14px 28px rgba(67,56,202,0.30)",
                 border: "none",
-                cursor: (effectivePaymentStep !== "idle" || !!pendingTxHash || hasInsufficientBalance || isCancelledOrExpired || isDraft) ? "not-allowed" : "pointer",
-                opacity: (effectivePaymentStep !== "idle" || !!pendingTxHash || hasInsufficientBalance || isCancelledOrExpired || isDraft) ? 0.55 : 1,
+                cursor: (effectivePaymentStep !== "idle" || !!pendingTxHash) ? "not-allowed" : "pointer",
+                opacity: (effectivePaymentStep !== "idle" || !!pendingTxHash) ? 0.55 : 1,
               }}
             >
               {effectivePaymentStep === "approving"

@@ -7,25 +7,59 @@ export function LanguageToggle() {
   const { lang, setLang } = useI18n();
 
   return (
-    <div className="flex items-center gap-1 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg p-0.5 text-xs font-medium">
+    <div
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        background: "#FFFFFF",
+        borderRadius: 999,
+        padding: 3,
+        boxShadow: "0 2px 8px rgba(40,50,120,0.08)",
+        border: "none",
+      }}
+    >
       <button
+        type="button"
         onClick={() => setLang("en")}
-        className={`px-2 py-1 rounded transition-colors cursor-pointer ${
-          lang === "en"
-            ? "bg-white dark:bg-slate-800 text-teal-800 dark:text-teal-300 font-semibold shadow-xs"
-            : "text-slate-700 dark:text-slate-300 hover:text-black dark:hover:text-white"
-        }`}
+        style={{
+          minHeight: 44,
+          minWidth: 44,
+          padding: "0 14px",
+          borderRadius: 999,
+          border: "none",
+          background: lang === "en" ? "#4338CA" : "transparent",
+          color: lang === "en" ? "#FFFFFF" : "#5B6190",
+          fontWeight: lang === "en" ? 700 : 500,
+          fontSize: 13,
+          cursor: "pointer",
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          transition: "all 0.15s ease",
+        }}
         aria-label="EN - Switch to English"
       >
         EN
       </button>
       <button
+        type="button"
         onClick={() => setLang("hi")}
-        className={`px-2 py-1 rounded transition-colors cursor-pointer font-serif ${
-          lang === "hi"
-            ? "bg-white dark:bg-slate-800 text-teal-800 dark:text-teal-300 font-semibold shadow-xs"
-            : "text-slate-700 dark:text-slate-300 hover:text-black dark:hover:text-white"
-        }`}
+        style={{
+          minHeight: 44,
+          minWidth: 44,
+          padding: "0 14px",
+          borderRadius: 999,
+          border: "none",
+          background: lang === "hi" ? "#4338CA" : "transparent",
+          color: lang === "hi" ? "#FFFFFF" : "#5B6190",
+          fontWeight: lang === "hi" ? 700 : 500,
+          fontSize: 13,
+          cursor: "pointer",
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          transition: "all 0.15s ease",
+        }}
         aria-label="हिन्दी - Switch to Hindi"
       >
         हिन्दी
