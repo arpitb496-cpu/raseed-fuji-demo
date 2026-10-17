@@ -763,11 +763,13 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
           )}
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
             <span style={{ fontSize: 14, color: "#5B6190" }}>
-              {lang === "en" ? "Total due" : "कुल देय राशि"}
+              {isPaid
+                ? (lang === "en" ? "Total paid" : "कुल भुगतान")
+                : (lang === "en" ? "Total due" : "कुल देय राशि")}
             </span>
             <span>
               <span style={{ fontSize: 44, fontWeight: 700, letterSpacing: "-1.5px", color: "#161A3A" }}>
-                {formatUsdc(remainingUsdc)}
+                {isPaid ? formatUsdc(invoice.amountUsdc) : formatUsdc(remainingUsdc)}
               </span>{" "}
               <span style={{ fontSize: 16, fontWeight: 500, color: "#4338CA" }}>USDC</span>
             </span>

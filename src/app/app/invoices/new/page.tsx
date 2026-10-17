@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n";
 import { MIN_INVOICE_AMOUNT_FLOAT, INDICATIVE_USD_TO_INR_RATE } from "@/config/constants";
-import { Trash2, ArrowLeft, Loader2, Sparkles, AlertCircle } from "lucide-react";
+import { Trash2, ArrowLeft, Loader2, Sparkles, AlertCircle, Plus } from "lucide-react";
 
 interface FormLineItem {
   description: string;
@@ -127,13 +127,14 @@ export default function NewInvoicePage() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Main Details Card */}
-        <div className="p-6 sm:p-8 rounded-[24px] bg-white border border-[#E6E9F5] space-y-5 shadow-[0_2px_8px_rgba(40,50,120,0.08)]">
+        <div className="p-6 sm:p-8 rounded-[24px] bg-white border border-[#E6E9F5] space-y-5 shadow-[0_2px_8px_rgba(40,50,120,0.06)]">
           <div>
             <label className="block text-xs font-semibold text-[#161A3A] mb-1.5">
               {t("newInvoice.titleLabel")} *
             </label>
             <input
               id="invoice-title-input"
+              data-testid="invoice-title-input"
               type="text"
               required
               minLength={2}
@@ -141,66 +142,63 @@ export default function NewInvoicePage() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder={t("newInvoice.titlePlaceholder")}
-              className="w-full px-4 py-3 min-h-[48px] text-xs rounded-[16px] bg-[#F2F4FB]/50 border border-[#E6E9F5] text-[#161A3A] placeholder-[#5B6190] focus:outline-none focus:ring-2 focus:ring-[#4338CA] transition-all"
+              className="w-full px-4 py-3 min-h-[48px] text-xs rounded-[16px] bg-[#F2F4FB]/50 border border-[#E6E9F5] text-[#161A3A] placeholder-[#5B6190] focus:outline-none focus:ring-2 focus:ring-[#4338CA] focus:ring-offset-1 transition-all"
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-xs font-semibold text-[#161A3A] mb-1.5">
-                {t("newInvoice.dueDateLabel")} *
-              </label>
-              <input
-                type="date"
-                required
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-                className="w-full px-4 py-3 min-h-[48px] text-xs rounded-[16px] bg-[#F2F4FB]/50 border border-[#E6E9F5] text-[#161A3A] focus:outline-none focus:ring-2 focus:ring-[#4338CA] transition-all"
-              />
-            </div>
+          <div>
+            <label className="block text-xs font-semibold text-[#161A3A] mb-1.5">
+              {t("newInvoice.dueDateLabel")} *
+            </label>
+            <input
+              id="invoice-due-date-input"
+              data-testid="invoice-due-date-input"
+              type="date"
+              required
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+              className="w-full px-4 py-3 min-h-[48px] text-xs rounded-[16px] bg-[#F2F4FB]/50 border border-[#E6E9F5] text-[#161A3A] focus:outline-none focus:ring-2 focus:ring-[#4338CA] focus:ring-offset-1 transition-all"
+            />
+          </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-[#161A3A] mb-1.5">
-                {t("newInvoice.clientNameLabel")}
-              </label>
-              <input
-                type="text"
-                maxLength={100}
-                value={clientName}
-                onChange={(e) => setClientName(e.target.value)}
-                placeholder={t("newInvoice.clientNamePlaceholder")}
-                className="w-full px-4 py-3 min-h-[48px] text-xs rounded-[16px] bg-[#F2F4FB]/50 border border-[#E6E9F5] text-[#161A3A] placeholder-[#5B6190] focus:outline-none focus:ring-2 focus:ring-[#4338CA] transition-all"
-              />
-            </div>
+          <div>
+            <label className="block text-xs font-semibold text-[#161A3A] mb-1.5">
+              {t("newInvoice.clientNameLabel")}
+            </label>
+            <input
+              id="invoice-client-name-input"
+              data-testid="invoice-client-name-input"
+              type="text"
+              maxLength={100}
+              value={clientName}
+              onChange={(e) => setClientName(e.target.value)}
+              placeholder={t("newInvoice.clientNamePlaceholder")}
+              className="w-full px-4 py-3 min-h-[48px] text-xs rounded-[16px] bg-[#F2F4FB]/50 border border-[#E6E9F5] text-[#161A3A] placeholder-[#5B6190] focus:outline-none focus:ring-2 focus:ring-[#4338CA] focus:ring-offset-1 transition-all"
+            />
+          </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-[#161A3A] mb-1.5">
-                {t("newInvoice.clientEmailLabel")}
-              </label>
-              <input
-                type="email"
-                value={clientEmail}
-                onChange={(e) => setClientEmail(e.target.value)}
-                placeholder={t("newInvoice.clientEmailPlaceholder")}
-                className="w-full px-4 py-3 min-h-[48px] text-xs rounded-[16px] bg-[#F2F4FB]/50 border border-[#E6E9F5] text-[#161A3A] placeholder-[#5B6190] focus:outline-none focus:ring-2 focus:ring-[#4338CA] transition-all"
-              />
-            </div>
+          <div>
+            <label className="block text-xs font-semibold text-[#161A3A] mb-1.5">
+              {t("newInvoice.clientEmailLabel")}
+            </label>
+            <input
+              id="invoice-client-email-input"
+              data-testid="invoice-client-email-input"
+              type="email"
+              value={clientEmail}
+              onChange={(e) => setClientEmail(e.target.value)}
+              placeholder={t("newInvoice.clientEmailPlaceholder")}
+              className="w-full px-4 py-3 min-h-[48px] text-xs rounded-[16px] bg-[#F2F4FB]/50 border border-[#E6E9F5] text-[#161A3A] placeholder-[#5B6190] focus:outline-none focus:ring-2 focus:ring-[#4338CA] focus:ring-offset-1 transition-all"
+            />
           </div>
         </div>
 
-        {/* Line Items Card */}
-        <div className="p-6 sm:p-8 rounded-[24px] bg-white border border-[#E6E9F5] space-y-4 shadow-[0_2px_8px_rgba(40,50,120,0.08)]">
-          <div className="flex items-center justify-between">
+        {/* Line Items Section */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between px-1">
             <h2 className="text-sm font-bold text-[#161A3A]">
               {t("newInvoice.lineItems")}
             </h2>
-            <button
-              type="button"
-              onClick={handleAddItem}
-              className="text-xs font-bold text-[#4338CA] hover:text-[#2E259B] cursor-pointer min-h-[44px] flex items-center px-2"
-            >
-              + {t("newInvoice.addItem")}
-            </button>
           </div>
 
           <div className="space-y-3">
@@ -209,70 +207,108 @@ export default function NewInvoicePage() {
               return (
                 <div
                   key={idx}
-                  className="p-3.5 rounded-[18px] bg-[#F2F4FB]/60 border border-[#E6E9F5] flex flex-col sm:flex-row items-stretch sm:items-center gap-3"
+                  className="p-4 sm:p-5 rounded-[20px] bg-white border border-[#E6E9F5] space-y-3 shadow-[0_2px_8px_rgba(40,50,120,0.06)]"
                 >
-                  <div className="flex-1">
+                  {/* Row 1: Description input full width */}
+                  <div>
+                    <label className="block text-[11px] font-semibold text-[#5B6190] mb-1">
+                      {t("newInvoice.itemDesc")}
+                    </label>
                     <input
                       id={`item-desc-${idx}`}
+                      data-testid={`item-desc-${idx}`}
                       type="text"
                       required
                       placeholder={t("newInvoice.itemDesc")}
                       value={item.description}
                       onChange={(e) => handleItemChange(idx, "description", e.target.value)}
-                      className="w-full px-3.5 py-2.5 min-h-[44px] text-xs rounded-[14px] bg-white border border-[#E6E9F5] text-[#161A3A] placeholder-[#5B6190] focus:outline-none focus:ring-2 focus:ring-[#4338CA]"
+                      className="w-full px-4 py-2.5 min-h-[48px] text-xs rounded-[14px] bg-[#F2F4FB]/50 border border-[#E6E9F5] text-[#161A3A] placeholder-[#5B6190] focus:outline-none focus:ring-2 focus:ring-[#4338CA] focus:ring-offset-1"
                     />
                   </div>
 
-                  <div className="w-full sm:w-24">
-                    <input
-                      id={`item-qty-${idx}`}
-                      type="number"
-                      required
-                      min={1}
-                      max={10000}
-                      value={item.quantity}
-                      onChange={(e) => handleItemChange(idx, "quantity", e.target.value)}
-                      className="w-full px-3 py-2.5 min-h-[44px] text-xs text-center rounded-[14px] bg-white border border-[#E6E9F5] text-[#161A3A] focus:outline-none focus:ring-2 focus:ring-[#4338CA]"
-                    />
-                  </div>
-
-                  <div className="w-full sm:w-36">
-                    <div className="relative">
+                  {/* Row 2: Qty, Unit price (USDC), line total, delete button (44px) */}
+                  <div className="flex items-end gap-3">
+                    {/* Qty */}
+                    <div className="w-20 shrink-0">
+                      <label className="block text-[11px] font-semibold text-[#5B6190] mb-1">
+                        {t("newInvoice.itemQty")}
+                      </label>
                       <input
-                        id={`item-price-${idx}`}
+                        id={`item-qty-${idx}`}
+                        data-testid={`item-qty-${idx}`}
                         type="number"
-                        step="0.01"
                         required
-                        min={0.01}
-                        value={item.unitPriceUsdc}
-                        onChange={(e) => handleItemChange(idx, "unitPriceUsdc", e.target.value)}
-                        className="w-full pl-3 pr-10 py-2.5 min-h-[44px] text-xs text-right rounded-[14px] bg-white border border-[#E6E9F5] text-[#161A3A] focus:outline-none focus:ring-2 focus:ring-[#4338CA]"
+                        min={1}
+                        max={10000}
+                        value={item.quantity}
+                        onChange={(e) => handleItemChange(idx, "quantity", e.target.value)}
+                        className="w-full px-2 py-2 min-h-[44px] text-xs text-center rounded-[12px] bg-[#F2F4FB]/50 border border-[#E6E9F5] text-[#161A3A] focus:outline-none focus:ring-2 focus:ring-[#4338CA] focus:ring-offset-1"
                       />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-[#5B6190]">
-                        USDC
-                      </span>
+                    </div>
+
+                    {/* Unit price (USDC) */}
+                    <div className="flex-1 min-w-[100px]">
+                      <label className="block text-[11px] font-semibold text-[#5B6190] mb-1">
+                        {t("newInvoice.itemPrice")}
+                      </label>
+                      <div className="relative">
+                        <input
+                          id={`item-price-${idx}`}
+                          data-testid={`item-price-${idx}`}
+                          type="number"
+                          step="0.01"
+                          required
+                          min={0.01}
+                          value={item.unitPriceUsdc}
+                          onChange={(e) => handleItemChange(idx, "unitPriceUsdc", e.target.value)}
+                          className="w-full pl-3 pr-10 py-2 min-h-[44px] text-xs text-right rounded-[12px] bg-[#F2F4FB]/50 border border-[#E6E9F5] text-[#161A3A] focus:outline-none focus:ring-2 focus:ring-[#4338CA] focus:ring-offset-1"
+                        />
+                        <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-[#5B6190]">
+                          USDC
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Line total */}
+                    <div className="shrink-0 text-right min-w-[70px]">
+                      <div className="text-[11px] font-semibold text-[#5B6190] mb-1">
+                        {t("newInvoice.itemTotal")}
+                      </div>
+                      <div className="h-[44px] flex items-center justify-end font-bold text-xs text-[#161A3A]">
+                        ${lineTotal.toFixed(2)}
+                      </div>
+                    </div>
+
+                    {/* Delete button (44px) */}
+                    <div className="shrink-0">
+                      <button
+                        type="button"
+                        disabled={items.length <= 1}
+                        onClick={() => handleRemoveItem(idx)}
+                        aria-label="Delete line item"
+                        className="w-11 h-11 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-[12px] border border-[#E6E9F5] text-[#5B6190] hover:text-[#991B1B] hover:bg-rose-50 disabled:opacity-20 cursor-pointer transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
-
-                  <div className="w-full sm:w-24 text-right font-bold text-xs text-[#161A3A]">
-                    ${lineTotal.toFixed(2)}
-                  </div>
-
-                  <button
-                    type="button"
-                    disabled={items.length <= 1}
-                    onClick={() => handleRemoveItem(idx)}
-                    className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-[12px] text-[#5B6190] hover:text-rose-600 disabled:opacity-20 cursor-pointer transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
                 </div>
               );
             })}
           </div>
 
-          {/* Total Calculation */}
-          <div className="pt-4 border-t border-[#E6E9F5] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          {/* "+ + Add Line Item" -> ONE plus icon + text, full width outlined indigo button */}
+          <button
+            type="button"
+            onClick={handleAddItem}
+            className="w-full py-3 min-h-[48px] rounded-[16px] border border-[#4338CA] bg-white hover:bg-[#4338CA]/5 text-[#4338CA] font-semibold text-xs flex items-center justify-center gap-2 cursor-pointer transition-colors shadow-2xs"
+          >
+            <Plus className="w-4 h-4" />
+            <span>{t("newInvoice.addItem")}</span>
+          </button>
+
+          {/* Total Calculation Card */}
+          <div className="p-4 sm:p-5 rounded-[20px] bg-white border border-[#E6E9F5] flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-[0_2px_8px_rgba(40,50,120,0.06)]">
             <div className="text-xs text-[#5B6190]">
               {t("newInvoice.minUsdcNotice")}
             </div>
@@ -301,7 +337,7 @@ export default function NewInvoicePage() {
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder={t("newInvoice.notesPlaceholder")}
-            className="w-full px-4 py-3 text-xs rounded-[16px] bg-[#F2F4FB]/50 border border-[#E6E9F5] text-[#161A3A] placeholder-[#5B6190] focus:outline-none focus:ring-2 focus:ring-[#4338CA] transition-all"
+            className="w-full px-4 py-3 text-xs rounded-[16px] bg-[#F2F4FB]/50 border border-[#E6E9F5] text-[#161A3A] placeholder-[#5B6190] focus:outline-none focus:ring-2 focus:ring-[#4338CA] focus:ring-offset-1 transition-all"
           />
         </div>
 
