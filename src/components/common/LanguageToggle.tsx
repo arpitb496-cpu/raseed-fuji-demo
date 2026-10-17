@@ -24,7 +24,7 @@ export function LanguageToggle() {
         style={{
           minHeight: 44,
           minWidth: 44,
-          padding: "0 14px",
+          padding: "0 8px",
           borderRadius: 999,
           border: "none",
           background: lang === "en" ? "#4338CA" : "transparent",
@@ -47,7 +47,7 @@ export function LanguageToggle() {
         style={{
           minHeight: 44,
           minWidth: 44,
-          padding: "0 14px",
+          padding: "0 8px",
           borderRadius: 999,
           border: "none",
           background: lang === "hi" ? "#4338CA" : "transparent",

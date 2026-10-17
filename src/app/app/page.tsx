@@ -87,23 +87,23 @@ export default function DashboardPage() {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 18, padding: "28px 20px 0 20px" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 18, padding: "24px 18px 0 18px" }}>
       {/* Header Row */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        {/* Indigo 14px Logo Tile with Check Icon */}
-        <div style={{ width: 40, height: 40, borderRadius: 14, background: "#4338CA", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        {/* Indigo 13px Logo Tile with Check Icon */}
+        <div style={{ width: 38, height: 38, borderRadius: 13, background: "#4338CA", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M5 12l5 5L20 7" />
           </svg>
         </div>
         {/* Brand Name */}
-        <div style={{ fontWeight: 700, fontSize: 20, flexGrow: 1, letterSpacing: "-0.3px", color: "#161A3A" }}>
+        <div style={{ fontWeight: 700, fontSize: 18, flexGrow: 1, minWidth: 0, letterSpacing: "-0.3px", color: "#161A3A" }}>
           CryptoDao
         </div>
         {/* Language Switch */}
         <LanguageToggle />
         {/* Fuji Testnet Pill */}
-        <div style={{ fontSize: 12, fontWeight: 500, padding: "7px 12px", borderRadius: 999, background: "#FFFFFF", color: "#4B517D", boxShadow: "0 2px 8px rgba(40,50,120,0.08)", whiteSpace: "nowrap" }}>
+        <div style={{ fontSize: 12, fontWeight: 500, padding: "6px 11px", borderRadius: 999, background: "#FFFFFF", color: "#4B517D", boxShadow: "0 2px 8px rgba(40,50,120,0.08)", whiteSpace: "nowrap", flexShrink: 0 }}>
           Fuji testnet
         </div>
       </div>
