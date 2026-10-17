@@ -15,7 +15,8 @@
     "connectWallet": "वॉलेट कनेक्ट करें",
     "disconnect": "डिस्कनेक्ट करें",
     "signInWithEthereum": "एथेरियम से साइन इन करें",
-    "signedInAs": "साइन इन उपयोगकर्ता"
+    "signedInAs": "साइन इन उपयोगकर्ता",
+    "loadingSession": "सत्र लोड हो रहा है..."
   },
   "status": {
     "draft": "ड्राफ्ट",

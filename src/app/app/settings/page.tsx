@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/lib/i18n";
 import { useAccount, useDisconnect } from "wagmi";
+import { useAuth } from "@/lib/auth/useAuth";
 
 interface MerchantProfile {
   id: string;
@@ -20,6 +21,7 @@ export default function MerchantSettingsPage() {
   const router = useRouter();
   const { address } = useAccount();
   const { disconnect } = useDisconnect();
+  const { logout } = useAuth();
 
   const [profile, setProfile] = useState<MerchantProfile | null>(null);
   const [displayName, setDisplayName] = useState("");
@@ -106,6 +108,20 @@ export default function MerchantSettingsPage() {
       setIsDeleting(false);
     }
   }
+
+  const walletAddr = address || profile?.walletAddress || "";
+  const shortAddress = walletAddr ? `${walletAddr.slice(0, 6)}…${walletAddr.slice(-4)}` : "";
+
+  const handleSignOut = async () => {
+    try {
+      await logout();
+      disconnect();
+    } catch (err) {
+      console.error("Sign out error:", err);
+    }
+    router.push("/app");
+    router.refresh();
+  };
 
   return (
     <div style={{ maxWidth: 840, margin: "0 auto", padding: "1.5rem" }}>
@@ -396,6 +412,45 @@ export default function MerchantSettingsPage() {
           </section>
         </form>
       )}
+
+      {/* Section: Sign Out */}
+      <div style={{ marginTop: "2rem" }}>
+        {shortAddress && (
+          <div
+            style={{
+              fontSize: "0.875rem",
+              color: "var(--muted-foreground, #5B6190)",
+              marginBottom: "0.5rem",
+              fontFamily: "monospace",
+            }}
+          >
+            {shortAddress}
+          </div>
+        )}
+        <button
+          id="settings-sign-out-btn"
+          type="button"
+          onClick={handleSignOut}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "100%",
+            height: 48,
+            minHeight: 48,
+            background: "#FFFFFF",
+            border: "1px solid #E6E9F5",
+            borderRadius: 16,
+            color: "#A11A1A",
+            fontSize: "0.9375rem",
+            fontWeight: 600,
+            cursor: "pointer",
+            boxShadow: "0 2px 8px rgba(40,50,120,0.06)",
+          }}
+        >
+          {t("auth.signOut")}
+        </button>
+      </div>
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (

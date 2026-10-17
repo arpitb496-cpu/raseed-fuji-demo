@@ -15,7 +15,8 @@
     "connectWallet": "Connect Wallet",
     "disconnect": "Disconnect",
     "signInWithEthereum": "Sign In with Ethereum",
-    "signedInAs": "Signed in as"
+    "signedInAs": "Signed in as",
+    "loadingSession": "Loading session..."
   },
   "status": {
     "draft": "Draft",

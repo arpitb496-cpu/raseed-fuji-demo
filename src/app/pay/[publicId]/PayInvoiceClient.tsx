@@ -255,8 +255,8 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
           if (!cancelled) {
             setReportStatusMessage(
               lang === "en"
-                ? "Waiting for blockchain confirmations. This can take a minute."
-                : "ब्लॉकचेन पुष्टि की प्रतीक्षा की जा रही है। इसमें एक मिनट लग सकता है।"
+                ? "Payment sent. We are still confirming it, please keep this page open."
+                : "भुगतान भेज दिया गया है। हम अभी भी इसकी पुष्टि कर रहे हैं, कृपया इस पेज को खुला रखें।"
             );
           }
         } else {

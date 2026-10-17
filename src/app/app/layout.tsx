@@ -20,7 +20,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
       <div className="w-full max-w-[480px] mx-auto min-h-screen bg-[#F2F4FB] text-[#161A3A] flex items-center justify-center p-6">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="w-8 h-8 text-[#4338CA] animate-spin" />
-          <p className="text-xs text-[#5B6190]">Loading session...</p>
+          <p className="text-xs text-[#5B6190]">{t("nav.loadingSession") || "Loading session..."}</p>
         </div>
       </div>
     );
@@ -68,7 +68,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const tabs = [
     {
       href: "/app",
-      label: "Home",
+      label: t("nav.dashboard"),
       icon: (
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M4 11l8-7 8 7v9H4z" />
@@ -77,7 +77,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
     },
     {
       href: "/app/invoices",
-      label: "Invoices",
+      label: t("nav.invoices"),
       icon: (
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M6 3h9l4 4v14H6zM14 3v5h5" />
@@ -86,7 +86,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
     },
     {
       href: "/app/settings",
-      label: "Settings",
+      label: t("nav.settings"),
       icon: (
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <circle cx="12" cy="12" r="3" />
@@ -127,7 +127,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                 style={{ fontSize: 11 }}
               >
                 {tab.icon}
-                <span>{tab.label}</span>
+                <span className="truncate max-w-[100px] text-center">{tab.label}</span>
               </Link>
             );
           })}
