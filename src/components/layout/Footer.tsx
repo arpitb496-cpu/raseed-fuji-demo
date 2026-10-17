@@ -2,13 +2,19 @@
 
 import React from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { BRANDING } from "@/config/branding";
 import { CURRENT_NETWORK } from "@/config/network";
 import { useI18n } from "@/lib/i18n";
 import { ExternalLink, Shield } from "lucide-react";
 
 export function Footer() {
+  const pathname = usePathname();
   const { t } = useI18n();
+
+  if (pathname.startsWith("/app") || pathname.startsWith("/pay")) {
+    return null;
+  }
 
   return (
     <footer className="w-full border-t border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-950/50 text-xs text-slate-500 dark:text-slate-400 mt-auto">

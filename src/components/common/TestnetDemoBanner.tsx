@@ -1,8 +1,13 @@
 "use client";
 
 import React from "react";
+import { usePathname } from "next/navigation";
 
 export function TestnetDemoBanner({ className = "" }: { className?: string }) {
+  const pathname = usePathname();
+  if (pathname.startsWith("/app") || pathname.startsWith("/pay")) {
+    return null;
+  }
   return (
     <aside
       aria-label="Testnet demo notice"
