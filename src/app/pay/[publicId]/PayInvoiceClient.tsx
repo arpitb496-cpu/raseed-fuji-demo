@@ -678,8 +678,8 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
         {/* Protocol Verification Note */}
         <div style={{ fontSize: 13, lineHeight: 1.5, color: "#4B517D", padding: "0 4px" }}>
           {lang === "en"
-            ? `Routed by PaymentRouter ${formatAddress(invoice.network.routerAddress)}, verified on Snowtrace. It never holds funds. Protocol fee: 0%. Not audited.`
-            : `PaymentRouter ${formatAddress(invoice.network.routerAddress)} द्वारा रूट किया गया, Snowtrace पर सत्यापित। यह कभी फंड नहीं रखता। प्रोटोकॉल शुल्क: 0%। ऑडिट नहीं किया गया।`}
+            ? `Routed by PaymentRouter ${formatAddress(invoice.network.routerAddress)}. Source code published on Snowtrace (similar-match verification). It never holds funds. Protocol fee: 0%. Not audited.`
+            : `PaymentRouter ${formatAddress(invoice.network.routerAddress)} द्वारा रूट किया गया। Snowtrace पर स्रोत कोड प्रकाशित (समान-मिलान सत्यापन)। यह कभी फंड नहीं रखता। प्रोटोकॉल शुल्क: 0%। ऑडिट नहीं किया गया।`}
         </div>
 
         {/* Small Muted Legal Links at Bottom of Scroll Area */}

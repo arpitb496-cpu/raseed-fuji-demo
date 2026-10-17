@@ -354,14 +354,13 @@ export default function HomePage() {
             </div>
 
             <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              Contract source code is{" "}
               <a
                 href="https://testnet.snowtrace.io/address/0xb94A922261bBa2e07648520bf56125a4102eaB95#code"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-teal-800 dark:text-teal-300 hover:underline font-medium"
               >
-                verified on Snowtrace (Fuji testnet)
+                Source code published on Snowtrace (similar-match verification)
               </a>
               . Contract handles testnet USDC routing only. Protocol fee is currently 0%. The contract owner can set a fee for future payments, capped in code at 1%.
             </p>
