@@ -7,14 +7,11 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { BRANDING } from "@/config/branding";
 
-const bricolageGrotesque =
-  typeof Bricolage_Grotesque === "function"
-    ? Bricolage_Grotesque({
-        subsets: ["latin"],
-        variable: "--font-bricolage",
-        display: "swap",
-      })
-    : { className: "", variable: "" };
+const bricolageGrotesque = Bricolage_Grotesque({
+  subsets: ["latin"],
+  variable: "--font-bricolage",
+  display: "swap",
+});
 
 export const viewport: Viewport = {
   width: "device-width",

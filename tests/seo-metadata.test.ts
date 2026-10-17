@@ -1,4 +1,12 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+
+vi.mock("next/font/google", () => ({
+  Bricolage_Grotesque: () => ({
+    className: "mock-bricolage",
+    variable: "--font-bricolage",
+  }),
+}));
+
 import robots from "@/app/robots";
 import sitemap from "@/app/sitemap";
 import { metadata as rootMetadata } from "@/app/layout";
