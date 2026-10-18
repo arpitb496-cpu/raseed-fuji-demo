@@ -100,6 +100,7 @@
     "lineItems": "मद विवरण (लाइन आइटम्स)",
     "addItem": "लाइन आइटम जोड़ें",
     "itemDesc": "मद का विवरण",
+    "itemDescPlaceholder": "उदा. वेबसाइट डिज़ाइन",
     "itemQty": "मात्रा",
     "itemPrice": "इकाई मूल्य (USDC)",
     "itemTotal": "कुल",

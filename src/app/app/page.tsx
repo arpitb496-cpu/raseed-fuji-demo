@@ -87,9 +87,9 @@ export default function DashboardPage() {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 18, padding: "24px 18px 0 18px" }}>
-      {/* Header Row */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+    <div className="space-y-6 pt-6 lg:pt-0">
+      {/* Mobile Header Row (hidden on desktop) */}
+      <div className="lg:hidden flex items-center gap-2">
         {/* Indigo 13px Logo Tile with Check Icon */}
         <div style={{ width: 38, height: 38, borderRadius: 13, background: "#4338CA", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
           <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -109,11 +109,11 @@ export default function DashboardPage() {
       </div>
 
       {/* Muted line & 30px bold headline */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-        <div style={{ fontSize: 15, color: "#4B517D" }}>
+      <div className="space-y-1">
+        <div className="text-sm font-semibold text-[#4B517D]">
           {lang === "en" ? "Merchant overview" : "व्यापारी डैशबोर्ड"}
         </div>
-        <div style={{ fontSize: 30, fontWeight: 700, letterSpacing: "-0.8px", lineHeight: 1.1, color: "#161A3A" }}>
+        <div className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#161A3A] leading-tight">
           {lang === "en" ? (
             <>Get paid in USDC,<br />straight to your wallet.</>
           ) : (
@@ -122,105 +122,111 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Big Indigo #4338CA Hero Card */}
-      <div style={{ padding: "22px 20px", borderRadius: 28, background: "#4338CA", color: "#FFFFFF", boxShadow: "0 16px 32px rgba(67,56,202,0.28)" }}>
-        <div style={{ fontSize: 14, color: "#D6D9FF" }}>
-          {lang === "en" ? "Received" : "प्राप्त"}
-        </div>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 2 }}>
-          <span style={{ fontSize: 48, fontWeight: 700, letterSpacing: "-1.5px" }}>
-            {formatUsdc(totalPaidMicro)}
-          </span>
-          <span style={{ fontSize: 17, fontWeight: 500, color: "#D6D9FF" }}>USDC</span>
-        </div>
-        <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
-          {/* Awaiting Sub-tile */}
-          <div style={{ flex: 1, padding: "10px 14px", borderRadius: 16, background: "rgba(255,255,255,0.16)" }}>
-            <div style={{ fontSize: 12, color: "#E3E5FF" }}>
-              {lang === "en" ? "Awaiting" : "प्रतीक्षित"}
+      {/* Two columns on desktop: Left (about 60%): Hero + CTA, Right (about 40%): Recent invoices */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+        {/* Left Column (about 60% / col-span-7) */}
+        <div className="lg:col-span-7 space-y-4">
+          {/* Big Indigo #4338CA Hero Card */}
+          <div style={{ padding: "22px 20px", borderRadius: 28, background: "#4338CA", color: "#FFFFFF", boxShadow: "0 16px 32px rgba(67,56,202,0.28)" }}>
+            <div style={{ fontSize: 14, color: "#D6D9FF" }}>
+              {lang === "en" ? "Received" : "प्राप्त"}
             </div>
-            <div style={{ fontSize: 17, fontWeight: 700 }}>
-              {formatUsdc(totalOutstandingMicro)}
+            <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 2 }}>
+              <span style={{ fontSize: 48, fontWeight: 700, letterSpacing: "-1.5px" }}>
+                {formatUsdc(totalPaidMicro)}
+              </span>
+              <span style={{ fontSize: 17, fontWeight: 500, color: "#D6D9FF" }}>USDC</span>
             </div>
-          </div>
-          {/* Overdue Sub-tile */}
-          <div style={{ flex: 1, padding: "10px 14px", borderRadius: 16, background: "rgba(255,255,255,0.16)" }}>
-            <div style={{ fontSize: 12, color: "#E3E5FF" }}>
-              {lang === "en" ? "Overdue" : "अतिदेय"}
-            </div>
-            <div style={{ fontSize: 17, fontWeight: 700 }}>
-              {totalOverdueCount}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Coral #FF6B57 "New invoice" + White "Pay link" buttons */}
-      <div style={{ display: "flex", gap: 10 }}>
-        <Link
-          href="/app/invoices/new"
-          style={{ flex: 1, minHeight: 52, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, borderRadius: 18, background: "#FF6B57", color: "#FFFFFF", fontWeight: 700, fontSize: 15, textDecoration: "none" }}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true">
-            <path d="M12 5v14M5 12h14" />
-          </svg>
-          {lang === "en" ? "New invoice" : "नया चालान"}
-        </Link>
-        <Link
-          href="/app/invoices"
-          style={{ minHeight: 52, padding: "0 20px", display: "flex", alignItems: "center", borderRadius: 18, background: "#FFFFFF", color: "#161A3A", fontWeight: 500, fontSize: 15, textDecoration: "none", boxShadow: "0 2px 8px rgba(40,50,120,0.08)" }}
-        >
-          {lang === "en" ? "Pay link" : "भुगतान लिंक"}
-        </Link>
-      </div>
-
-      {/* Recent Invoices Heading ONCE */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        <div style={{ fontWeight: 700, fontSize: 17, color: "#161A3A" }}>
-          {lang === "en" ? "Recent invoices" : "हाल के चालान"}
-        </div>
-
-        {isLoading ? (
-          <div style={{ padding: "24px 0", textAlign: "center", fontSize: 13, color: "#5B6190" }}>
-            {lang === "en" ? "Loading invoices..." : "चालान लोड हो रहे हैं..."}
-          </div>
-        ) : invoices.length === 0 ? (
-          <div style={{ padding: "24px 16px", borderRadius: 20, background: "#FFFFFF", boxShadow: "0 2px 8px rgba(40,50,120,0.06)", textAlign: "center", color: "#5B6190", fontSize: 14 }}>
-            {lang === "en" ? "No invoices created yet." : "अभी तक कोई चालान नहीं बनाया गया है।"}
-          </div>
-        ) : (
-          invoices.map((inv) => {
-            const badge = getBadgeStyle(inv.status);
-            const numMatch = inv.invoiceNumber.match(/\d+$/);
-            const badgeNumber = numMatch ? `#${parseInt(numMatch[0], 10)}` : `#${inv.invoiceNumber.replace(/^INV-/, "")}`;
-
-            return (
-              <Link
-                key={inv.id}
-                href={`/app/invoices/${inv.id}`}
-                style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 20, background: "#FFFFFF", boxShadow: "0 2px 8px rgba(40,50,120,0.06)", textDecoration: "none", color: "inherit" }}
-              >
-                {/* Colored #N Badge */}
-                <div style={{ minWidth: 42, height: 38, padding: "0 8px", borderRadius: 12, background: badge.bg, color: badge.color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, flexShrink: 0 }}>
-                  {badgeNumber}
+            <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
+              {/* Awaiting Sub-tile */}
+              <div style={{ flex: 1, padding: "10px 14px", borderRadius: 16, background: "rgba(255,255,255,0.16)" }}>
+                <div style={{ fontSize: 12, color: "#E3E5FF" }}>
+                  {lang === "en" ? "Awaiting" : "प्रतीक्षित"}
                 </div>
-                {/* Title and Status */}
-                <div style={{ flexGrow: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 15, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {inv.title}
+                <div style={{ fontSize: 17, fontWeight: 700 }}>
+                  {formatUsdc(totalOutstandingMicro)}
+                </div>
+              </div>
+              {/* Overdue Sub-tile */}
+              <div style={{ flex: 1, padding: "10px 14px", borderRadius: 16, background: "rgba(255,255,255,0.16)" }}>
+                <div style={{ fontSize: 12, color: "#E3E5FF" }}>
+                  {lang === "en" ? "Overdue" : "अतिदेय"}
+                </div>
+                <div style={{ fontSize: 17, fontWeight: 700 }}>
+                  {totalOverdueCount}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Coral #FF6B57 "New invoice" + White "Pay link" buttons */}
+          <div style={{ display: "flex", gap: 10 }}>
+            <Link
+              href="/app/invoices/new"
+              style={{ flex: 1, minHeight: 52, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, borderRadius: 18, background: "#FF6B57", color: "#FFFFFF", fontWeight: 700, fontSize: 15, textDecoration: "none" }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true">
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+              {lang === "en" ? "New invoice" : "नया चालान"}
+            </Link>
+            <Link
+              href="/app/invoices"
+              style={{ minHeight: 52, padding: "0 20px", display: "flex", alignItems: "center", borderRadius: 18, background: "#FFFFFF", color: "#161A3A", fontWeight: 500, fontSize: 15, textDecoration: "none", boxShadow: "0 2px 8px rgba(40,50,120,0.08)" }}
+            >
+              {lang === "en" ? "Pay link" : "भुगतान लिंक"}
+            </Link>
+          </div>
+        </div>
+
+        {/* Right Column (about 40% / col-span-5): Recent invoices list */}
+        <div className="lg:col-span-5 space-y-3">
+          <div style={{ fontWeight: 700, fontSize: 17, color: "#161A3A" }}>
+            {lang === "en" ? "Recent invoices" : "हाल के चालान"}
+          </div>
+
+          {isLoading ? (
+            <div style={{ padding: "24px 0", textAlign: "center", fontSize: 13, color: "#5B6190" }}>
+              {lang === "en" ? "Loading invoices..." : "चालान लोड हो रहे हैं..."}
+            </div>
+          ) : invoices.length === 0 ? (
+            <div style={{ padding: "24px 16px", borderRadius: 20, background: "#FFFFFF", boxShadow: "0 2px 8px rgba(40,50,120,0.06)", textAlign: "center", color: "#5B6190", fontSize: 14 }}>
+              {lang === "en" ? "No invoices created yet." : "अभी तक कोई चालान नहीं बनाया गया है।"}
+            </div>
+          ) : (
+            invoices.map((inv) => {
+              const badge = getBadgeStyle(inv.status);
+              const numMatch = inv.invoiceNumber.match(/\d+$/);
+              const badgeNumber = numMatch ? `#${parseInt(numMatch[0], 10)}` : `#${inv.invoiceNumber.replace(/^INV-/, "")}`;
+
+              return (
+                <Link
+                  key={inv.id}
+                  href={`/app/invoices/${inv.id}`}
+                  style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 20, background: "#FFFFFF", boxShadow: "0 2px 8px rgba(40,50,120,0.06)", textDecoration: "none", color: "inherit" }}
+                >
+                  {/* Colored #N Badge */}
+                  <div style={{ minWidth: 42, height: 38, padding: "0 8px", borderRadius: 12, background: badge.bg, color: badge.color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, flexShrink: 0 }}>
+                    {badgeNumber}
                   </div>
-                  <div style={{ fontSize: 12, color: badge.color }}>
-                    {badge.label}
+                  {/* Title and Status */}
+                  <div style={{ flexGrow: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 15, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {inv.title}
+                    </div>
+                    <div style={{ fontSize: 12, color: badge.color }}>
+                      {badge.label}
+                    </div>
                   </div>
-                </div>
-                {/* Amount */}
-                <div style={{ fontSize: 15, fontWeight: 700, flexShrink: 0 }}>
-                  {formatUsdc(BigInt(inv.amountUsdc))}
-                </div>
-              </Link>
-            );
-          })
-        )}
+                  {/* Amount */}
+                  <div style={{ fontSize: 15, fontWeight: 700, flexShrink: 0 }}>
+                    {formatUsdc(BigInt(inv.amountUsdc))}
+                  </div>
+                </Link>
+              );
+            })
+          )}
+        </div>
       </div>
 
       {/* Small Muted Legal Links at Bottom of Scroll Area */}

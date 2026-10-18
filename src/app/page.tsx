@@ -24,19 +24,6 @@ export default function HomePage() {
       {/* 1. Hero & Value Proposition */}
       <section className="relative overflow-hidden pt-10 pb-16 md:pt-16 md:pb-24 border-b border-[#E6E9F5]">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-          {/* Persistent Testnet Demo Notice */}
-          <div
-            role="banner"
-            aria-label="Testnet demo notice"
-            data-testid="hero-testnet-notice"
-            className="inline-flex flex-wrap items-center justify-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FFE9D1] border border-[#FED7AA] text-[#9A4B00] text-xs font-semibold"
-          >
-            <span className="w-2 h-2 rounded-full bg-[#9A4B00] shrink-0" />
-            <span>Testnet Demo — No Real Money</span>
-            <span className="text-[#9A4B00]/40">•</span>
-            <span>टेस्टनेट डेमो — कोई वास्तविक धन नहीं (Avalanche Fuji)</span>
-          </div>
-
           {/* Value Proposition Badge */}
           <div className="flex items-center justify-center">
             <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#EEF2FF] border border-[#C7D2FE] text-[#4338CA] text-xs font-semibold">

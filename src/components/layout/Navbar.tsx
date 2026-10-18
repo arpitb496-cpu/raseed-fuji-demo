@@ -82,7 +82,7 @@ export function Navbar() {
             {/* Mobile Hamburger Menu */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-900 cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center"
+              className="md:hidden p-2 rounded-lg text-[#161A3A] hover:bg-[#F2F4FB] cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center transition-colors"
               aria-label="Toggle menu"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -92,32 +92,32 @@ export function Navbar() {
 
         {/* Mobile Navigation Drawer */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-slate-200 dark:border-slate-800 py-3 space-y-2 text-sm font-medium">
+          <div className="md:hidden border-t border-[#E6E9F5] py-3 space-y-2 text-sm font-medium">
             <Link
               href="/"
               onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-800 dark:text-slate-200"
+              className="block px-3 py-2 rounded-md hover:bg-[#F2F4FB] text-[#161A3A]"
             >
               {t("nav.home")}
             </Link>
             <Link
               href="/about/how-it-works"
               onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-800 dark:text-slate-200"
+              className="block px-3 py-2 rounded-md hover:bg-[#F2F4FB] text-[#161A3A]"
             >
               {t("nav.howItWorks")}
             </Link>
             <Link
               href="/security"
               onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-800 dark:text-slate-200"
+              className="block px-3 py-2 rounded-md hover:bg-[#F2F4FB] text-[#161A3A]"
             >
               {t("nav.security")}
             </Link>
             <Link
               href="/app"
               onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-md text-teal-700 dark:text-teal-300 font-semibold hover:bg-slate-100 dark:hover:bg-slate-900"
+              className="block px-3 py-2 rounded-md text-[#4338CA] font-semibold hover:bg-[#F2F4FB]"
             >
               {t("nav.dashboard")}
             </Link>

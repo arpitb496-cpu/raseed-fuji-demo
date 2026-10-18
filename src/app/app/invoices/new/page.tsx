@@ -101,7 +101,7 @@ export default function NewInvoicePage() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="max-w-[720px] mx-auto space-y-6 pt-6 lg:pt-0">
       <Link
         href="/app/invoices"
         className="inline-flex items-center gap-1.5 text-xs text-[#4338CA] hover:text-[#2E259B] font-semibold min-h-[44px]"
@@ -219,7 +219,7 @@ export default function NewInvoicePage() {
                       data-testid={`item-desc-${idx}`}
                       type="text"
                       required
-                      placeholder={t("newInvoice.itemDesc")}
+                      placeholder={t("newInvoice.itemDescPlaceholder")}
                       value={item.description}
                       onChange={(e) => handleItemChange(idx, "description", e.target.value)}
                       className="w-full px-4 py-2.5 min-h-[48px] text-xs rounded-[14px] bg-[#F2F4FB]/50 border border-[#E6E9F5] text-[#161A3A] placeholder-[#5B6190] focus:outline-none focus:ring-2 focus:ring-[#4338CA] focus:ring-offset-1"
@@ -275,7 +275,7 @@ export default function NewInvoicePage() {
                         {t("newInvoice.itemTotal")}
                       </div>
                       <div className="h-[44px] flex items-center justify-end font-bold text-xs text-[#161A3A]">
-                        ${lineTotal.toFixed(2)}
+                        {lineTotal.toFixed(2)} USDC
                       </div>
                     </div>
 

@@ -94,7 +94,7 @@ export default function InvoicesListPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pt-6 lg:pt-0 max-w-[1080px] mx-auto">
       {/* Title & Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>

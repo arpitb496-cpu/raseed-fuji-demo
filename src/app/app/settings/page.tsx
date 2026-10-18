@@ -124,7 +124,7 @@ export default function MerchantSettingsPage() {
   };
 
   return (
-    <div style={{ maxWidth: 840, margin: "0 auto", padding: "1.5rem" }}>
+    <div style={{ maxWidth: 720, margin: "0 auto", padding: "1.5rem 0" }}>
       <div style={{ marginBottom: "2rem" }}>
         <h1 style={{ fontSize: "1.75rem", fontWeight: 700, margin: 0, color: "var(--foreground)" }}>
           {t("settings.title")}
