@@ -207,7 +207,7 @@ export default function NewInvoicePage() {
               return (
                 <div
                   key={idx}
-                  className="p-4 sm:p-5 rounded-[20px] bg-white border border-[#E6E9F5] space-y-3 shadow-[0_2px_8px_rgba(40,50,120,0.06)]"
+                  className="p-3.5 sm:p-5 rounded-[20px] bg-white border border-[#E6E9F5] space-y-3 shadow-[0_2px_8px_rgba(40,50,120,0.06)]"
                 >
                   {/* Row 1: Description input full width */}
                   <div>
@@ -227,9 +227,9 @@ export default function NewInvoicePage() {
                   </div>
 
                   {/* Row 2: Qty, Unit price (USDC), line total, delete button (44px) */}
-                  <div className="flex items-end gap-3">
+                  <div className="flex items-end gap-2 sm:gap-3">
                     {/* Qty */}
-                    <div className="w-20 shrink-0">
+                    <div className="w-16 sm:w-20 shrink-0">
                       <label className="block text-[11px] font-semibold text-[#5B6190] mb-1">
                         {t("newInvoice.itemQty")}
                       </label>
@@ -247,7 +247,7 @@ export default function NewInvoicePage() {
                     </div>
 
                     {/* Unit price (USDC) */}
-                    <div className="flex-1 min-w-[100px]">
+                    <div className="flex-1 min-w-[76px] sm:min-w-[100px]">
                       <label className="block text-[11px] font-semibold text-[#5B6190] mb-1">
                         {t("newInvoice.itemPrice")}
                       </label>
@@ -261,16 +261,16 @@ export default function NewInvoicePage() {
                           min={0.01}
                           value={item.unitPriceUsdc}
                           onChange={(e) => handleItemChange(idx, "unitPriceUsdc", e.target.value)}
-                          className="w-full pl-3 pr-10 py-2 min-h-[44px] text-xs text-right rounded-[12px] bg-[#F2F4FB]/50 border border-[#E6E9F5] text-[#161A3A] focus:outline-none focus:ring-2 focus:ring-[#4338CA] focus:ring-offset-1"
+                          className="w-full pl-2.5 sm:pl-3 pr-9 sm:pr-10 py-2 min-h-[44px] text-xs text-right rounded-[12px] bg-[#F2F4FB]/50 border border-[#E6E9F5] text-[#161A3A] focus:outline-none focus:ring-2 focus:ring-[#4338CA] focus:ring-offset-1"
                         />
-                        <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-[#5B6190]">
+                        <span className="absolute right-2 sm:right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-[#5B6190]">
                           USDC
                         </span>
                       </div>
                     </div>
 
                     {/* Line total */}
-                    <div className="shrink-0 text-right min-w-[70px]">
+                    <div className="shrink-0 text-right min-w-[64px] sm:min-w-[70px]">
                       <div className="text-[11px] font-semibold text-[#5B6190] mb-1">
                         {t("newInvoice.itemTotal")}
                       </div>
@@ -286,7 +286,7 @@ export default function NewInvoicePage() {
                         disabled={items.length <= 1}
                         onClick={() => handleRemoveItem(idx)}
                         aria-label="Delete line item"
-                        className="w-11 h-11 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-[12px] border border-[#E6E9F5] text-[#5B6190] hover:text-[#991B1B] hover:bg-rose-50 disabled:opacity-20 cursor-pointer transition-colors"
+                        className="w-11 h-11 min-h-[44px] min-w-[44px] shrink-0 flex items-center justify-center rounded-[12px] border border-[#E6E9F5] text-[#5B6190] hover:text-[#991B1B] hover:bg-rose-50 disabled:opacity-20 cursor-pointer transition-colors"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>

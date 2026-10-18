@@ -22,7 +22,7 @@ export interface NetworkConfig {
 // Known placeholder address indicating contract is not yet deployed
 export const PLACEHOLDER_ADDRESS = "0x0000000000000000000000000000000000000000" as const;
 
-function isConfiguredAddress(address?: string | null): address is `0x${string}` {
+export function isConfiguredAddress(address?: string | null): address is `0x${string}` {
   if (!address) return false;
   if (!/^0x[a-fA-F0-9]{40}$/.test(address)) return false;
   return address.toLowerCase() !== PLACEHOLDER_ADDRESS.toLowerCase();

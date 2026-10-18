@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BRANDING } from "@/config/branding";
-import { CURRENT_NETWORK } from "@/config/network";
+import { CURRENT_NETWORK, isConfiguredAddress } from "@/config/network";
 import { useI18n } from "@/lib/i18n";
 import { ExternalLink, Shield } from "lucide-react";
 
@@ -56,18 +56,20 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <a
-                  href={
-                    CURRENT_NETWORK.routerAddress
-                      ? `${CURRENT_NETWORK.explorerUrl}/address/${CURRENT_NETWORK.routerAddress}`
-                      : CURRENT_NETWORK.explorerUrl
-                  }
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 min-h-[32px] py-1 text-[#4B517D] hover:text-[#4338CA] transition-colors"
-                >
-                  {t("common.viewOnExplorer")} <ExternalLink className="w-3 h-3" />
-                </a>
+                {isConfiguredAddress(CURRENT_NETWORK.routerAddress) ? (
+                  <a
+                    href={`${CURRENT_NETWORK.explorerUrl}/address/${CURRENT_NETWORK.routerAddress}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 min-h-[32px] py-1 text-[#4B517D] hover:text-[#4338CA] transition-colors"
+                  >
+                    {t("common.viewOnExplorer")} <ExternalLink className="w-3 h-3" />
+                  </a>
+                ) : (
+                  <span className="inline-flex items-center min-h-[32px] py-1 text-[#5B6190] italic">
+                    {t("common.contractNotConfigured")}
+                  </span>
+                )}
               </li>
             </ul>
           </div>

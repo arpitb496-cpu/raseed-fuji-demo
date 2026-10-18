@@ -20,7 +20,7 @@ interface InvoiceSummary {
 }
 
 export default function DashboardPage() {
-  const { lang } = useI18n();
+  const { t, lang } = useI18n();
   const [invoices, setInvoices] = useState<InvoiceSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -58,32 +58,50 @@ export default function DashboardPage() {
   const totalOverdueCount = invoices.filter((inv) => inv.status === "EXPIRED").length;
 
   const getBadgeStyle = (status: string) => {
-    if (status === "PAID") {
-      return {
-        bg: "#D9F5E6",
-        color: "#0B6B3A",
-        label: lang === "en" ? "Paid" : "भुगतान संपन्न",
-      };
+    switch (status) {
+      case "PAID":
+        return {
+          bg: "#D9F5E6",
+          color: "#0B6B3A",
+          label: t("status.paid"),
+        };
+      case "SENT":
+        return {
+          bg: "#FFE9D1",
+          color: "#9A4B00",
+          label: t("status.sent"),
+        };
+      case "PARTIALLY_PAID":
+        return {
+          bg: "#FFE9D1",
+          color: "#9A4B00",
+          label: t("status.partiallyPaid"),
+        };
+      case "EXPIRED":
+        return {
+          bg: "#FEE2E2",
+          color: "#991B1B",
+          label: t("status.expired"),
+        };
+      case "DRAFT":
+        return {
+          bg: "#F2F4FB",
+          color: "#5B6190",
+          label: t("status.draft"),
+        };
+      case "CANCELLED":
+        return {
+          bg: "#F2F4FB",
+          color: "#5B6190",
+          label: t("status.cancelled"),
+        };
+      default:
+        return {
+          bg: "#F2F4FB",
+          color: "#5B6190",
+          label: status,
+        };
     }
-    if (status === "SENT" || status === "PARTIALLY_PAID") {
-      return {
-        bg: "#FFE9D1",
-        color: "#9A4B00",
-        label: lang === "en" ? "Awaiting payment" : "भुगतान की प्रतीक्षा",
-      };
-    }
-    if (status === "EXPIRED") {
-      return {
-        bg: "#FEE2E2",
-        color: "#991B1B",
-        label: lang === "en" ? "Overdue" : "अतिदेय",
-      };
-    }
-    return {
-      bg: "#F2F4FB",
-      color: "#5B6190",
-      label: status === "DRAFT" ? (lang === "en" ? "Draft" : "ड्राफ्ट") : status,
-    };
   };
 
   return (
@@ -174,7 +192,7 @@ export default function DashboardPage() {
               href="/app/invoices"
               style={{ minHeight: 52, padding: "0 20px", display: "flex", alignItems: "center", borderRadius: 18, background: "#FFFFFF", color: "#161A3A", fontWeight: 500, fontSize: 15, textDecoration: "none", boxShadow: "0 2px 8px rgba(40,50,120,0.08)" }}
             >
-              {lang === "en" ? "Pay link" : "भुगतान लिंक"}
+              {lang === "en" ? "Payment links" : "भुगतान लिंक"}
             </Link>
           </div>
         </div>

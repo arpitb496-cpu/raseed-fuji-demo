@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n";
-import { CURRENT_NETWORK } from "@/config/network";
+import { CURRENT_NETWORK, isConfiguredAddress } from "@/config/network";
 import { INDICATIVE_USD_TO_INR_RATE } from "@/config/constants";
 import {
   ArrowRight,
@@ -318,33 +318,51 @@ export default function HomePage() {
             </div>
 
             <div className="space-y-1 font-mono text-[11px]">
-              <div className="text-[#5B6190]">PaymentRouter Contract:</div>
-              <div className="flex flex-wrap items-center gap-2 text-[#161A3A] break-all font-semibold">
-                <span>{CURRENT_NETWORK.routerAddress || "Not configured"}</span>
-                {CURRENT_NETWORK.routerAddress && (
+              <div className="text-[#5B6190]">
+                {lang === "hi" ? "PaymentRouter अनुबंध:" : "PaymentRouter Contract:"}
+              </div>
+              {isConfiguredAddress(CURRENT_NETWORK.routerAddress) ? (
+                <div className="flex flex-wrap items-center gap-2 text-[#161A3A] break-all font-semibold">
+                  <span>{CURRENT_NETWORK.routerAddress}</span>
                   <a
                     href={`${CURRENT_NETWORK.explorerUrl}/address/${CURRENT_NETWORK.routerAddress}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 text-[#4338CA] hover:text-[#2E259B] text-xs font-sans font-semibold"
                   >
-                    <span>View on Snowtrace</span>
+                    <span>{t("common.viewOnExplorer")}</span>
                     <ExternalLink className="w-3 h-3" />
                   </a>
-                )}
-              </div>
+                </div>
+              ) : (
+                <div className="text-[#5B6190] font-sans text-xs italic">
+                  {t("common.contractNotConfigured")}
+                </div>
+              )}
             </div>
 
             <p className="text-[11px] text-[#5B6190]">
-              <a
-                href="https://testnet.snowtrace.io/address/0xb94A922261bBa2e07648520bf56125a4102eaB95#code"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[#4338CA] hover:text-[#2E259B] underline font-semibold"
-              >
-                Source code published on Snowtrace (similar-match verification)
-              </a>
-              . Contract handles testnet USDC routing only. Protocol fee is currently 0%. The contract owner can set a fee for future payments, capped in code at 1%.
+              {isConfiguredAddress(CURRENT_NETWORK.routerAddress) ? (
+                <a
+                  href={`${CURRENT_NETWORK.explorerUrl}/address/${CURRENT_NETWORK.routerAddress}#code`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#4338CA] hover:text-[#2E259B] underline font-semibold"
+                >
+                  {lang === "hi"
+                    ? "Snowtrace पर प्रकाशित स्रोत कोड (समान-मिलान सत्यापन)"
+                    : "Source code published on Snowtrace (similar-match verification)"}
+                </a>
+              ) : (
+                <span>
+                  {lang === "hi"
+                    ? "Snowtrace पर प्रकाशित स्रोत कोड (समान-मिलान सत्यापन)"
+                    : "Source code published on Snowtrace (similar-match verification)"}
+                </span>
+              )}
+              {lang === "hi"
+                ? "। अनुबंध केवल टेस्टनेट USDC रूटिंग को संभालता है। प्रोटोकॉल शुल्क वर्तमान में 0% है। अनुबंध स्वामी भविष्य के भुगतानों के लिए शुल्क निर्धारित कर सकता है, जो कोड में 1% पर सीमित है।"
+                : ". Contract handles testnet USDC routing only. Protocol fee is currently 0%. The contract owner can set a fee for future payments, capped in code at 1%."}
             </p>
           </div>
         </div>

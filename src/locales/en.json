@@ -52,7 +52,8 @@
     "wrongNetwork": "Wrong Network Detected",
     "wrongNetworkDesc": "Please switch your wallet to Avalanche Fuji (Chain ID 43113) to continue.",
     "language": "Language",
-    "indicativeRate": "Illustrative demo rate, not a live rate"
+    "indicativeRate": "Illustrative demo rate, not a live rate",
+    "contractNotConfigured": "Contract address not configured in this environment."
   },
   "dashboard": {
     "title": "Merchant Overview",

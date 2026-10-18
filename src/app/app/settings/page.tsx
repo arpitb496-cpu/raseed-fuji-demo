@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useLanguage } from "@/lib/i18n";
 import { useAccount, useDisconnect } from "wagmi";
 import { useAuth } from "@/lib/auth/useAuth";
+import { Download, Trash2 } from "lucide-react";
 
 interface MerchantProfile {
   id: string;
@@ -363,7 +364,8 @@ export default function MerchantSettingsPage() {
                   textDecoration: "none",
                 }}
               >
-                <span>📥</span> {t("settings.exportData")}
+                <Download className="w-4 h-4 text-[#4338CA]" />
+                <span>{t("settings.exportData")}</span>
               </a>
 
               <button
@@ -376,15 +378,16 @@ export default function MerchantSettingsPage() {
                   gap: "0.5rem",
                   padding: "0.625rem 1.25rem",
                   borderRadius: 8,
-                  border: "1px solid rgba(239, 68, 68, 0.4)",
-                  background: "rgba(239, 68, 68, 0.1)",
-                  color: "#ef4444",
+                  border: "1px solid rgba(185, 28, 28, 0.35)",
+                  background: "rgba(254, 226, 226, 0.5)",
+                  color: "#991B1B",
                   fontSize: "0.875rem",
-                  fontWeight: 500,
+                  fontWeight: 600,
                   cursor: "pointer",
                 }}
               >
-                <span>🗑️</span> {t("settings.deleteData")}
+                <Trash2 className="w-4 h-4 text-[#991B1B]" />
+                <span>{t("settings.deleteData")}</span>
               </button>
             </div>
           </section>
