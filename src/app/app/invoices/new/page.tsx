@@ -101,7 +101,7 @@ export default function NewInvoicePage() {
   };
 
   return (
-    <div className="max-w-[720px] mx-auto space-y-6 pt-6 lg:pt-0">
+    <div className="max-w-[720px] mx-auto space-y-6">
       <Link
         href="/app/invoices"
         className="inline-flex items-center gap-1.5 text-xs text-[#4338CA] hover:text-[#2E259B] font-semibold min-h-[44px]"
@@ -195,7 +195,7 @@ export default function NewInvoicePage() {
 
         {/* Line Items Section */}
         <div className="space-y-3">
-          <div className="flex items-center justify-between px-1">
+          <div className="flex items-center justify-between">
             <h2 className="text-sm font-bold text-[#161A3A]">
               {t("newInvoice.lineItems")}
             </h2>

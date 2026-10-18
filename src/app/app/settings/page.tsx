@@ -295,7 +295,7 @@ export default function MerchantSettingsPage() {
                     fontSize: "0.875rem",
                   }}
                 >
-                  <option value="USD">USD ($) - Base Micro-USDC</option>
+                  <option value="USD">USD ($), indicative reference</option>
                   <option value="INR">INR (₹) - Indicative (1 USDC ≈ ₹85)</option>
                 </select>
               </div>
@@ -324,28 +324,6 @@ export default function MerchantSettingsPage() {
               </div>
             </div>
           </section>
-
-          {/* Action: Save Profile */}
-          <div>
-            <button
-              id="settings-save-button"
-              type="submit"
-              disabled={isSaving}
-              style={{
-                padding: "0.75rem 1.75rem",
-                borderRadius: 8,
-                background: "var(--primary)",
-                color: "#fff",
-                fontWeight: 600,
-                fontSize: "0.9375rem",
-                border: "none",
-                cursor: isSaving ? "not-allowed" : "pointer",
-                opacity: isSaving ? 0.7 : 1,
-              }}
-            >
-              {isSaving ? t("settings.saving") : t("settings.saveProfile")}
-            </button>
-          </div>
 
           {/* Section: Data Privacy & Export */}
           <section
@@ -410,16 +388,40 @@ export default function MerchantSettingsPage() {
               </button>
             </div>
           </section>
+
+          {/* Action: Save Profile */}
+          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "1rem" }}>
+            <button
+              id="settings-save-button"
+              type="submit"
+              disabled={isSaving}
+              style={{
+                padding: "0.75rem 1.75rem",
+                minHeight: 48,
+                borderRadius: 14,
+                background: "#4338CA",
+                color: "#fff",
+                fontWeight: 600,
+                fontSize: "0.9375rem",
+                border: "none",
+                cursor: isSaving ? "not-allowed" : "pointer",
+                opacity: isSaving ? 0.7 : 1,
+                boxShadow: "0 2px 8px rgba(67,56,202,0.25)",
+              }}
+            >
+              {isSaving ? t("settings.saving") : t("settings.saveProfile")}
+            </button>
+          </div>
         </form>
       )}
 
-      {/* Section: Sign Out */}
-      <div style={{ marginTop: "2rem" }}>
+      {/* Section: Sign Out (clearly visible at the bottom after Save Changes, with bottom padding) */}
+      <div style={{ marginTop: "2rem", paddingBottom: "6rem" }}>
         {shortAddress && (
           <div
             style={{
-              fontSize: "0.875rem",
-              color: "var(--muted-foreground, #5B6190)",
+              fontSize: "0.8125rem",
+              color: "#5B6190",
               marginBottom: "0.5rem",
               fontFamily: "monospace",
             }}
@@ -440,7 +442,7 @@ export default function MerchantSettingsPage() {
             minHeight: 48,
             background: "#FFFFFF",
             border: "1px solid #E6E9F5",
-            borderRadius: 16,
+            borderRadius: 18,
             color: "#A11A1A",
             fontSize: "0.9375rem",
             fontWeight: 600,

@@ -226,7 +226,7 @@ export default function InvoiceDetailPage({
   };
 
   return (
-    <div className="max-w-[1080px] mx-auto space-y-6 pt-6 lg:pt-0">
+    <div className="max-w-[1080px] mx-auto space-y-6">
       {/* Top Bar Navigation & Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <Link

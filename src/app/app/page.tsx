@@ -87,7 +87,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="space-y-6 pt-6 lg:pt-0">
+    <div className="space-y-6">
       {/* Mobile Header Row (hidden on desktop) */}
       <div className="lg:hidden flex items-center gap-2">
         {/* Indigo 13px Logo Tile with Check Icon */}

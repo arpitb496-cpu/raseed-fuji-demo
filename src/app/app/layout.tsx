@@ -99,7 +99,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   ];
 
   const desktopNavItems = [
-    { href: "/app", label: t("nav.home"), exact: true },
+    { href: "/app", label: t("nav.dashboard"), exact: true },
     { href: "/app/invoices", label: t("nav.invoices"), exact: false },
     { href: "/app/settings", label: t("nav.settings"), exact: false },
   ];
@@ -118,7 +118,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
             <span className="font-bold text-lg text-[#161A3A] tracking-tight">CryptoDao</span>
           </Link>
 
-          {/* Horizontal Nav Links: Home, Invoices, Settings */}
+          {/* Horizontal Nav Links: Dashboard, Invoices, Settings */}
           <nav aria-label="Desktop Navigation" className="flex items-center gap-6 text-sm">
             {desktopNavItems.map((item) => {
               const isActive = item.exact
@@ -152,8 +152,8 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      {/* Scrollable Content Area with shared 20px padding on phones */}
-      <div className="flex-1 px-5 lg:px-8 pb-28 lg:pb-12">
+      {/* Scrollable Content Area with 24px top padding on phones and 32px on laptop */}
+      <div className="flex-1 px-5 lg:px-8 pt-6 lg:pt-8 pb-28 lg:pb-12">
         {children}
       </div>
 
