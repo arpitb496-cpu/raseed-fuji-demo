@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { evaluateInvoiceStatus } from "@/lib/invoice-utils";
-import { CURRENT_NETWORK } from "@/config/network";
+import { CURRENT_NETWORK, isConfiguredAddress } from "@/config/network";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function GET(
@@ -82,7 +82,10 @@ export async function GET(
       network: {
         chainId: CURRENT_NETWORK.chain.id,
         networkName: CURRENT_NETWORK.name,
-        routerAddress: CURRENT_NETWORK.routerAddress,
+        routerAddress: isConfiguredAddress(CURRENT_NETWORK.routerAddress)
+          ? CURRENT_NETWORK.routerAddress
+          : null,
+        routerConfigured: isConfiguredAddress(CURRENT_NETWORK.routerAddress),
         usdcAddress: CURRENT_NETWORK.usdcAddress,
         explorerUrl: CURRENT_NETWORK.explorerUrl,
       },

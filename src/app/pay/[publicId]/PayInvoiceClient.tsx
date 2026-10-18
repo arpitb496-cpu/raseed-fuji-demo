@@ -34,7 +34,8 @@ interface PublicInvoiceData {
   network: {
     chainId: number;
     networkName: string;
-    routerAddress: `0x${string}`;
+    routerAddress: `0x${string}` | null;
+    routerConfigured?: boolean;
     usdcAddress: `0x${string}`;
     explorerUrl: string;
   };
@@ -132,8 +133,8 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
     address: invoice?.network.usdcAddress,
     abi: ERC20_ABI,
     functionName: "allowance",
-    args: address && invoice ? [address, invoice.network.routerAddress] : undefined,
-    query: { enabled: !!address && !!invoice },
+    args: address && invoice?.network.routerAddress ? [address, invoice.network.routerAddress] : undefined,
+    query: { enabled: !!address && !!invoice?.network.routerAddress },
   });
 
   const remainingUsdc = invoice ? BigInt(invoice.remainingUsdc) : 0n;
@@ -340,6 +341,14 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
 
   const handlePay = async () => {
     if (!invoice || !address || isDraft || isCancelledOrExpired) return;
+    if (!isConfiguredAddress(invoice?.network?.routerAddress)) {
+      setErrorMessage(
+        lang === "en"
+          ? "Contract address not configured in this environment. Payment is disabled."
+          : "इस परिवेश में अनुबंध पता कॉन्फ़िगर नहीं है। भुगतान अक्षम है।"
+      );
+      return;
+    }
     setErrorMessage(null);
 
     try {
@@ -856,7 +865,7 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
               <button
                 type="button"
                 onClick={handlePay}
-                disabled={effectivePaymentStep !== "idle" || !!pendingTxHash}
+                disabled={effectivePaymentStep !== "idle" || !!pendingTxHash || !isConfiguredAddress(invoice?.network?.routerAddress)}
                 style={{
                   width: "100%",
                   minHeight: 58,
@@ -870,8 +879,8 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
                   fontSize: 17,
                   boxShadow: "0 14px 28px rgba(67,56,202,0.30)",
                   border: "none",
-                  cursor: (effectivePaymentStep !== "idle" || !!pendingTxHash) ? "not-allowed" : "pointer",
-                  opacity: (effectivePaymentStep !== "idle" || !!pendingTxHash) ? 0.55 : 1,
+                  cursor: (effectivePaymentStep !== "idle" || !!pendingTxHash || !isConfiguredAddress(invoice?.network?.routerAddress)) ? "not-allowed" : "pointer",
+                  opacity: (effectivePaymentStep !== "idle" || !!pendingTxHash || !isConfiguredAddress(invoice?.network?.routerAddress)) ? 0.55 : 1,
                 }}
               >
                 {effectivePaymentStep === "approving"
@@ -892,6 +901,13 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
                       : `${formatUsdc(remainingUsdc)} USDC स्वीकृत कर भुगतान करें`
                   )}
               </button>
+            )}
+            {!isConfiguredAddress(invoice?.network?.routerAddress) && (
+              <div style={{ textAlign: "center", fontSize: 12, color: "#991B1B", fontWeight: 500, marginTop: 6 }}>
+                {lang === "en"
+                  ? "Contract address not configured in this environment. Payment is disabled."
+                  : "इस परिवेश में अनुबंध पता कॉन्फ़िगर नहीं है। भुगतान अक्षम है।"}
+              </div>
             )}
           </div>
           <div style={{ textAlign: "center", fontSize: 12, color: "#5B6190" }}>

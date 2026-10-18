@@ -24,7 +24,7 @@ export const PLACEHOLDER_ADDRESS = "0x0000000000000000000000000000000000000000" 
 
 export function isConfiguredAddress(address?: string | null): address is `0x${string}` {
   if (!address) return false;
-  if (!/^0x[a-fA-F0-9]{40}$/.test(address)) return false;
+  if (!/^0x[a-fA-F0-9]{40}$/i.test(address)) return false;
   return address.toLowerCase() !== PLACEHOLDER_ADDRESS.toLowerCase();
 }
 

@@ -53,7 +53,8 @@
     "wrongNetworkDesc": "Please switch your wallet to Avalanche Fuji (Chain ID 43113) to continue.",
     "language": "Language",
     "indicativeRate": "Illustrative demo rate, not a live rate",
-    "contractNotConfigured": "Contract address not configured in this environment."
+    "contractNotConfigured": "Contract address not configured in this environment.",
+    "paymentDisabledNoContract": "Contract address not configured in this environment. Payment is disabled."
   },
   "dashboard": {
     "title": "Merchant Overview",
