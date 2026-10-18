@@ -39,8 +39,8 @@ export function NetworkBanner() {
 
       {/* 3. Router Not Configured Notice (if placeholder) */}
       {!CURRENT_NETWORK.isRouterConfigured && (
-        <div className="bg-sky-500/10 border-b border-sky-500/20 text-sky-800 dark:text-sky-300 px-4 py-2 flex items-center justify-center gap-2 text-center">
-          <AlertTriangle className="w-4 h-4 shrink-0 text-sky-600 dark:text-sky-400" />
+        <div className="bg-sky-500/10 border-b border-sky-500/20 text-sky-950 px-4 py-2 flex items-center justify-center gap-2 text-center">
+          <AlertTriangle className="w-4 h-4 shrink-0 text-sky-700" />
           <span>
             <strong>Dev Notice:</strong> Payment Router contract address is currently placeholder. Deploy to Fuji using instructions in{" "}
             <code className="bg-sky-500/10 px-1 py-0.5 rounded font-mono-code">/docs/DEPLOY_FUJI.md</code>.

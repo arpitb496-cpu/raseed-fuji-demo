@@ -11,11 +11,17 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { ShieldAlert, LogIn, Loader2 } from "lucide-react";
 
 import { LanguageToggle } from "@/components/common/LanguageToggle";
+import { isProtectedRoute } from "@/lib/auth/routes";
 
 function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { isAuthenticated, isLoading, signIn, isSigning } = useAuth();
   const { t } = useI18n();
+
+  // Guard: Never render merchant session loading or SIWE auth gate outside protected /app/* routes
+  if (!isProtectedRoute(pathname)) {
+    return <>{children}</>;
+  }
 
   if (isLoading) {
     return (

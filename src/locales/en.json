@@ -126,7 +126,22 @@
     "noPaymentsYet": "No on-chain payments detected yet. Funds will appear here once confirmed on Avalanche Fuji.",
     "sendByEmail": "Send by email",
     "shareWhatsApp": "Share on WhatsApp",
-    "markAsSentHint": "Mark as sent first (link cannot be paid yet)"
+    "markAsSentHint": "Mark as sent first (link cannot be paid yet)",
+    "downloadReceipt": "Download Receipt",
+    "preparingPdf": "Preparing PDF...",
+    "preparingReceipt": "Preparing receipt...",
+    "downloadFailed": "Download failed. Please try again.",
+    "overpaid": "Overpaid",
+    "colConfirmed": "Confirmed",
+    "colPayer": "Payer Address",
+    "colAmount": "Amount",
+    "colStatusFlags": "Status Flags",
+    "colTransaction": "Transaction",
+    "statusOnDraft": "On Draft",
+    "statusDust": "Dust (<0.01 USDC)",
+    "statusLate": "Late",
+    "statusOnCancelled": "On Cancelled Invoice",
+    "statusValid": "Valid"
   },
   "settings": {
     "title": "Merchant Settings",

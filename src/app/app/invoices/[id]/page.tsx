@@ -81,6 +81,40 @@ export default function InvoiceDetailPage({
   const [copied, setCopied] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+  const [downloadingType, setDownloadingType] = useState<"pdf" | "receipt" | null>(null);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
+
+  const handleDownload = async (type: "pdf" | "receipt") => {
+    if (!invoice) return;
+    setDownloadingType(type);
+    setDownloadError(null);
+    try {
+      const endpoint = type === "pdf" ? `/api/invoices/${invoice.id}/pdf` : `/api/invoices/${invoice.id}/receipt`;
+      const filename = type === "pdf" ? `${invoice.invoiceNumber}.pdf` : `Receipt-${invoice.invoiceNumber}.pdf`;
+      const res = await fetch(endpoint);
+      if (!res.ok) {
+        throw new Error(t("invoiceDetail.downloadFailed"));
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err: unknown) {
+      console.error("Download error:", err);
+      setDownloadError(
+        err instanceof Error && err.message
+          ? err.message
+          : t("invoiceDetail.downloadFailed")
+      );
+    } finally {
+      setDownloadingType(null);
+    }
+  };
 
   useEffect(() => {
     let active = true;
@@ -250,26 +284,52 @@ export default function InvoiceDetailPage({
             </button>
           )}
 
-          <a
+          <button
             id="download-pdf-btn"
-            href={`/api/invoices/${invoice.id}/pdf`}
-            download={`${invoice.invoiceNumber}.pdf`}
-            className="inline-flex items-center gap-1.5 px-4 py-2 min-h-[44px] rounded-[14px] border border-[#E6E9F5] bg-white text-[#161A3A] hover:bg-[#F2F4FB] text-xs font-semibold cursor-pointer transition-colors shadow-2xs"
+            type="button"
+            onClick={() => handleDownload("pdf")}
+            disabled={downloadingType !== null}
+            className="inline-flex items-center gap-1.5 px-4 py-2 min-h-[44px] rounded-[14px] border border-[#E6E9F5] bg-white text-[#161A3A] hover:bg-[#F2F4FB] text-xs font-semibold cursor-pointer transition-colors shadow-2xs disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            <Download className="w-3.5 h-3.5 text-[#5B6190]" />
-            <span>{t("invoiceDetail.downloadPdf")}</span>
-          </a>
+            {downloadingType === "pdf" ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 text-[#5B6190] animate-spin" />
+                <span>{t("invoiceDetail.preparingPdf")}</span>
+              </>
+            ) : (
+              <>
+                <Download className="w-3.5 h-3.5 text-[#5B6190]" />
+                <span>{t("invoiceDetail.downloadPdf")}</span>
+              </>
+            )}
+          </button>
 
           {invoice.paymentEvents.length > 0 && (
-            <a
+            <button
               id="download-receipt-btn"
-              href={`/api/invoices/${invoice.id}/receipt`}
-              download={`Receipt-${invoice.invoiceNumber}.pdf`}
-              className="inline-flex items-center gap-1.5 px-4 py-2 min-h-[44px] rounded-[14px] border border-[#A7F3D0] bg-[#D9F5E6] text-xs font-semibold text-[#0B6B3A] hover:bg-[#c3ebd4] cursor-pointer transition-colors shadow-2xs"
+              type="button"
+              onClick={() => handleDownload("receipt")}
+              disabled={downloadingType !== null}
+              className="inline-flex items-center gap-1.5 px-4 py-2 min-h-[44px] rounded-[14px] border border-[#A7F3D0] bg-[#D9F5E6] text-xs font-semibold text-[#0B6B3A] hover:bg-[#c3ebd4] cursor-pointer transition-colors shadow-2xs disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              <ShieldCheck className="w-3.5 h-3.5 text-[#0B6B3A]" />
-              <span>Download Receipt</span>
-            </a>
+              {downloadingType === "receipt" ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 text-[#0B6B3A] animate-spin" />
+                  <span>{t("invoiceDetail.preparingReceipt")}</span>
+                </>
+              ) : (
+                <>
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#0B6B3A]" />
+                  <span>{t("invoiceDetail.downloadReceipt")}</span>
+                </>
+              )}
+            </button>
+          )}
+
+          {downloadError && (
+            <div className="w-full text-xs text-rose-600 font-medium px-1">
+              {downloadError}
+            </div>
           )}
 
           {invoice.status !== "PAID" && invoice.status !== "CANCELLED" && (
@@ -397,24 +457,50 @@ export default function InvoiceDetailPage({
                   </button>
                 )}
 
-                <a
-                  href={`/api/invoices/${invoice.id}/pdf`}
-                  download={`${invoice.invoiceNumber}.pdf`}
-                  className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 min-h-[44px] rounded-[14px] border border-[#E6E9F5] bg-white text-[#161A3A] hover:bg-[#F2F4FB] text-xs font-semibold cursor-pointer transition-colors shadow-2xs"
+                <button
+                  type="button"
+                  onClick={() => handleDownload("pdf")}
+                  disabled={downloadingType !== null}
+                  className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 min-h-[44px] rounded-[14px] border border-[#E6E9F5] bg-white text-[#161A3A] hover:bg-[#F2F4FB] text-xs font-semibold cursor-pointer transition-colors shadow-2xs disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  <Download className="w-3.5 h-3.5 text-[#5B6190]" />
-                  <span>{t("invoiceDetail.downloadPdf")}</span>
-                </a>
+                  {downloadingType === "pdf" ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 text-[#5B6190] animate-spin" />
+                      <span>{t("invoiceDetail.preparingPdf")}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-3.5 h-3.5 text-[#5B6190]" />
+                      <span>{t("invoiceDetail.downloadPdf")}</span>
+                    </>
+                  )}
+                </button>
 
                 {invoice.paymentEvents.length > 0 && (
-                  <a
-                    href={`/api/invoices/${invoice.id}/receipt`}
-                    download={`Receipt-${invoice.invoiceNumber}.pdf`}
-                    className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 min-h-[44px] rounded-[14px] border border-[#A7F3D0] bg-[#D9F5E6] text-xs font-semibold text-[#0B6B3A] hover:bg-[#c3ebd4] cursor-pointer transition-colors shadow-2xs"
+                  <button
+                    type="button"
+                    onClick={() => handleDownload("receipt")}
+                    disabled={downloadingType !== null}
+                    className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 min-h-[44px] rounded-[14px] border border-[#A7F3D0] bg-[#D9F5E6] text-xs font-semibold text-[#0B6B3A] hover:bg-[#c3ebd4] cursor-pointer transition-colors shadow-2xs disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    <ShieldCheck className="w-3.5 h-3.5 text-[#0B6B3A]" />
-                    <span>Download Receipt</span>
-                  </a>
+                    {downloadingType === "receipt" ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 text-[#0B6B3A] animate-spin" />
+                        <span>{t("invoiceDetail.preparingReceipt")}</span>
+                      </>
+                    ) : (
+                      <>
+                        <ShieldCheck className="w-3.5 h-3.5 text-[#0B6B3A]" />
+                        <span>{t("invoiceDetail.downloadReceipt")}</span>
+                      </>
+                    )}
+                  </button>
+                )}
+
+                {downloadError && (
+                  <div className="w-full text-xs text-rose-600 font-medium px-1 text-center">
+                    {downloadError}
+                  </div>
                 )}
 
                 {invoice.status !== "PAID" && invoice.status !== "CANCELLED" && (
@@ -544,7 +630,7 @@ export default function InvoiceDetailPage({
           </div>
 
           {/* Verified Payment Events Table */}
-          <div className="p-6 sm:p-8 rounded-[24px] bg-white border border-[#E6E9F5] shadow-[0_2px_8px_rgba(40,50,120,0.06)] space-y-4">
+          <div className="p-5 sm:p-6 rounded-[24px] bg-white border border-[#E6E9F5] shadow-[0_2px_8px_rgba(40,50,120,0.06)] space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-bold text-[#161A3A] flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-[#4338CA]" />
@@ -553,7 +639,7 @@ export default function InvoiceDetailPage({
 
               {BigInt(invoice.paidAmountUsdc) > BigInt(invoice.amountUsdc) && (
                 <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-purple-50 text-purple-700 border border-purple-200">
-                  Overpaid / अधिक भुगतान (+{formatUsdc(BigInt(invoice.paidAmountUsdc) - BigInt(invoice.amountUsdc))} USDC)
+                  {t("invoiceDetail.overpaid")} (+{formatUsdc(BigInt(invoice.paidAmountUsdc) - BigInt(invoice.amountUsdc))} USDC)
                 </span>
               )}
             </div>
@@ -563,15 +649,15 @@ export default function InvoiceDetailPage({
                 {t("invoiceDetail.noPaymentsYet")}
               </div>
             ) : (
-              <div className="rounded-[18px] border border-[#E6E9F5] overflow-hidden text-xs">
-                <table className="w-full text-left border-collapse">
+              <div className="rounded-[18px] border border-[#E6E9F5] overflow-x-auto text-xs">
+                <table className="w-full min-w-[500px] lg:min-w-0 text-left border-collapse">
                   <thead>
                     <tr className="bg-[#F2F4FB]/60 text-[#5B6190] border-b border-[#E6E9F5]">
-                      <th className="py-3 px-4 font-semibold">Confirmed</th>
-                      <th className="py-3 px-4 font-semibold">Payer Address</th>
-                      <th className="py-3 px-4 font-semibold">Amount</th>
-                      <th className="py-3 px-4 font-semibold">Status Flags</th>
-                      <th className="py-3 px-4 font-semibold text-right">Transaction</th>
+                      <th className="py-2.5 px-2.5 sm:px-3 font-semibold">{t("invoiceDetail.colConfirmed")}</th>
+                      <th className="py-2.5 px-2.5 sm:px-3 font-semibold">{t("invoiceDetail.colPayer")}</th>
+                      <th className="py-2.5 px-2.5 sm:px-3 font-semibold">{t("invoiceDetail.colAmount")}</th>
+                      <th className="py-2.5 px-2 sm:px-2.5 font-semibold">{t("invoiceDetail.colStatusFlags")}</th>
+                      <th className="py-2.5 px-2.5 sm:px-3 font-semibold text-right">{t("invoiceDetail.colTransaction")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#E6E9F5]">
@@ -585,43 +671,48 @@ export default function InvoiceDetailPage({
 
                       return (
                         <tr key={pe.id}>
-                          <td className="py-3.5 px-4 text-[#5B6190] whitespace-nowrap">
-                            {new Date(pe.confirmedAt).toLocaleString()}
+                          <td className="py-2.5 px-2.5 sm:px-3 text-[#5B6190] whitespace-nowrap">
+                            <div className="font-medium text-[#161A3A]">
+                              {new Date(pe.confirmedAt).toLocaleDateString(lang === "hi" ? "hi-IN" : "en-US", { day: "numeric", month: "short", year: "2-digit" })}
+                            </div>
+                            <div className="text-[10px] text-[#5B6190]">
+                              {new Date(pe.confirmedAt).toLocaleTimeString(lang === "hi" ? "hi-IN" : "en-US", { hour: "2-digit", minute: "2-digit" })}
+                            </div>
                           </td>
-                          <td className="py-3.5 px-4 font-mono text-[11px] text-[#161A3A]">
-                            {pe.payerAddress.slice(0, 6)}...{pe.payerAddress.slice(-4)}
+                          <td className="py-2.5 px-2.5 sm:px-3 font-mono text-[11px] text-[#161A3A] whitespace-nowrap">
+                            {pe.payerAddress.slice(0, 6)}…{pe.payerAddress.slice(-4)}
                           </td>
-                          <td className="py-3.5 px-4 font-bold text-[#0B6B3A] whitespace-nowrap">
+                          <td className="py-2.5 px-2.5 sm:px-3 font-bold text-[#0B6B3A] whitespace-nowrap">
                             +{formatUsdc(BigInt(pe.amountUsdc))} USDC
                           </td>
-                          <td className="py-3.5 px-4 whitespace-nowrap space-x-1.5">
+                          <td className="py-2.5 px-2 sm:px-2.5 whitespace-nowrap space-x-1">
                             {isPaymentOnDraft && (
                               <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-[#9A4B00] border border-[#FED7AA]">
-                                On Draft / ड्राफ्ट पर भुगतान
+                                {t("invoiceDetail.statusOnDraft")}
                               </span>
                             )}
                             {isDust && (
                               <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-[#9A4B00] border border-[#FED7AA]">
-                                Dust (&lt;0.01 USDC)
+                                {t("invoiceDetail.statusDust")}
                               </span>
                             )}
                             {isLate && (
                               <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-rose-50 text-[#991B1B] border border-[#FECACA]">
-                                Late / विलंबित
+                                {t("invoiceDetail.statusLate")}
                               </span>
                             )}
                             {isCancelled && (
                               <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#F2F4FB] text-[#4B517D] border border-[#E6E9F5]">
-                                On Cancelled Invoice
+                                {t("invoiceDetail.statusOnCancelled")}
                               </span>
                             )}
                             {!isDust && !isLate && !isCancelled && !isPaymentOnDraft && (
                               <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#D9F5E6] text-[#0B6B3A]">
-                                Valid / वैध
+                                {t("invoiceDetail.statusValid")}
                               </span>
                             )}
                           </td>
-                          <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                          <td className="py-2.5 px-2.5 sm:px-3 text-right whitespace-nowrap">
                             <a
                               href={`${CURRENT_NETWORK.explorerUrl}/tx/${pe.txHash}`}
                               target="_blank"

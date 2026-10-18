@@ -21,7 +21,7 @@ export default function MerchantSettingsPage() {
   const { t, locale, setLocale } = useLanguage();
   const router = useRouter();
   const { address } = useAccount();
-  const { disconnect } = useDisconnect();
+  const { disconnect, disconnectAsync } = useDisconnect();
   const { logout } = useAuth();
 
   const [profile, setProfile] = useState<MerchantProfile | null>(null);
@@ -116,9 +116,17 @@ export default function MerchantSettingsPage() {
   const handleSignOut = async () => {
     try {
       await logout();
-      disconnect();
     } catch (err) {
       console.error("Sign out error:", err);
+    }
+    try {
+      if (disconnectAsync) {
+        await disconnectAsync();
+      } else {
+        disconnect();
+      }
+    } catch (discErr) {
+      console.error("Wallet disconnect error:", discErr);
     }
     router.push("/app");
     router.refresh();
@@ -152,9 +160,52 @@ export default function MerchantSettingsPage() {
       )}
 
       {isLoading ? (
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-          <div style={{ height: 160, background: "var(--card-bg)", borderRadius: 12, border: "1px solid var(--border)", opacity: 0.5 }} />
-          <div style={{ height: 120, background: "var(--card-bg)", borderRadius: 12, border: "1px solid var(--border)", opacity: 0.5 }} />
+        <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+          {/* Skeleton Card 1: Merchant Profile */}
+          <section
+            style={{
+              background: "white",
+              border: "1px solid #E6E9F5",
+              borderRadius: 16,
+              padding: "1.75rem",
+              boxShadow: "0 2px 8px rgba(40,50,120,0.06)",
+            }}
+          >
+            <div className="h-5 w-36 bg-[#E6E9F5] rounded-md animate-pulse mb-6" />
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "1.25rem" }}>
+              <div>
+                <div className="h-3 w-28 bg-[#E6E9F5] rounded animate-pulse mb-2" />
+                <div className="h-10 w-full bg-[#F2F4FB] rounded-lg border border-[#E6E9F5] animate-pulse" />
+              </div>
+              <div>
+                <div className="h-3 w-24 bg-[#E6E9F5] rounded animate-pulse mb-2" />
+                <div className="h-10 w-full bg-[#F2F4FB] rounded-lg border border-[#E6E9F5] animate-pulse" />
+              </div>
+              <div>
+                <div className="h-3 w-32 bg-[#E6E9F5] rounded animate-pulse mb-2" />
+                <div className="h-10 w-full bg-[#F2F4FB] rounded-lg border border-[#E6E9F5] animate-pulse" />
+              </div>
+              <div>
+                <div className="h-3 w-20 bg-[#E6E9F5] rounded animate-pulse mb-2" />
+                <div className="h-10 w-full bg-[#F2F4FB] rounded-lg border border-[#E6E9F5] animate-pulse" />
+              </div>
+            </div>
+          </section>
+
+          {/* Skeleton Card 2: Currency Preferences */}
+          <section
+            style={{
+              background: "white",
+              border: "1px solid #E6E9F5",
+              borderRadius: 16,
+              padding: "1.75rem",
+              boxShadow: "0 2px 8px rgba(40,50,120,0.06)",
+            }}
+          >
+            <div className="h-5 w-48 bg-[#E6E9F5] rounded-md animate-pulse mb-2" />
+            <div className="h-3 w-72 max-w-full bg-[#E6E9F5] rounded animate-pulse mb-5" />
+            <div className="h-10 w-full max-w-md bg-[#F2F4FB] rounded-lg border border-[#E6E9F5] animate-pulse" />
+          </section>
         </div>
       ) : (
         <form onSubmit={handleSave} style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>

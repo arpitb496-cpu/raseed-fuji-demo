@@ -126,7 +126,22 @@
     "noPaymentsYet": "अभी तक कोई ऑन-चेन भुगतान दर्ज नहीं हुआ है। एवलांच पर पुष्टि होते ही यहां दिखाई देगा।",
     "sendByEmail": "ईमेल द्वारा भेजें",
     "shareWhatsApp": "व्हाट्सएप पर साझा करें",
-    "markAsSentHint": "पहले भेजा गया चिह्नित करें (लिंक पर अभी भुगतान नहीं किया जा सकता)"
+    "markAsSentHint": "पहले भेजा गया चिह्नित करें (लिंक पर अभी भुगतान नहीं किया जा सकता)",
+    "downloadReceipt": "रसीद डाउनलोड करें",
+    "preparingPdf": "PDF तैयार हो रहा है...",
+    "preparingReceipt": "रसीद तैयार हो रही है...",
+    "downloadFailed": "डाउनलोड विफल रहा। कृपया पुन: प्रयास करें।",
+    "overpaid": "अधिक भुगतान",
+    "colConfirmed": "पुष्टि की गई",
+    "colPayer": "भुगतानकर्ता का पता",
+    "colAmount": "राशि",
+    "colStatusFlags": "स्थिति संकेत",
+    "colTransaction": "लेनदेन",
+    "statusOnDraft": "ड्राफ्ट पर भुगतान",
+    "statusDust": "डस्ट (<0.01 USDC)",
+    "statusLate": "विलंबित",
+    "statusOnCancelled": "रद्द चालान पर भुगतान",
+    "statusValid": "वैध"
   },
   "settings": {
     "title": "व्यापारी सेटिंग्स",
