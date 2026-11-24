@@ -74,7 +74,15 @@ export default function HomePage() {
           {/* Action CTAs */}
           <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link
+              href="/demo"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 min-h-[48px] rounded-xl border border-[#4338CA] bg-white hover:bg-[#EEF2FF] text-[#4338CA] font-semibold text-sm transition-colors"
+            >
+              {lang === "hi" ? "नमूना चालान आज़माएं" : "Try a Sample Invoice"}
+              <Receipt className="w-4 h-4" />
+            </Link>
+            <Link
               href="/app"
+              prefetch={false}
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 min-h-[48px] rounded-xl bg-[#4338CA] hover:bg-[#2E259B] text-white font-semibold text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#4338CA] focus:ring-offset-1 shadow-2xs cursor-pointer"
             >
               <span>{lang === "hi" ? "व्यापारी पोर्टल खोलें" : "Launch Merchant Portal"}</span>

@@ -15,7 +15,7 @@ test.describe("Merchant Invoice Flow E2E Smoke Test", () => {
     await expect(page).toHaveURL(/\/app/);
 
     // Verify merchant dashboard metrics exist
-    await expect(page.locator("h1")).toBeVisible();
+    await expect(page.getByText("Merchant overview", { exact: true })).toBeVisible();
 
     // 3. Navigate to create invoice
     await page.goto("/app/invoices/new");
@@ -39,7 +39,7 @@ test.describe("Merchant Invoice Flow E2E Smoke Test", () => {
     await expect(page.locator("text=250.00").first()).toBeVisible();
 
     // Verify share link & QR container
-    await expect(page.locator('text=/pay/').first()).toBeVisible();
+    await expect(page.locator('input[readonly]')).toHaveValue(/\/pay\/[a-zA-Z0-9_]+/);
 
     // 5. Navigate to invoices list page
     await page.goto("/app/invoices");
@@ -63,7 +63,7 @@ test.describe("Merchant Invoice Flow E2E Smoke Test", () => {
     });
 
     // Click Cancel Invoice button
-    await page.click("#cancel-invoice-btn");
+    await page.getByRole("button", { name: "Cancel Invoice", exact: true }).click();
 
     // Verify status updates to CANCELLED and banner displays
     await expect(page.locator("#invoice-status-badge")).toContainText(/Cancelled|रद्द/i);

@@ -73,7 +73,8 @@ export function Navbar() {
 
             <Link
               href="/app"
-              className="inline-flex items-center gap-1.5 px-4 py-2 min-h-[44px] rounded-[16px] bg-[#4338CA] hover:bg-[#2E259B] text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+              prefetch={false}
+              className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 min-h-[44px] rounded-[16px] bg-[#4338CA] hover:bg-[#2E259B] text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
             >
               <LayoutDashboard className="w-3.5 h-3.5" />
               <span>{t("nav.dashboard")}</span>
@@ -84,6 +85,8 @@ export function Navbar() {
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="md:hidden p-2 rounded-lg text-[#161A3A] hover:bg-[#F2F4FB] cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center transition-colors"
               aria-label="Toggle menu"
+              aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-navigation"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -92,7 +95,7 @@ export function Navbar() {
 
         {/* Mobile Navigation Drawer */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-[#E6E9F5] py-3 space-y-2 text-sm font-medium">
+          <div id="mobile-navigation" className="md:hidden border-t border-[#E6E9F5] py-3 space-y-2 text-sm font-medium">
             <Link
               href="/"
               onClick={() => setMobileMenuOpen(false)}

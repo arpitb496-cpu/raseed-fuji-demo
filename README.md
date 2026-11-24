@@ -1,5 +1,33 @@
 # CryptoDao
 
+CryptoDao helps freelancers turn a USDC payment into an itemised invoice and a payment receipt. A client can pay a deposit and the balance against the same invoice, while the merchant receives tokens directly in their wallet.
+
+The repository retains its original name, `raseed-fuji-demo`. CryptoDao is the product name used in the application.
+
+[Open the live app](https://raseed-fuji-demo.vercel.app/) · [Try the interactive sample](https://raseed-fuji-demo.vercel.app/demo) · [Inspect the payment router](contracts/src/PaymentRouter.sol)
+
+## Try the project
+
+The **Try a Sample Invoice** button opens an English/Hindi walkthrough with fictional data. It shows a 250 USDC invoice, a 100 USDC deposit, the remaining 150 USDC payment, and a sample receipt. Sample interactions run locally in the browser and are labelled as simulations.
+
+For the live testnet flow, open the merchant portal with a test wallet, sign in, create an invoice, and open its payment link in a payer wallet. Use Avalanche Fuji AVAX for gas and test USDC for payment. After payment, the server checks the router's events and the invoice total before recording settlement. Receipt PDFs include transaction explorer links.
+
+The project currently runs on Avalanche Fuji. The application implements deterministic payment verification. AI-assisted development was used for the submission preparation changes, including the sample walkthrough, test review, and documentation.
+
+## Run locally
+
+Use Node.js 22 and PostgreSQL. Copy `.env.example` to `.env.local`, configure a local database and generated session secret, and explicitly set `NEXT_PUBLIC_FUJI_ROUTER_ADDRESS` from [`contracts/deployments.json`](contracts/deployments.json). For Prisma CLI commands, supply the same local database URL as `DATABASE_URL` and `DIRECT_URL` in the shell.
+
+```sh
+npm ci
+npx prisma migrate deploy
+npm run dev
+```
+
+Tests use a separate database configured as `TEST_DATABASE_URL`. Apply the committed migrations to that test database first, then run `npm test`. PDF tests also require `npx playwright install chromium`. Run `npx tsc --noEmit`, `npm run lint`, and `npm run build` for application checks. The sample walkthrough can be checked with `npx playwright test e2e/sample-invoice.spec.ts`.
+
+---
+
 > **Non-custodial, peer-to-peer stablecoin invoicing and payment links on Avalanche C-Chain.**  
 > Zero custody. Direct settlement. Atomic on-chain routing.
 
@@ -51,77 +79,30 @@ sequenceDiagram
 | Component | Technology | Rationale |
 |---|---|---|
 | **Smart Contracts** | Solidity `^0.8.24`, Foundry, OpenZeppelin | Non-custodial, gas-efficient router with invariant tests and Slither static analysis run by the team (not an independent audit). Never holds funds: transfers tokens atomically from payer to merchant and keeps no token balance or per-invoice settlement state, preventing griefing. |
-| **Blockchain** | Avalanche C-Chain (Fuji Testnet & Mainnet) | Sub-second deterministic finality, sub-cent gas fees, native Circle USDC support. |
+| **Blockchain** | Avalanche C-Chain | The public demo uses Fuji testnet and test USDC. Mainnet configuration is gated. |
 | **Frontend** | Next.js (App Router), TypeScript, Tailwind CSS | High performance, accessible, server-side rendering for invoices & metadata. |
 | **Web3 Client** | Wagmi, Viem, RainbowKit | Type-safe Ethereum interactions, robust connector management, exact allowance requests. |
 | **Verification Engine** | Viem server-side RPC decoding | Zero trust in client state; deterministic event log verification against canonical blocks. |
 | **Database & Auth** | PostgreSQL, Prisma ORM, SIWE (EIP-4361) | Zero password/key storage; cryptographic wallet authentication with signed session cookies. |
-| **Documents** | Server-side PDF generation (`@react-pdf/renderer`) | High-fidelity invoice and receipt PDFs matching tax and accounting requirements. |
-| **i18n** | English + Hindi JSON dictionaries | Dual-language India-first support with dynamic font pairing and RTL/LTR support. |
+| **Documents** | Server-rendered HTML and Playwright Chromium | Invoice and receipt PDFs with embedded Devanagari fonts and transaction references. |
+| **i18n** | English + Hindi JSON dictionaries | English and Hindi interfaces with Devanagari font support. |
 
 ---
 
 ## 3. Directory & File Tree
 
 ```
-defi/
-├── .github/
-│   └── workflows/
-│       └── ci.yml                 # CI pipeline: forge test, slither, vitest, lint, typecheck, build
-├── contracts/
-│   ├── foundry.toml               # Foundry configuration
-│   ├── src/
-│   │   ├── PaymentRouter.sol      # Zero-custody stablecoin payment router
-│   │   └── interfaces/
-│   │       └── IPaymentRouter.sol
-│   ├── test/
-│   │   ├── PaymentRouter.t.sol    # Unit, fuzz, fee, and invariant tests
-│   │   └── mocks/
-│   │       ├── MockUSDC.sol       # Mock ERC20 with permit support
-│   │       ├── MockMaliciousToken.sol # Reentrancy & fee-on-transfer tests
-│   │       └── MockRevertingToken.sol
-│   └── script/
-│       ├── DeployFuji.s.sol       # Deployment script for Fuji testnet
-│       └── DeployMainnet.s.sol    # Deployment script for Avalanche Mainnet (gated)
-├── docs/
-│   ├── ARCHITECTURE.md            # Detailed technical architecture
-│   ├── DECISIONS.md               # Architectural & product decisions record
-│   ├── THREAT_MODEL.md            # Threat model, attack vectors & mitigations
-│   ├── SECURITY.md                # Vulnerability disclosure & contact info
-│   ├── OPERATIONS.md              # Ops, health checks, cron reconciliation & backups
-│   ├── DEPLOY_FUJI.md             # Keystore deployment guide for Fuji
-│   ├── SLITHER_REVIEW.md          # Slither static analysis configuration & review
-│   └── MAINNET_LAUNCH_CHECKLIST.md # Checklist before mainnet activation
-├── prisma/
-│   ├── schema.prisma              # Data model: Merchant, Invoice, PaymentEvent, AuditLog
-│   └── seed.ts                    # Testnet seed data for demo testing
-├── src/
-│   ├── app/                       # Next.js App Router pages and APIs
-│   │   ├── api/
-│   │   │   ├── auth/              # SIWE nonce, verify, session, logout
-│   │   │   ├── invoices/          # Verification, PDF download, CSV export
-│   │   │   ├── cron/reconcile/    # Background payment reconciliation cron
-│   │   │   └── health/            # System & RPC health check
-│   │   ├── layout.tsx             # Root layout with Web3Provider & i18n
-│   │   └── page.tsx               # Public landing page
-│   ├── components/                # Reusable UI components & design system
-│   │   ├── common/                # Buttons, inputs, modals, toasts, language selector
-│   │   └── layout/                # Navbar, footer, network banner, test-mode ribbon
-│   ├── config/
-│   │   ├── branding.ts            # Central branding configuration (Product name: CryptoDao)
-│   │   ├── network.ts             # Avalanche Fuji & Mainnet RPC, contracts & USDC addresses
-│   │   ├── constants.ts           # Financial constants (MIN_INVOICE_USDC, DUST_THRESHOLD)
-│   │   └── env.ts                 # Validated environment configuration (Zod)
-│   ├── lib/
-│   │   ├── auth/                  # SIWE verification & session management
-│   │   ├── db/                    # Prisma client instance
-│   │   ├── rate-limit.ts          # Rate limiter (Upstash / in-memory fallback)
-│   │   └── currency.ts            # USDC micro-unit formatters & INR reference rates
-│   └── locales/
-│       ├── en.json                # Complete English UI strings
-│       └── hi.json                # Complete Hindi UI strings (Devanagari)
-├── package.json
-└── tsconfig.json
+raseed-fuji-demo/
+├── contracts/        # Solidity router, Foundry tests, deployment scripts
+├── docs/             # Operations, security, deployment and scope notes
+├── prisma/           # Schema and committed PostgreSQL migrations
+├── src/app/          # Public pages, merchant portal, payment pages and APIs
+├── src/components/   # Shared UI components
+├── src/config/       # Network, contracts, branding and environment settings
+├── src/lib/          # Auth, payment verification, PDFs and currency arithmetic
+├── src/locales/      # English and Hindi translations
+├── tests/            # Vitest unit and integration tests
+└── e2e/              # Playwright browser flows
 ```
 
 ---
@@ -176,5 +157,4 @@ CryptoDao uses Prisma with PostgreSQL (e.g. Neon serverless).
 ## 7. Security Hardening & Observability Status
 - **Error Monitoring**: PII scrubber implemented; error monitoring is NOT active yet (no Sentry.init).
 - **Content Security Policy (CSP)**: Report-Only, includes 'unsafe-eval'/'unsafe-inline'; not yet enforcing.
-- **Dependency Hygiene**: 25 vulnerabilities reported by `npm audit --omit=dev` (3 high in prisma CLI chain, 22 moderate in wallet stack). `npm audit fix --force` would downgrade prisma, so it was NOT run. The 3 high prisma CLI findings are verified not reachable at runtime in our code (`src/` imports only `@prisma/client`); the 22 moderate wallet findings are not verified.
-
+- **Dependency Hygiene**: Next.js and its ESLint configuration were updated to 16.4.6 for submission preparation. The full `npm audit` on 24 November 2026 still reported 24 high and 9 moderate findings across the dependency tree, with no critical findings. These remaining advisories need dependency-by-dependency review; this is not a claim that the application is independently audited or ready for mainnet.

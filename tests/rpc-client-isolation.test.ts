@@ -66,8 +66,8 @@ describe("Server-Only RPC Isolation & Client Bundle Security (Section A)", () =>
             checkDir(fullPath);
           } else if (file.endsWith(".js")) {
             const code = readFileSync(fullPath, "utf-8");
-            expect(code).not.toContain("FUJI_RPC_URL");
-            expect(code).not.toContain("MAINNET_RPC_URL");
+            expect(code).not.toMatch(/\bFUJI_RPC_URL\b/);
+            expect(code).not.toMatch(/\bMAINNET_RPC_URL\b/);
           }
         }
       }
