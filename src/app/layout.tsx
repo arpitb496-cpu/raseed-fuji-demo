@@ -1,5 +1,10 @@
 import type { Metadata, Viewport } from "next";
-import { Bricolage_Grotesque } from "next/font/google";
+import {
+  Plus_Jakarta_Sans,
+  DM_Sans,
+  Instrument_Serif,
+  JetBrains_Mono,
+} from "next/font/google";
 import "./globals.css";
 import { I18nProvider } from "@/lib/i18n";
 import { TestnetDemoBanner } from "@/components/common/TestnetDemoBanner";
@@ -7,9 +12,32 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { BRANDING } from "@/config/branding";
 
-const bricolageGrotesque = Bricolage_Grotesque({
+const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  variable: "--font-bricolage",
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-jakarta",
+  display: "swap",
+});
+
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-dm-sans",
+  display: "swap",
+});
+
+const instrumentSerif = Instrument_Serif({
+  subsets: ["latin"],
+  weight: ["400"],
+  style: ["normal", "italic"],
+  variable: "--font-instrument-serif",
+  display: "swap",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-jetbrains",
   display: "swap",
 });
 
@@ -66,8 +94,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={bricolageGrotesque.variable} suppressHydrationWarning>
-      <body className={`${bricolageGrotesque.className} min-h-screen flex flex-col bg-[#F2F4FB] text-[#161A3A] antialiased selection:bg-[#4338CA] selection:text-white`}>
+    <html
+      lang="en"
+      className={`${plusJakartaSans.variable} ${dmSans.variable} ${instrumentSerif.variable} ${jetbrainsMono.variable}`}
+      suppressHydrationWarning
+    >
+      <body
+        className={`${plusJakartaSans.className} min-h-screen flex flex-col bg-[#fffaf0] text-[#0a0a0a] antialiased selection:bg-[#ffb084] selection:text-[#0a0a0a]`}
+      >
         <I18nProvider>
           <TestnetDemoBanner />
           <Navbar />

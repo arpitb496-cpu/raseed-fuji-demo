@@ -8,7 +8,7 @@ import { useI18n } from "@/lib/i18n";
 import { Web3Provider } from "@/components/providers/Web3Provider";
 import { WrongNetworkBanner } from "@/components/layout/WrongNetworkBanner";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { ShieldAlert, LogIn, Loader2 } from "lucide-react";
+import { ShieldAlert, LogIn, Loader2, Check } from "lucide-react";
 
 import { LanguageToggle } from "@/components/common/LanguageToggle";
 import { isProtectedRoute } from "@/lib/auth/routes";
@@ -25,10 +25,12 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
 
   if (isLoading) {
     return (
-      <div className="w-full max-w-[480px] lg:max-w-[1080px] mx-auto min-h-screen bg-[#F2F4FB] text-[#161A3A] flex items-center justify-center p-6">
+      <div className="w-full min-h-screen bg-[#fffaf0] text-[#0a0a0a] flex items-center justify-center p-6">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-8 h-8 text-[#4338CA] animate-spin" />
-          <p className="text-xs text-[#5B6190]">{t("nav.loadingSession") || "Loading session..."}</p>
+          <Loader2 className="w-7 h-7 text-[#0a0a0a] animate-spin" />
+          <p className="text-xs text-[#6a6a6a]">
+            {t("nav.loadingSession") || "Loading session..."}
+          </p>
         </div>
       </div>
     );
@@ -36,38 +38,41 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
 
   if (!isAuthenticated) {
     return (
-      <div className="w-full max-w-[480px] lg:max-w-[1080px] mx-auto min-h-screen bg-[#F2F4FB] text-[#161A3A] px-5 py-16 flex flex-col items-center justify-center text-center">
-        <div className="w-16 h-16 rounded-[22px] bg-white border border-[#E6E9F5] shadow-[0_2px_8px_rgba(40,50,120,0.08)] flex items-center justify-center text-[#4338CA] mb-6">
-          <ShieldAlert className="w-8 h-8" />
-        </div>
-        <h1 className="text-2xl font-bold tracking-tight text-[#161A3A] mb-2">
-          {t("auth.signInTitle")}
-        </h1>
-        <p className="text-sm text-[#4B517D] mb-6 max-w-xs leading-relaxed">
-          {t("auth.signInDesc")}
-        </p>
-
-        <div className="flex flex-col items-center gap-3 w-full max-w-xs">
-          <div className="w-full flex justify-center">
-            <ConnectButton showBalance={false} chainStatus="icon" />
+      <div className="w-full min-h-screen bg-[#fffaf0] text-[#0a0a0a] px-5 py-16 flex flex-col items-center justify-center text-center">
+        <div className="w-full max-w-md bg-[#faf5e8] border border-[#0a0a0a] rounded-[24px] p-8 flex flex-col items-center shadow-[0_24px_48px_-36px_rgba(10,10,10,0.22)]">
+          <div className="w-14 h-14 rounded-[16px] bg-[#ffb084] border border-[#0a0a0a]/15 flex items-center justify-center text-[#0a0a0a] mb-5">
+            <ShieldAlert className="w-7 h-7" />
           </div>
-          <button
-            onClick={signIn}
-            disabled={isSigning}
-            className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 min-h-[48px] rounded-[18px] bg-[#4338CA] hover:bg-[#2E259B] text-white font-semibold text-sm shadow-[0_4px_14px_rgba(67,56,202,0.25)] transition-all cursor-pointer disabled:opacity-50"
-          >
-            {isSigning ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>{t("auth.signing")}</span>
-              </>
-            ) : (
-              <>
-                <LogIn className="w-4 h-4" />
-                <span>{t("auth.signInButton")}</span>
-              </>
-            )}
-          </button>
+          <div className="nyc-kicker mb-2">SIWE Authentication</div>
+          <h1 className="text-2xl sm:text-3xl font-display font-medium tracking-[-0.03em] text-[#0a0a0a] mb-2">
+            {t("auth.signInTitle")}
+          </h1>
+          <p className="text-sm text-[#3a3a3a] mb-6 max-w-xs leading-relaxed">
+            {t("auth.signInDesc")}
+          </p>
+
+          <div className="flex flex-col items-center gap-3 w-full">
+            <div className="w-full flex justify-center">
+              <ConnectButton showBalance={false} chainStatus="icon" />
+            </div>
+            <button
+              onClick={signIn}
+              disabled={isSigning}
+              className="clay-btn-primary w-full"
+            >
+              {isSigning ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>{t("auth.signing")}</span>
+                </>
+              ) : (
+                <>
+                  <LogIn className="w-4 h-4" />
+                  <span>{t("auth.signInButton")}</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -78,7 +83,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
       href: "/app",
       label: t("nav.dashboard"),
       icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M4 11l8-7 8 7v9H4z" />
         </svg>
       ),
@@ -87,7 +92,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
       href: "/app/invoices",
       label: t("nav.invoices"),
       icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M6 3h9l4 4v14H6zM14 3v5h5" />
         </svg>
       ),
@@ -96,7 +101,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
       href: "/app/settings",
       label: t("nav.settings"),
       icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <circle cx="12" cy="12" r="3" />
           <path d="M12 3v3M12 18v3M3 12h3M18 12h3" />
         </svg>
@@ -111,64 +116,62 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   ];
 
   return (
-    <div className="w-full max-w-[480px] lg:max-w-[1080px] mx-auto min-h-screen bg-[#F2F4FB] text-[#161A3A] relative flex flex-col box-border">
-      {/* Desktop Top Bar (>= 1024px) */}
-      <header className="hidden lg:flex items-center justify-between h-16 border-b border-[#E6E9F5] px-8">
-        <div className="flex items-center gap-8">
-          <Link href="/app" className="flex items-center gap-2.5 shrink-0">
-            <div className="w-9 h-9 rounded-[13px] bg-[#4338CA] flex items-center justify-center shrink-0 text-white">
-              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M5 12l5 5L20 7" />
-              </svg>
-            </div>
-            <span className="font-bold text-lg text-[#161A3A] tracking-tight">CryptoDao</span>
-          </Link>
+    <div className="w-full min-h-screen bg-[#fffaf0] text-[#0a0a0a] relative flex flex-col box-border">
+      {/* Desktop Floating Pill Header (>= 1024px) */}
+      <div className="hidden lg:block sticky top-2.5 z-50 px-3.5 pt-2.5 pointer-events-none">
+        <header className="nyc-site-header pointer-events-auto mx-auto max-w-[1280px] h-[62px] flex items-center justify-between gap-4 pl-[18px] pr-[10px]">
+          <div className="flex items-center gap-6">
+            <Link href="/app" className="flex items-center gap-2.5 shrink-0">
+              <div className="w-[38px] h-[38px] rounded-[12px] bg-[#0a0a0a] flex items-center justify-center shrink-0 text-[#fffaf0]">
+                <Check className="w-4 h-4 stroke-[2.5]" />
+              </div>
+              <span className="font-medium text-[17.5px] text-[#0a0a0a] tracking-[-0.035em]">
+                CryptoDao
+              </span>
+            </Link>
 
-          {/* Horizontal Nav Links: Dashboard, Invoices, Settings */}
-          <nav aria-label="Desktop Navigation" className="flex items-center gap-6 text-sm">
-            {desktopNavItems.map((item) => {
-              const isActive = item.exact
-                ? pathname === item.href
-                : pathname.startsWith(item.href);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`py-5 transition-colors relative font-medium ${
-                    isActive
-                      ? "text-[#4338CA] font-semibold"
-                      : "text-[#5B6190] hover:text-[#161A3A]"
-                  }`}
-                >
-                  <span>{item.label}</span>
-                  {isActive && (
-                    <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#4338CA] rounded-full" />
-                  )}
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
-
-        <div className="flex items-center gap-3 shrink-0">
-          <LanguageToggle />
-          <div className="text-xs font-medium px-3 py-1.5 rounded-full bg-white text-[#4B517D] shadow-[0_2px_8px_rgba(40,50,120,0.08)] whitespace-nowrap">
-            Fuji testnet
+            <nav aria-label="Desktop Navigation" className="flex items-center gap-1 text-[15px]">
+              {desktopNavItems.map((item) => {
+                const isActive = item.exact
+                  ? pathname === item.href
+                  : pathname.startsWith(item.href);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`px-[15px] py-[9px] rounded-full transition-colors whitespace-nowrap ${
+                      isActive
+                        ? "bg-[#ebe6d6] text-[#0a0a0a] font-medium"
+                        : "text-[#3a3a3a] font-normal hover:bg-[#f5f0e0] hover:text-[#0a0a0a]"
+                    }`}
+                  >
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+            </nav>
           </div>
-        </div>
-      </header>
 
-      {/* Scrollable Content Area with 24px top padding on phones and 32px on laptop */}
-      <div className="flex-1 px-5 lg:px-8 pt-6 lg:pt-8 pb-28 lg:pb-12">
+          <div className="flex items-center gap-2.5 shrink-0 pl-3 border-l border-[#e5e5e5]">
+            <LanguageToggle />
+            <div className="text-xs font-medium px-3.5 py-2 rounded-full bg-[#ffb084] text-[#0a0a0a] border border-[#0a0a0a]/10 whitespace-nowrap">
+              Fuji testnet
+            </div>
+          </div>
+        </header>
+      </div>
+
+      {/* Main Content Container */}
+      <div className="flex-1 w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 lg:pt-8 pb-28 lg:pb-14">
         {children}
       </div>
 
-      {/* Floating White Bottom Tab Bar (hidden on desktop) */}
+      {/* Floating Bottom Tab Bar (hidden on desktop) */}
       <nav
         aria-label="Bottom Navigation"
         className="lg:hidden fixed bottom-[18px] left-0 right-0 max-w-[480px] mx-auto px-4 z-40 pointer-events-none"
       >
-        <div className="pointer-events-auto h-[64px] rounded-[24px] bg-white shadow-[0_8px_24px_rgba(40,50,120,0.14)] flex items-center justify-around px-2 border border-[#E6E9F5]">
+        <div className="pointer-events-auto h-[64px] rounded-full bg-[#fffaf0]/95 backdrop-blur-md shadow-[0_12px_32px_rgba(10,10,10,0.16)] flex items-center justify-around px-3 border border-[#0a0a0a]">
           {tabs.map((tab) => {
             const isActive =
               tab.href === "/app"
@@ -179,15 +182,15 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
               <Link
                 key={tab.href}
                 href={tab.href}
-                className={`flex flex-col items-center justify-center gap-[3px] min-w-[56px] min-h-[44px] transition-colors ${
+                className={`flex flex-col items-center justify-center gap-[2px] min-w-[64px] min-h-[44px] px-3 rounded-full transition-colors ${
                   isActive
-                    ? "text-[#4338CA] font-bold"
-                    : "text-[#5B6190] font-medium hover:text-[#161A3A]"
+                    ? "bg-[#ebe6d6] text-[#0a0a0a] font-medium"
+                    : "text-[#6a6a6a] font-normal hover:text-[#0a0a0a]"
                 }`}
                 style={{ fontSize: 11 }}
               >
                 {tab.icon}
-                <span className="truncate max-w-[100px] text-center">{tab.label}</span>
+                <span className="truncate max-w-[96px] text-center">{tab.label}</span>
               </Link>
             );
           })}

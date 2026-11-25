@@ -8,7 +8,9 @@ import { formatMicroUsdc } from "@/lib/currency";
 
 const COPY = {
   en: {
-    heading: "From invoice to payment receipt.",
+    kicker: "Interactive Walkthrough",
+    headingStart: "From invoice to ",
+    headingAccent: "payment receipt.",
     intro:
       "A freelancer completes a website project for 250 USDC. Follow the deposit and final payment through one invoice.",
     notice:
@@ -49,7 +51,9 @@ const COPY = {
     code: "Explore the source code",
   },
   hi: {
-    heading: "चालान से भुगतान की रसीद तक।",
+    kicker: "इंटरैक्टिव उदाहरण",
+    headingStart: "चालान से ",
+    headingAccent: "भुगतान की रसीद तक।",
     intro:
       "एक फ्रीलांसर ने 250 USDC का वेबसाइट प्रोजेक्ट पूरा किया। एक ही चालान पर अग्रिम और अंतिम भुगतान का उदाहरण देखें।",
     notice:
@@ -103,178 +107,191 @@ export default function DemoPage() {
   const remaining = TOTAL - received;
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 md:py-16">
-      <header className="max-w-3xl space-y-4">
-        <h1 className="text-3xl font-bold tracking-tight text-pearl-ink sm:text-5xl">
-          {copy.heading}
-        </h1>
-        <p className="text-base leading-relaxed text-pearl-muted sm:text-lg">
-          {copy.intro}
-        </p>
-        <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          {copy.notice}
-        </p>
-      </header>
+    <div className="min-h-screen bg-[#fffaf0]">
+      <div className="page-container py-10 md:py-16">
+        <header className="max-w-3xl space-y-4">
+          <div className="nyc-kicker">{copy.kicker}</div>
+          <h1 className="text-4xl font-display font-medium tracking-[-0.04em] text-[#0a0a0a] sm:text-5xl">
+            {copy.headingStart}
+            <span className="font-editorial nyc-accent-terra">{copy.headingAccent}</span>
+          </h1>
+          <p className="text-base leading-relaxed text-[#3a3a3a] sm:text-lg">
+            {copy.intro}
+          </p>
+          <p className="rounded-[14px] border border-[#e5e5e5] bg-[#f5f0e0] px-4 py-3 text-sm text-[#1a1a1a]">
+            {copy.notice}
+          </p>
+        </header>
 
-      <div className="mt-8 grid items-start gap-6 lg:grid-cols-[1.2fr_1fr]">
-        <section
-          aria-label={copy.invoice}
-          className="overflow-hidden rounded-3xl border border-pearl-border bg-white shadow-pearl-card"
-        >
-          <div className="border-b border-pearl-border p-6 sm:p-8">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <span className="flex items-center gap-2 text-sm font-semibold text-pearl-indigo">
-                <Receipt size={18} /> {copy.invoice}
-              </span>
-              <span
-                data-testid="sample-status"
-                className="rounded-full bg-pearl-bg px-3 py-1.5 text-xs font-semibold text-pearl-ink"
-              >
-                {copy.status[step]}
-              </span>
-            </div>
-            <h2 className="mt-6 text-2xl font-bold text-pearl-ink">
-              {copy.title}
-            </h2>
-            <p className="mt-3 text-sm text-pearl-muted">{copy.merchant}</p>
-            <p className="mt-1 text-sm text-pearl-subtle">{copy.client}</p>
-          </div>
-          <div className="p-6 sm:p-8">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-pearl-border text-pearl-subtle">
-                  <th scope="col" className="pb-3 text-left font-medium">
-                    {copy.description}
-                  </th>
-                  <th scope="col" className="pb-3 text-right font-medium">
-                    {copy.amount}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td className="py-4 pr-3">{copy.design}</td>
-                  <td className="whitespace-nowrap text-right font-mono">
-                    200.00 USDC
-                  </td>
-                </tr>
-                <tr>
-                  <td className="pb-4 pr-3">{copy.localisation}</td>
-                  <td className="whitespace-nowrap pb-4 text-right font-mono">
-                    50.00 USDC
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-            <dl className="space-y-3 border-t border-pearl-border pt-5 text-sm">
-              <div className="flex justify-between gap-3">
-                <dt>{copy.total}</dt>
-                <dd className="font-mono font-semibold">
-                  {formatMicroUsdc(TOTAL)} USDC
-                </dd>
-              </div>
-              <div className="flex justify-between gap-3 text-pearl-muted">
-                <dt>{copy.received}</dt>
-                <dd
-                  data-testid="sample-received"
-                  className="whitespace-nowrap font-mono"
-                >
-                  {formatMicroUsdc(received)} USDC
-                </dd>
-              </div>
-              <div className="flex justify-between gap-3 rounded-xl bg-pearl-bg p-4 font-semibold">
-                <dt>{copy.remaining}</dt>
-                <dd
-                  data-testid="sample-remaining"
-                  className="whitespace-nowrap font-mono"
-                >
-                  {formatMicroUsdc(remaining)} USDC
-                </dd>
-              </div>
-            </dl>
-            {payments.length > 0 && (
-              <div className="mt-6 border-t border-pearl-border pt-5">
-                <h3 className="text-sm font-semibold">{copy.history}</h3>
-                <ul className="mt-3 space-y-3 text-sm text-pearl-muted">
-                  {payments.map((amount, index) => (
-                    <li key={index} className="flex justify-between gap-3">
-                      <span>
-                        {index === 0 ? copy.deposit : copy.finalPayment}
-                      </span>
-                      <span className="whitespace-nowrap font-mono">
-                        {formatMicroUsdc(amount)} USDC
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        </section>
-
-        <section className="space-y-6 rounded-3xl border border-pearl-border bg-white p-6 shadow-pearl-card sm:p-8">
-          <div aria-live="polite" aria-atomic="true" className="space-y-4">
-            <h2 className="text-2xl font-bold text-pearl-ink">
-              {copy.stepTitle[step]}
-            </h2>
-            <p className="text-sm leading-relaxed text-pearl-muted">
-              {copy.stepBody[step]}
-            </p>
-            {step === 2 && (
-              <div className="rounded-2xl bg-pearl-success-bg p-5 text-pearl-success-text">
-                <h3 className="flex items-center gap-2 font-semibold">
-                  <CheckCircle2 size={20} />
-                  {copy.receipt}
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed">
-                  {copy.receiptNote}
-                </p>
-              </div>
-            )}
-          </div>
-          {step < 2 && (
-            <button
-              onClick={() => setStep((current) => Math.min(current + 1, 2))}
-              className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-pearl-indigo px-4 py-3 text-sm font-semibold text-white hover:bg-pearl-indigo-hover"
-            >
-              {copy.actions[step]}
-              <ArrowRight size={17} className="shrink-0" />
-            </button>
-          )}
-          <button
-            onClick={() => setStep(0)}
-            className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-pearl-muted hover:text-pearl-indigo"
+        <div className="mt-8 grid items-start gap-6 lg:grid-cols-[1.2fr_1fr]">
+          <section
+            aria-label={copy.invoice}
+            className="overflow-hidden rounded-[24px] border border-[#e5e5e5] bg-[#faf5e8] shadow-[0_24px_48px_-36px_rgba(10,10,10,0.18)]"
           >
-            <RotateCcw size={16} />
-            {copy.restart}
-          </button>
+            <div className="border-b border-[#e5e5e5] p-6 sm:p-8">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <span className="flex items-center gap-2 text-sm font-medium text-[#0a0a0a]">
+                  <Receipt size={18} className="text-[#b64d31]" /> {copy.invoice}
+                </span>
+                <span
+                  data-testid="sample-status"
+                  className={`rounded-full px-3 py-1.5 text-xs font-medium border ${
+                    step === 2
+                      ? "bg-[#a4d4c5] text-[#0a0a0a] border-[#0a0a0a]/15"
+                      : step === 1
+                      ? "bg-[#ffb084] text-[#0a0a0a] border-[#0a0a0a]/15"
+                      : "bg-[#f5f0e0] text-[#0a0a0a] border-[#e5e5e5]"
+                  }`}
+                >
+                  {copy.status[step]}
+                </span>
+              </div>
+              <h2 className="mt-6 text-2xl font-display font-medium text-[#0a0a0a]">
+                {copy.title}
+              </h2>
+              <p className="mt-3 text-sm text-[#3a3a3a]">{copy.merchant}</p>
+              <p className="mt-1 text-sm text-[#6a6a6a]">{copy.client}</p>
+            </div>
+            <div className="p-6 sm:p-8 bg-[#fffaf0]">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-[#e5e5e5] text-[#6a6a6a]">
+                    <th scope="col" className="pb-3 text-left font-medium">
+                      {copy.description}
+                    </th>
+                    <th scope="col" className="pb-3 text-right font-medium">
+                      {copy.amount}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="py-4 pr-3 text-[#0a0a0a]">{copy.design}</td>
+                    <td className="whitespace-nowrap text-right font-mono text-[#0a0a0a]">
+                      200.00 USDC
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="pb-4 pr-3 text-[#0a0a0a]">{copy.localisation}</td>
+                    <td className="whitespace-nowrap pb-4 text-right font-mono text-[#0a0a0a]">
+                      50.00 USDC
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <dl className="space-y-3 border-t border-[#e5e5e5] pt-5 text-sm">
+                <div className="flex justify-between gap-3">
+                  <dt className="text-[#3a3a3a]">{copy.total}</dt>
+                  <dd className="font-mono font-medium text-[#0a0a0a]">
+                    {formatMicroUsdc(TOTAL)} USDC
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-3 text-[#6a6a6a]">
+                  <dt>{copy.received}</dt>
+                  <dd
+                    data-testid="sample-received"
+                    className="whitespace-nowrap font-mono"
+                  >
+                    {formatMicroUsdc(received)} USDC
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-3 rounded-[14px] bg-[#f5f0e0] border border-[#e5e5e5] p-4 font-medium text-[#0a0a0a]">
+                  <dt>{copy.remaining}</dt>
+                  <dd
+                    data-testid="sample-remaining"
+                    className="whitespace-nowrap font-mono"
+                  >
+                    {formatMicroUsdc(remaining)} USDC
+                  </dd>
+                </div>
+              </dl>
+              {payments.length > 0 && (
+                <div className="mt-6 border-t border-[#e5e5e5] pt-5">
+                  <h3 className="text-sm font-medium text-[#0a0a0a]">{copy.history}</h3>
+                  <ul className="mt-3 space-y-3 text-sm text-[#3a3a3a]">
+                    {payments.map((amount, index) => (
+                      <li key={index} className="flex justify-between gap-3">
+                        <span>
+                          {index === 0 ? copy.deposit : copy.finalPayment}
+                        </span>
+                        <span className="whitespace-nowrap font-mono text-[#0a0a0a]">
+                          {formatMicroUsdc(amount)} USDC
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </section>
+
+          <section className="space-y-6 rounded-[24px] border border-[#0a0a0a] bg-[#fffaf0] p-6 sm:p-8">
+            <div aria-live="polite" aria-atomic="true" className="space-y-4">
+              <div className="nyc-kicker">Step 0{step + 1} / 03</div>
+              <h2 className="text-2xl font-display font-medium text-[#0a0a0a]">
+                {copy.stepTitle[step]}
+              </h2>
+              <p className="text-sm leading-relaxed text-[#3a3a3a]">
+                {copy.stepBody[step]}
+              </p>
+              {step === 2 && (
+                <div className="rounded-[18px] bg-[#1a3a3a] p-5 text-[#fffaf0]">
+                  <h3 className="flex items-center gap-2 font-medium text-[#a4d4c5]">
+                    <CheckCircle2 size={20} />
+                    {copy.receipt}
+                  </h3>
+                  <p className="mt-2 text-sm leading-relaxed text-[#f0f0f0]">
+                    {copy.receiptNote}
+                  </p>
+                </div>
+              )}
+            </div>
+            {step < 2 && (
+              <button
+                onClick={() => setStep((current) => Math.min(current + 1, 2))}
+                className="clay-btn-primary w-full"
+              >
+                {copy.actions[step]}
+                <ArrowRight size={17} className="shrink-0" />
+              </button>
+            )}
+            <button
+              onClick={() => setStep(0)}
+              className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-[#3a3a3a] hover:text-[#0a0a0a] cursor-pointer"
+            >
+              <RotateCcw size={16} />
+              {copy.restart}
+            </button>
+          </section>
+        </div>
+
+        <section className="mt-10 flex flex-col justify-between gap-5 rounded-[24px] border border-[#e5e5e5] bg-[#faf5e8] p-6 sm:p-10 md:flex-row md:items-center">
+          <div className="max-w-xl space-y-2">
+            <h2 className="text-2xl font-display font-medium text-[#0a0a0a]">
+              {copy.liveTitle}
+            </h2>
+            <p className="text-sm leading-relaxed text-[#3a3a3a]">
+              {copy.liveBody}
+            </p>
+          </div>
+          <div className="flex shrink-0 flex-col items-start gap-3">
+            <Link
+              href="/app"
+              prefetch={false}
+              className="clay-btn-primary"
+            >
+              {copy.launch}
+              <ArrowRight size={17} />
+            </Link>
+            <a
+              href="https://github.com/arpitb496-cpu/raseed-fuji-demo"
+              className="inline-flex min-h-11 items-center text-sm font-medium text-[#0a0a0a] underline underline-offset-4 hover:text-[#b64d31]"
+            >
+              {copy.code}
+            </a>
+          </div>
         </section>
       </div>
-
-      <section className="mt-8 flex flex-col justify-between gap-5 rounded-3xl border border-pearl-border bg-white p-6 sm:p-8 md:flex-row md:items-center">
-        <div className="max-w-xl space-y-2">
-          <h2 className="text-xl font-bold">{copy.liveTitle}</h2>
-          <p className="text-sm leading-relaxed text-pearl-muted">
-            {copy.liveBody}
-          </p>
-        </div>
-        <div className="flex shrink-0 flex-col items-start gap-3">
-          <Link
-            href="/app"
-            prefetch={false}
-            className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-pearl-indigo px-5 py-3 text-sm font-semibold text-white hover:bg-pearl-indigo-hover"
-          >
-            {copy.launch}
-            <ArrowRight size={17} />
-          </Link>
-          <a
-            href="https://github.com/arpitb496-cpu/raseed-fuji-demo"
-            className="inline-flex min-h-11 items-center text-sm font-medium text-pearl-indigo underline underline-offset-4"
-          >
-            {copy.code}
-          </a>
-        </div>
-      </section>
     </div>
   );
 }

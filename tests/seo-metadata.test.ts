@@ -5,6 +5,22 @@ vi.mock("next/font/google", () => ({
     className: "mock-bricolage",
     variable: "--font-bricolage",
   }),
+  Plus_Jakarta_Sans: () => ({
+    className: "mock-jakarta",
+    variable: "--font-jakarta",
+  }),
+  DM_Sans: () => ({
+    className: "mock-dm-sans",
+    variable: "--font-dm-sans",
+  }),
+  Instrument_Serif: () => ({
+    className: "mock-instrument-serif",
+    variable: "--font-instrument-serif",
+  }),
+  JetBrains_Mono: () => ({
+    className: "mock-jetbrains",
+    variable: "--font-jetbrains",
+  }),
 }));
 
 import robots from "@/app/robots";

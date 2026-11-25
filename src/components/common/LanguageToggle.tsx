@@ -11,31 +11,30 @@ export function LanguageToggle() {
       style={{
         display: "inline-flex",
         alignItems: "center",
-        background: "#FFFFFF",
+        background: "#f5f0e0",
         borderRadius: 999,
         padding: 3,
-        boxShadow: "0 2px 8px rgba(40,50,120,0.08)",
-        border: "none",
+        border: "1px solid #e5e5e5",
       }}
     >
       <button
         type="button"
         onClick={() => setLang("en")}
         style={{
-          minHeight: 44,
-          minWidth: 44,
-          padding: "0 8px",
+          minHeight: 38,
+          minWidth: 42,
+          padding: "0 10px",
           borderRadius: 999,
           border: "none",
-          background: lang === "en" ? "#4338CA" : "transparent",
-          color: lang === "en" ? "#FFFFFF" : "#5B6190",
-          fontWeight: lang === "en" ? 700 : 500,
+          background: lang === "en" ? "#0a0a0a" : "transparent",
+          color: lang === "en" ? "#fffaf0" : "#3a3a3a",
+          fontWeight: lang === "en" ? 500 : 400,
           fontSize: 13,
           cursor: "pointer",
           display: "inline-flex",
           alignItems: "center",
           justifyContent: "center",
-          transition: "all 0.15s ease",
+          transition: "all 0.18s ease",
         }}
         aria-label="EN - Switch to English"
       >
@@ -45,20 +44,20 @@ export function LanguageToggle() {
         type="button"
         onClick={() => setLang("hi")}
         style={{
-          minHeight: 44,
-          minWidth: 44,
-          padding: "0 8px",
+          minHeight: 38,
+          minWidth: 46,
+          padding: "0 10px",
           borderRadius: 999,
           border: "none",
-          background: lang === "hi" ? "#4338CA" : "transparent",
-          color: lang === "hi" ? "#FFFFFF" : "#5B6190",
-          fontWeight: lang === "hi" ? 700 : 500,
+          background: lang === "hi" ? "#0a0a0a" : "transparent",
+          color: lang === "hi" ? "#fffaf0" : "#3a3a3a",
+          fontWeight: lang === "hi" ? 500 : 400,
           fontSize: 13,
           cursor: "pointer",
           display: "inline-flex",
           alignItems: "center",
           justifyContent: "center",
-          transition: "all 0.15s ease",
+          transition: "all 0.18s ease",
         }}
         aria-label="हिन्दी - Switch to Hindi"
       >

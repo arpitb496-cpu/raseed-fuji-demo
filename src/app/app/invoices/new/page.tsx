@@ -31,7 +31,6 @@ export default function NewInvoicePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Live calculation
   const totalUsdc = items.reduce(
     (sum, item) => sum + (Number(item.quantity) || 0) * (Number(item.unitPriceUsdc) || 0),
     0
@@ -101,25 +100,26 @@ export default function NewInvoicePage() {
   };
 
   return (
-    <div className="max-w-[720px] mx-auto space-y-6">
+    <div className="max-w-[740px] mx-auto space-y-6">
       <Link
         href="/app/invoices"
-        className="inline-flex items-center gap-1.5 text-xs text-[#4338CA] hover:text-[#2E259B] font-semibold min-h-[44px]"
+        className="inline-flex items-center gap-1.5 text-xs text-[#0a0a0a] hover:text-[#b64d31] font-medium min-h-[44px]"
       >
         <ArrowLeft className="w-3.5 h-3.5" /> {t("invoiceDetail.backToList")}
       </Link>
 
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#161A3A]">
+      <div className="pb-4 border-b border-[#e5e5e5]">
+        <div className="nyc-kicker mb-1.5">Create Payment Link</div>
+        <h1 className="text-3xl sm:text-4xl font-display font-medium tracking-[-0.04em] text-[#0a0a0a]">
           {t("newInvoice.heading")}
         </h1>
-        <p className="text-xs text-[#5B6190] mt-1 font-medium">
+        <p className="text-sm text-[#3a3a3a] mt-1">
           {t("newInvoice.subheading")}
         </p>
       </div>
 
       {error && (
-        <div className="p-4 rounded-[18px] bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
+        <div className="p-4 rounded-[14px] bg-[#fee2e2] border border-[#fecaca] text-[#991b1b] text-xs flex items-center gap-2">
           <AlertCircle className="w-4 h-4 shrink-0" />
           <span>{error}</span>
         </div>
@@ -127,9 +127,9 @@ export default function NewInvoicePage() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Main Details Card */}
-        <div className="p-6 sm:p-8 rounded-[24px] bg-white border border-[#E6E9F5] space-y-5 shadow-[0_2px_8px_rgba(40,50,120,0.06)]">
+        <div className="p-6 sm:p-8 rounded-[24px] bg-[#faf5e8] border border-[#0a0a0a] space-y-5">
           <div>
-            <label className="block text-xs font-semibold text-[#161A3A] mb-1.5">
+            <label className="block text-xs font-medium text-[#0a0a0a] mb-1.5">
               {t("newInvoice.titleLabel")} *
             </label>
             <input
@@ -142,43 +142,45 @@ export default function NewInvoicePage() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder={t("newInvoice.titlePlaceholder")}
-              className="w-full px-4 py-3 min-h-[48px] text-xs rounded-[16px] bg-[#F2F4FB]/50 border border-[#E6E9F5] text-[#161A3A] placeholder-[#5B6190] focus:outline-none focus:ring-2 focus:ring-[#4338CA] focus:ring-offset-1 transition-all"
+              className="clay-input"
             />
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-[#161A3A] mb-1.5">
-              {t("newInvoice.dueDateLabel")} *
-            </label>
-            <input
-              id="invoice-due-date-input"
-              data-testid="invoice-due-date-input"
-              type="date"
-              required
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-              className="w-full px-4 py-3 min-h-[48px] text-xs rounded-[16px] bg-[#F2F4FB]/50 border border-[#E6E9F5] text-[#161A3A] focus:outline-none focus:ring-2 focus:ring-[#4338CA] focus:ring-offset-1 transition-all"
-            />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-[#0a0a0a] mb-1.5">
+                {t("newInvoice.dueDateLabel")} *
+              </label>
+              <input
+                id="invoice-due-date-input"
+                data-testid="invoice-due-date-input"
+                type="date"
+                required
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                className="clay-input"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-[#0a0a0a] mb-1.5">
+                {t("newInvoice.clientNameLabel")}
+              </label>
+              <input
+                id="invoice-client-name-input"
+                data-testid="invoice-client-name-input"
+                type="text"
+                maxLength={100}
+                value={clientName}
+                onChange={(e) => setClientName(e.target.value)}
+                placeholder={t("newInvoice.clientNamePlaceholder")}
+                className="clay-input"
+              />
+            </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-[#161A3A] mb-1.5">
-              {t("newInvoice.clientNameLabel")}
-            </label>
-            <input
-              id="invoice-client-name-input"
-              data-testid="invoice-client-name-input"
-              type="text"
-              maxLength={100}
-              value={clientName}
-              onChange={(e) => setClientName(e.target.value)}
-              placeholder={t("newInvoice.clientNamePlaceholder")}
-              className="w-full px-4 py-3 min-h-[48px] text-xs rounded-[16px] bg-[#F2F4FB]/50 border border-[#E6E9F5] text-[#161A3A] placeholder-[#5B6190] focus:outline-none focus:ring-2 focus:ring-[#4338CA] focus:ring-offset-1 transition-all"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-[#161A3A] mb-1.5">
+            <label className="block text-xs font-medium text-[#0a0a0a] mb-1.5">
               {t("newInvoice.clientEmailLabel")}
             </label>
             <input
@@ -188,18 +190,16 @@ export default function NewInvoicePage() {
               value={clientEmail}
               onChange={(e) => setClientEmail(e.target.value)}
               placeholder={t("newInvoice.clientEmailPlaceholder")}
-              className="w-full px-4 py-3 min-h-[48px] text-xs rounded-[16px] bg-[#F2F4FB]/50 border border-[#E6E9F5] text-[#161A3A] placeholder-[#5B6190] focus:outline-none focus:ring-2 focus:ring-[#4338CA] focus:ring-offset-1 transition-all"
+              className="clay-input"
             />
           </div>
         </div>
 
         {/* Line Items Section */}
         <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold text-[#161A3A]">
-              {t("newInvoice.lineItems")}
-            </h2>
-          </div>
+          <h2 className="text-base font-display font-medium text-[#0a0a0a]">
+            {t("newInvoice.lineItems")}
+          </h2>
 
           <div className="space-y-3">
             {items.map((item, idx) => {
@@ -207,11 +207,10 @@ export default function NewInvoicePage() {
               return (
                 <div
                   key={idx}
-                  className="p-3.5 sm:p-5 rounded-[20px] bg-white border border-[#E6E9F5] space-y-3 shadow-[0_2px_8px_rgba(40,50,120,0.06)]"
+                  className="p-4 sm:p-5 rounded-[20px] bg-[#f5f0e0] border border-[#e5e5e5] space-y-3"
                 >
-                  {/* Row 1: Description input full width */}
                   <div>
-                    <label className="block text-[11px] font-semibold text-[#5B6190] mb-1">
+                    <label className="block text-xs font-medium text-[#3a3a3a] mb-1">
                       {t("newInvoice.itemDesc")}
                     </label>
                     <input
@@ -222,15 +221,13 @@ export default function NewInvoicePage() {
                       placeholder={t("newInvoice.itemDescPlaceholder")}
                       value={item.description}
                       onChange={(e) => handleItemChange(idx, "description", e.target.value)}
-                      className="w-full px-4 py-2.5 min-h-[48px] text-xs rounded-[14px] bg-[#F2F4FB]/50 border border-[#E6E9F5] text-[#161A3A] placeholder-[#5B6190] focus:outline-none focus:ring-2 focus:ring-[#4338CA] focus:ring-offset-1"
+                      className="clay-input"
                     />
                   </div>
 
-                  {/* Row 2: Qty, Unit price (USDC), line total, delete button (44px) */}
                   <div className="flex items-end gap-2 sm:gap-3">
-                    {/* Qty */}
                     <div className="w-16 sm:w-20 shrink-0">
-                      <label className="block text-[11px] font-semibold text-[#5B6190] mb-1">
+                      <label className="block text-xs font-medium text-[#3a3a3a] mb-1">
                         {t("newInvoice.itemQty")}
                       </label>
                       <input
@@ -242,13 +239,12 @@ export default function NewInvoicePage() {
                         max={10000}
                         value={item.quantity}
                         onChange={(e) => handleItemChange(idx, "quantity", e.target.value)}
-                        className="w-full px-2 py-2 min-h-[44px] text-xs text-center rounded-[12px] bg-[#F2F4FB]/50 border border-[#E6E9F5] text-[#161A3A] focus:outline-none focus:ring-2 focus:ring-[#4338CA] focus:ring-offset-1"
+                        className="clay-input !px-2 text-center"
                       />
                     </div>
 
-                    {/* Unit price (USDC) */}
-                    <div className="flex-1 min-w-[76px] sm:min-w-[100px]">
-                      <label className="block text-[11px] font-semibold text-[#5B6190] mb-1">
+                    <div className="flex-1 min-w-[90px]">
+                      <label className="block text-xs font-medium text-[#3a3a3a] mb-1">
                         {t("newInvoice.itemPrice")}
                       </label>
                       <div className="relative">
@@ -261,32 +257,30 @@ export default function NewInvoicePage() {
                           min={0.01}
                           value={item.unitPriceUsdc}
                           onChange={(e) => handleItemChange(idx, "unitPriceUsdc", e.target.value)}
-                          className="w-full pl-2.5 sm:pl-3 pr-9 sm:pr-10 py-2 min-h-[44px] text-xs text-right rounded-[12px] bg-[#F2F4FB]/50 border border-[#E6E9F5] text-[#161A3A] focus:outline-none focus:ring-2 focus:ring-[#4338CA] focus:ring-offset-1"
+                          className="clay-input !pr-14 text-right font-mono"
                         />
-                        <span className="absolute right-2 sm:right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-[#5B6190]">
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-medium text-[#6a6a6a]">
                           USDC
                         </span>
                       </div>
                     </div>
 
-                    {/* Line total */}
-                    <div className="shrink-0 text-right min-w-[64px] sm:min-w-[70px]">
-                      <div className="text-[11px] font-semibold text-[#5B6190] mb-1">
+                    <div className="shrink-0 text-right min-w-[74px]">
+                      <div className="text-xs font-medium text-[#3a3a3a] mb-1">
                         {t("newInvoice.itemTotal")}
                       </div>
-                      <div className="h-[44px] flex items-center justify-end font-bold text-xs text-[#161A3A]">
+                      <div className="h-[44px] flex items-center justify-end font-mono font-medium text-xs text-[#0a0a0a]">
                         {lineTotal.toFixed(2)} USDC
                       </div>
                     </div>
 
-                    {/* Delete button (44px) */}
                     <div className="shrink-0">
                       <button
                         type="button"
                         disabled={items.length <= 1}
                         onClick={() => handleRemoveItem(idx)}
                         aria-label="Delete line item"
-                        className="w-11 h-11 min-h-[44px] min-w-[44px] shrink-0 flex items-center justify-center rounded-[12px] border border-[#E6E9F5] text-[#5B6190] hover:text-[#991B1B] hover:bg-rose-50 disabled:opacity-20 cursor-pointer transition-colors"
+                        className="w-11 h-11 min-h-[44px] min-w-[44px] shrink-0 flex items-center justify-center rounded-[12px] border border-[#e5e5e5] bg-[#fffaf0] text-[#6a6a6a] hover:text-[#991b1b] hover:border-[#991b1b] disabled:opacity-30 cursor-pointer transition-colors"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -297,26 +291,25 @@ export default function NewInvoicePage() {
             })}
           </div>
 
-          {/* "+ + Add Line Item" -> ONE plus icon + text, full width outlined indigo button */}
           <button
             type="button"
             onClick={handleAddItem}
-            className="w-full py-3 min-h-[48px] rounded-[16px] border border-[#4338CA] bg-white hover:bg-[#4338CA]/5 text-[#4338CA] font-semibold text-xs flex items-center justify-center gap-2 cursor-pointer transition-colors shadow-2xs"
+            className="clay-btn-secondary w-full"
           >
             <Plus className="w-4 h-4" />
             <span>{t("newInvoice.addItem")}</span>
           </button>
 
           {/* Total Calculation Card */}
-          <div className="p-4 sm:p-5 rounded-[20px] bg-white border border-[#E6E9F5] flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-[0_2px_8px_rgba(40,50,120,0.06)]">
-            <div className="text-xs text-[#5B6190]">
+          <div className="p-5 rounded-[20px] bg-[#1a3a3a] text-white flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="text-xs text-[#a4d4c5]">
               {t("newInvoice.minUsdcNotice")}
             </div>
             <div className="text-right">
-              <div className="text-xl font-extrabold text-[#161A3A]">
-                {totalUsdc.toFixed(2)} <span className="text-xs font-normal text-[#5B6190]">USDC</span>
+              <div className="text-2xl font-light font-mono tabular-nums text-white">
+                {totalUsdc.toFixed(2)} <span className="text-xs font-normal text-[#a4d4c5]">USDC</span>
               </div>
-              <div className="text-[11px] text-[#5B6190]">
+              <div className="text-[11px] text-[#f0f0f0]">
                 ~₹{approxInr} INR indicative
               </div>
             </div>
@@ -324,11 +317,11 @@ export default function NewInvoicePage() {
         </div>
 
         {/* Notes Card */}
-        <div className="p-6 sm:p-8 rounded-[24px] bg-white border border-[#E6E9F5] space-y-2 shadow-[0_2px_8px_rgba(40,50,120,0.08)]">
-          <label className="block text-xs font-semibold text-[#161A3A]">
+        <div className="p-6 sm:p-8 rounded-[24px] bg-[#faf5e8] border border-[#e5e5e5] space-y-2">
+          <label className="block text-xs font-medium text-[#0a0a0a]">
             {t("newInvoice.notesLabel")}
           </label>
-          <p className="text-[11px] text-[#5B6190]">
+          <p className="text-xs text-[#6a6a6a]">
             {t("newInvoice.notesSubtext")}
           </p>
           <textarea
@@ -337,7 +330,7 @@ export default function NewInvoicePage() {
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder={t("newInvoice.notesPlaceholder")}
-            className="w-full px-4 py-3 text-xs rounded-[16px] bg-[#F2F4FB]/50 border border-[#E6E9F5] text-[#161A3A] placeholder-[#5B6190] focus:outline-none focus:ring-2 focus:ring-[#4338CA] focus:ring-offset-1 transition-all"
+            className="clay-input"
           />
         </div>
 
@@ -347,7 +340,7 @@ export default function NewInvoicePage() {
             id="create-invoice-submit-btn"
             type="submit"
             disabled={isSubmitting || totalUsdc < MIN_INVOICE_AMOUNT_FLOAT}
-            className="px-6 py-3.5 min-h-[48px] rounded-[18px] bg-[#4338CA] hover:bg-[#2E259B] text-white font-semibold text-xs shadow-sm transition-all cursor-pointer disabled:opacity-50 flex items-center gap-2"
+            className="clay-btn-primary"
           >
             {isSubmitting ? (
               <>
@@ -356,7 +349,7 @@ export default function NewInvoicePage() {
               </>
             ) : (
               <>
-                <Sparkles className="w-4 h-4" />
+                <Sparkles className="w-4 h-4 text-[#ffb084]" />
                 <span>{t("newInvoice.createButton")}</span>
               </>
             )}

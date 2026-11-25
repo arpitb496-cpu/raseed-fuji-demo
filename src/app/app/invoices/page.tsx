@@ -78,46 +78,47 @@ export default function InvoicesListPage() {
 
   const getStatusBadge = (status: string) => {
     const map: Record<string, { bg: string; text: string }> = {
-      PAID: { bg: "bg-[#D9F5E6] text-[#0B6B3A] border-[#A7F3D0]", text: t("status.paid") },
-      SENT: { bg: "bg-indigo-50 text-[#4338CA] border-indigo-100", text: t("status.sent") },
-      PARTIALLY_PAID: { bg: "bg-[#FFE9D1] text-[#9A4B00] border-[#FED7AA]", text: t("status.partiallyPaid") },
-      DRAFT: { bg: "bg-[#F2F4FB] text-[#4B517D] border-[#E6E9F5]", text: t("status.draft") },
-      EXPIRED: { bg: "bg-rose-50 text-rose-700 border-rose-200", text: t("status.expired") },
-      CANCELLED: { bg: "bg-slate-100 text-slate-500 border-slate-200", text: t("status.cancelled") },
+      PAID: { bg: "bg-[#a4d4c5] text-[#0a0a0a] border-[#0a0a0a]/15", text: t("status.paid") },
+      SENT: { bg: "bg-[#ffb084] text-[#0a0a0a] border-[#0a0a0a]/15", text: t("status.sent") },
+      PARTIALLY_PAID: { bg: "bg-[#e8b94a] text-[#0a0a0a] border-[#0a0a0a]/15", text: t("status.partiallyPaid") },
+      DRAFT: { bg: "bg-[#ebe6d6] text-[#3a3a3a] border-[#e5e5e5]", text: t("status.draft") },
+      EXPIRED: { bg: "bg-[#fee2e2] text-[#991b1b] border-[#fecaca]", text: t("status.expired") },
+      CANCELLED: { bg: "bg-[#f5f0e0] text-[#6a6a6a] border-[#e5e5e5]", text: t("status.cancelled") },
     };
-    const s = map[status] || { bg: "bg-slate-100 text-slate-700 border-slate-200", text: status };
+    const s = map[status] || { bg: "bg-[#f5f0e0] text-[#3a3a3a] border-[#e5e5e5]", text: status };
     return (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${s.bg}`}>
+      <span className={`inline-flex items-center px-2.5 py-1 rounded-[9px] text-[11px] font-medium border ${s.bg}`}>
         {s.text}
       </span>
     );
   };
 
   return (
-    <div className="space-y-6 max-w-[1080px] mx-auto">
+    <div className="space-y-6">
       {/* Title & Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-[#e5e5e5]">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#161A3A]">
+          <div className="nyc-kicker mb-1.5">Merchant Ledger</div>
+          <h1 className="text-3xl sm:text-4xl font-display font-medium tracking-[-0.04em] text-[#0a0a0a]">
             {t("invoices.allInvoices")}
           </h1>
-          <p className="text-xs text-[#5B6190] mt-1 font-medium">
+          <p className="text-sm text-[#3a3a3a] mt-1">
             Manage your peer-to-peer invoices, payment links, and settlement receipts.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           <a
             href="/api/invoices/export"
             download="cryptodao_invoices.csv"
-            className="inline-flex items-center gap-1.5 px-4 py-2.5 min-h-[44px] rounded-[16px] bg-white border border-[#E6E9F5] text-xs font-semibold text-[#4B517D] hover:bg-[#F2F4FB] transition-colors shadow-xs"
+            className="clay-btn-secondary"
           >
-            <Download className="w-3.5 h-3.5 text-[#5B6190]" />
+            <Download className="w-4 h-4" />
             <span>{t("invoices.exportCsv")}</span>
           </a>
           <Link
             href="/app/invoices/new"
-            className="inline-flex items-center gap-1.5 px-4 py-2.5 min-h-[44px] rounded-[16px] bg-[#4338CA] hover:bg-[#2E259B] text-white font-semibold text-xs shadow-xs transition-colors shrink-0"
+            className="clay-btn-primary"
           >
             <PlusCircle className="w-4 h-4" />
             <span>{t("invoices.newInvoice")}</span>
@@ -125,8 +126,8 @@ export default function InvoicesListPage() {
         </div>
       </div>
 
-      {/* Quick Filter Chips */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs scrollbar-none">
+      {/* Filter Chips (matches .wk-tabs on ai.nexgendigital.tech) */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
         {[
           { key: "ALL", label: t("invoices.allStatus") },
           { key: "DRAFT", label: t("status.draft") },
@@ -145,10 +146,10 @@ export default function InvoicesListPage() {
                 setStatusFilter(chip.key);
                 setPage(1);
               }}
-              className={`px-4 py-2 min-h-[44px] rounded-full font-semibold transition-all shrink-0 text-xs cursor-pointer ${
+              className={`px-4 min-h-[40px] rounded-[12px] font-medium transition-all shrink-0 text-sm cursor-pointer border ${
                 isActive
-                  ? "bg-[#4338CA] text-white shadow-xs"
-                  : "bg-white border border-[#E6E9F5] text-[#4B517D] hover:bg-[#F2F4FB]"
+                  ? "bg-[#0a0a0a] text-[#fffaf0] border-[#0a0a0a]"
+                  : "bg-[#fffaf0] border-[#e2ddd0] text-[#3a3a3a] hover:bg-[#f5f0e0] hover:text-[#0a0a0a]"
               }`}
             >
               {chip.label}
@@ -157,10 +158,10 @@ export default function InvoicesListPage() {
         })}
       </div>
 
-      {/* Filters & Search - Big Rounded Inputs */}
+      {/* Search & Select */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
         <div className="relative flex-1">
-          <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-[#5B6190]" />
+          <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-[#6a6a6a]" />
           <input
             type="text"
             value={search}
@@ -169,7 +170,7 @@ export default function InvoicesListPage() {
               setPage(1);
             }}
             placeholder={t("invoices.searchPlaceholder")}
-            className="w-full pl-11 pr-4 py-3 min-h-[48px] text-xs rounded-[18px] bg-white border border-[#E6E9F5] text-[#161A3A] placeholder-[#5B6190] focus:outline-none focus:ring-2 focus:ring-[#4338CA] shadow-[0_2px_8px_rgba(40,50,120,0.04)]"
+            className="clay-input !pl-11"
           />
         </div>
 
@@ -179,7 +180,7 @@ export default function InvoicesListPage() {
             setStatusFilter(e.target.value);
             setPage(1);
           }}
-          className="px-4 py-3 min-h-[48px] text-xs rounded-[18px] bg-white border border-[#E6E9F5] text-[#161A3A] font-medium focus:outline-none focus:ring-2 focus:ring-[#4338CA] shadow-[0_2px_8px_rgba(40,50,120,0.04)] cursor-pointer"
+          className="clay-input sm:w-52 cursor-pointer"
         >
           <option value="ALL">{t("invoices.allStatus")}</option>
           <option value="DRAFT">{t("status.draft")}</option>
@@ -191,56 +192,56 @@ export default function InvoicesListPage() {
         </select>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-[24px] border border-[#E6E9F5] overflow-hidden shadow-[0_2px_8px_rgba(40,50,120,0.08)]">
+      {/* Table Container */}
+      <div className="bg-[#faf5e8] rounded-[24px] border border-[#e5e5e5] overflow-hidden shadow-[0_24px_48px_-36px_rgba(10,10,10,0.18)]">
         {isLoading ? (
-          <div className="p-16 text-center text-xs text-[#5B6190]">Loading invoices...</div>
+          <div className="p-16 text-center text-xs text-[#6a6a6a]">Loading invoices...</div>
         ) : invoices.length === 0 ? (
           <div className="p-16 text-center flex flex-col items-center gap-2">
-            <FileSpreadsheet className="w-10 h-10 text-[#5B6190]" />
-            <div className="text-sm font-bold text-[#161A3A]">
+            <FileSpreadsheet className="w-10 h-10 text-[#6a6a6a]" />
+            <div className="text-base font-display font-medium text-[#0a0a0a]">
               {t("invoices.emptySearch")}
             </div>
-            <p className="text-xs text-[#4B517D]">
+            <p className="text-xs text-[#3a3a3a]">
               Try adjusting your search query or status filter.
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto bg-[#fffaf0]">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="bg-[#F2F4FB]/70 text-[#5B6190] border-b border-[#E6E9F5]">
-                  <th className="py-3.5 px-5 font-semibold">{t("invoices.tableInvoice")}</th>
-                  <th className="py-3.5 px-5 font-semibold">{t("invoices.tableClient")}</th>
-                  <th className="py-3.5 px-5 font-semibold">{t("invoices.tableDue")}</th>
-                  <th className="py-3.5 px-5 font-semibold text-right">{t("invoices.tableAmount")}</th>
-                  <th className="py-3.5 px-5 font-semibold text-center">{t("invoices.tableStatus")}</th>
-                  <th className="py-3.5 px-5 font-semibold text-right">{t("invoices.actions")}</th>
+                <tr className="bg-[#f5f0e0] text-[#3a3a3a] border-b border-[#e5e5e5]">
+                  <th className="py-3.5 px-5 font-medium">{t("invoices.tableInvoice")}</th>
+                  <th className="py-3.5 px-5 font-medium">{t("invoices.tableClient")}</th>
+                  <th className="py-3.5 px-5 font-medium">{t("invoices.tableDue")}</th>
+                  <th className="py-3.5 px-5 font-medium text-right">{t("invoices.tableAmount")}</th>
+                  <th className="py-3.5 px-5 font-medium text-center">{t("invoices.tableStatus")}</th>
+                  <th className="py-3.5 px-5 font-medium text-right">{t("invoices.actions")}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#E6E9F5]">
+              <tbody className="divide-y divide-[#e5e5e5]">
                 {invoices.map((inv) => (
                   <tr
                     key={inv.id}
-                    className="hover:bg-[#F2F4FB]/50 transition-colors"
+                    className="hover:bg-[#faf5e8] transition-colors"
                   >
-                    <td className="py-4 px-5 font-medium text-[#161A3A]">
+                    <td className="py-4 px-5 font-medium text-[#0a0a0a]">
                       <Link href={`/app/invoices/${inv.id}`} className="block group">
-                        <div className="font-bold text-[#4338CA] group-hover:underline">
+                        <div className="font-mono font-medium text-[#0a0a0a] group-hover:text-[#b64d31] group-hover:underline">
                           {inv.invoiceNumber}
                         </div>
-                        <div className="text-[11px] text-[#5B6190] truncate max-w-[200px]">
+                        <div className="text-xs text-[#6a6a6a] truncate max-w-[220px] mt-0.5">
                           {inv.title}
                         </div>
                       </Link>
                     </td>
-                    <td className="py-4 px-5 text-[#4B517D]">
-                      {inv.clientName || <span className="text-[#5B6190]">—</span>}
+                    <td className="py-4 px-5 text-[#3a3a3a]">
+                      {inv.clientName || <span className="text-[#9a9a9a]">—</span>}
                     </td>
-                    <td className="py-4 px-5 text-[#5B6190] whitespace-nowrap">
+                    <td className="py-4 px-5 text-[#6a6a6a] whitespace-nowrap">
                       {formatUnambiguousDate(inv.dueDate, lang)}
                     </td>
-                    <td className="py-4 px-5 font-bold text-[#161A3A] text-right whitespace-nowrap">
+                    <td className="py-4 px-5 font-mono font-medium text-[#0a0a0a] text-right whitespace-nowrap">
                       {formatUsdc(BigInt(inv.amountUsdc))} USDC
                     </td>
                     <td className="py-4 px-5 text-center whitespace-nowrap">
@@ -251,10 +252,10 @@ export default function InvoicesListPage() {
                         <button
                           onClick={() => handleCopyLink(inv.publicId, inv.id)}
                           title={t("invoiceDetail.copyLink")}
-                          className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-[12px] border border-[#E6E9F5] text-[#4B517D] hover:bg-[#F2F4FB] cursor-pointer transition-colors"
+                          className="p-2 min-h-[42px] min-w-[42px] flex items-center justify-center rounded-[12px] border border-[#e5e5e5] bg-[#fffaf0] text-[#3a3a3a] hover:bg-[#f5f0e0] hover:border-[#0a0a0a] cursor-pointer transition-colors"
                         >
                           {copiedId === inv.id ? (
-                            <Check className="w-4 h-4 text-emerald-600" />
+                            <Check className="w-4 h-4 text-[#173f32]" />
                           ) : (
                             <Copy className="w-4 h-4" />
                           )}
@@ -262,7 +263,7 @@ export default function InvoicesListPage() {
                         <Link
                           href={`/app/invoices/${inv.id}`}
                           title={t("invoices.view")}
-                          className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-[12px] border border-[#E6E9F5] text-[#4B517D] hover:bg-[#F2F4FB] cursor-pointer transition-colors"
+                          className="p-2 min-h-[42px] min-w-[42px] flex items-center justify-center rounded-[12px] border border-[#e5e5e5] bg-[#fffaf0] text-[#3a3a3a] hover:bg-[#f5f0e0] hover:border-[#0a0a0a] cursor-pointer transition-colors"
                         >
                           <Eye className="w-4 h-4" />
                         </Link>
@@ -277,7 +278,7 @@ export default function InvoicesListPage() {
 
         {/* Pagination Footer */}
         {totalPages > 1 && (
-          <div className="p-4 border-t border-[#E6E9F5] flex items-center justify-between text-xs text-[#5B6190]">
+          <div className="p-4 border-t border-[#e5e5e5] bg-[#faf5e8] flex items-center justify-between text-xs text-[#6a6a6a]">
             <div>
               {t("invoices.page")} {page} {t("invoices.of")} {totalPages}
             </div>
@@ -285,14 +286,14 @@ export default function InvoicesListPage() {
               <button
                 disabled={page <= 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
-                className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-[12px] border border-[#E6E9F5] disabled:opacity-30 hover:bg-[#F2F4FB] cursor-pointer transition-colors"
+                className="p-2 min-h-[42px] min-w-[42px] flex items-center justify-center rounded-[12px] border border-[#e5e5e5] bg-[#fffaf0] disabled:opacity-30 hover:bg-[#ebe6d6] cursor-pointer transition-colors"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
               <button
                 disabled={page >= totalPages}
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-[12px] border border-[#E6E9F5] disabled:opacity-30 hover:bg-[#F2F4FB] cursor-pointer transition-colors"
+                className="p-2 min-h-[42px] min-w-[42px] flex items-center justify-center rounded-[12px] border border-[#e5e5e5] bg-[#fffaf0] disabled:opacity-30 hover:bg-[#ebe6d6] cursor-pointer transition-colors"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
