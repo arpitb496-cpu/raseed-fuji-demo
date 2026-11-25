@@ -6,7 +6,8 @@ import QRCode from "qrcode";
 import { useI18n } from "@/lib/i18n";
 import { formatUsdc } from "@/lib/currency";
 import { formatUnambiguousDate } from "@/lib/utils/date";
-import { INDICATIVE_USD_TO_INR_RATE } from "@/config/constants";
+import { useInrRate } from "@/hooks/useInrRate";
+import { formatInrReferenceLabel } from "@/lib/rate";
 import { CURRENT_NETWORK } from "@/config/network";
 import {
   ArrowLeft,
@@ -73,6 +74,7 @@ export default function InvoiceDetailPage({
 }) {
   const { id } = use(params);
   const { t, lang } = useI18n();
+  const { rate: inrRate, asOf: inrAsOf } = useInrRate();
 
   const [invoice, setInvoice] = useState<InvoiceDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -216,9 +218,12 @@ export default function InvoiceDetailPage({
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   const payUrl = `${origin}/pay/${invoice.publicId}`;
   const totalMicro = BigInt(invoice.amountUsdc);
-  const approxInr = (Number(invoice.amountUsdc) / 1_000_000 * INDICATIVE_USD_TO_INR_RATE).toLocaleString("en-IN", {
-    maximumFractionDigits: 2,
-  });
+  const approxInr =
+    inrRate !== null
+      ? (Number(invoice.amountUsdc) / 1_000_000 * inrRate).toLocaleString("en-IN", {
+          maximumFractionDigits: 2,
+        })
+      : null;
 
   const isPayable = invoice.status === "SENT" || invoice.status === "PARTIALLY_PAID";
   const isDraft = invoice.status === "DRAFT";
@@ -543,9 +548,11 @@ export default function InvoiceDetailPage({
                 <div className="text-2xl sm:text-3xl font-light font-mono tabular-nums text-[#0a0a0a]">
                   {formatUsdc(totalMicro)} <span className="text-xs font-normal text-[#6a6a6a]">USDC</span>
                 </div>
-                <div className="text-xs text-[#6a6a6a] mt-0.5">
-                  ~₹{approxInr} INR (illustrative demo rate, not a live rate)
-                </div>
+                {approxInr !== null && inrRate !== null && inrAsOf !== null && (
+                  <div className="text-xs text-[#6a6a6a] mt-0.5">
+                    ~₹{approxInr} INR ({formatInrReferenceLabel(inrRate, inrAsOf, lang)})
+                  </div>
+                )}
               </div>
             </div>
 

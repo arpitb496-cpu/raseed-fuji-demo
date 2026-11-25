@@ -4,7 +4,8 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n";
 import { CURRENT_NETWORK, isConfiguredAddress } from "@/config/network";
-import { INDICATIVE_USD_TO_INR_RATE } from "@/config/constants";
+import { useInrRate } from "@/hooks/useInrRate";
+import { formatInrReferenceLabel } from "@/lib/rate";
 import {
   ArrowRight,
   Receipt,
@@ -23,6 +24,7 @@ import {
 export default function HomePage() {
   const { t, lang } = useI18n();
   const [showSpotlightDetails, setShowSpotlightDetails] = useState(false);
+  const { rate: inrRate, asOf: inrAsOf } = useInrRate();
 
   const capabilities = [
     {
@@ -255,9 +257,13 @@ export default function HomePage() {
 
                   {/* Bottom Right Caption */}
                   <div className="flex items-end justify-between gap-2 pt-1">
-                    <span className="text-[10px] font-mono uppercase tracking-[0.08em] text-[#3a3a3a]">
-                      1 USDC ≈ ₹{INDICATIVE_USD_TO_INR_RATE.toFixed(2)} INR (demo ref)
-                    </span>
+                    {inrRate !== null ? (
+                      <span className="text-[10px] font-mono uppercase tracking-[0.08em] text-[#3a3a3a]">
+                        1 USDC ≈ ₹{inrRate.toFixed(2)} INR
+                      </span>
+                    ) : (
+                      <span />
+                    )}
                     <span className="text-[10px] font-medium uppercase tracking-[0.06em] text-[#0a0a0a] text-right leading-tight">
                       AVALANCHE FUJI · CHAIN 43113
                     </span>
@@ -523,12 +529,14 @@ export default function HomePage() {
 
                 {showSpotlightDetails && (
                   <div className="mt-2 p-3.5 rounded-[12px] bg-[#fffaf0] border border-[#e5e5e5] text-xs text-[#3a3a3a] space-y-1.5">
-                    <div className="flex items-center gap-1.5 font-mono text-[#0a0a0a]">
-                      <Info className="w-3.5 h-3.5 text-[#b64d31]" />
-                      <span>
-                        Indicative demo reference: 1 USDC ≈ ₹{INDICATIVE_USD_TO_INR_RATE.toFixed(2)} INR (illustrative demo rate, not a live rate)
-                      </span>
-                    </div>
+                    {inrRate !== null && inrAsOf !== null && (
+                      <div className="flex items-center gap-1.5 font-mono text-[#0a0a0a]">
+                        <Info className="w-3.5 h-3.5 text-[#b64d31] shrink-0" />
+                        <span>
+                          {formatInrReferenceLabel(inrRate, inrAsOf, lang)}
+                        </span>
+                      </div>
+                    )}
                     <p>
                       {lang === "hi"
                         ? "नमूना चालान पेज पूरी तरह ब्राउज़र में चलता है और कोई API कॉल या ऑन-चेन लेनदेन नहीं करता।"
@@ -799,12 +807,14 @@ export default function HomePage() {
                     : ". Contract handles testnet USDC routing only. Protocol fee is currently 0%. The contract owner can set a fee for future payments, capped in code at 1%."}
                 </p>
 
-                <div className="p-3.5 rounded-[12px] bg-[#faf5e8] border border-[#e5e5e5] text-xs font-mono text-[#3a3a3a] flex items-center gap-2">
-                  <Info className="w-3.5 h-3.5 text-[#b64d31] shrink-0" />
-                  <span>
-                    Indicative demo reference: 1 USDC ≈ ₹{INDICATIVE_USD_TO_INR_RATE.toFixed(2)} INR (illustrative demo rate, not a live rate)
-                  </span>
-                </div>
+                {inrRate !== null && inrAsOf !== null && (
+                  <div className="p-3.5 rounded-[12px] bg-[#faf5e8] border border-[#e5e5e5] text-xs font-mono text-[#3a3a3a] flex items-center gap-2">
+                    <Info className="w-3.5 h-3.5 text-[#b64d31] shrink-0" />
+                    <span>
+                      {formatInrReferenceLabel(inrRate, inrAsOf, lang)}
+                    </span>
+                  </div>
+                )}
 
                 <Link href="/app" prefetch={false} className="clay-btn-primary w-full">
                   <span>

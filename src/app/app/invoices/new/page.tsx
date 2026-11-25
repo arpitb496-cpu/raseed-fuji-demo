@@ -4,7 +4,9 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n";
-import { MIN_INVOICE_AMOUNT_FLOAT, INDICATIVE_USD_TO_INR_RATE } from "@/config/constants";
+import { MIN_INVOICE_AMOUNT_FLOAT } from "@/config/constants";
+import { useInrRate } from "@/hooks/useInrRate";
+import { formatInrReferenceLabel } from "@/lib/rate";
 import { Trash2, ArrowLeft, Loader2, Sparkles, AlertCircle, Plus } from "lucide-react";
 
 interface FormLineItem {
@@ -15,7 +17,8 @@ interface FormLineItem {
 
 export default function NewInvoicePage() {
   const router = useRouter();
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
+  const { rate: inrRate, asOf: inrAsOf } = useInrRate();
 
   const [title, setTitle] = useState("");
   const [clientName, setClientName] = useState("");
@@ -36,9 +39,12 @@ export default function NewInvoicePage() {
     0
   );
 
-  const approxInr = (totalUsdc * INDICATIVE_USD_TO_INR_RATE).toLocaleString("en-IN", {
-    maximumFractionDigits: 2,
-  });
+  const approxInr =
+    inrRate !== null
+      ? (totalUsdc * inrRate).toLocaleString("en-IN", {
+          maximumFractionDigits: 2,
+        })
+      : null;
 
   const handleAddItem = () => {
     setItems([...items, { description: "", quantity: 1, unitPriceUsdc: 50 }]);
@@ -309,9 +315,11 @@ export default function NewInvoicePage() {
               <div className="text-2xl font-light font-mono tabular-nums text-white">
                 {totalUsdc.toFixed(2)} <span className="text-xs font-normal text-[#a4d4c5]">USDC</span>
               </div>
-              <div className="text-[11px] text-[#f0f0f0]">
-                ~₹{approxInr} INR indicative
-              </div>
+              {approxInr !== null && inrRate !== null && inrAsOf !== null && (
+                <div className="text-[11px] text-[#f0f0f0] mt-0.5">
+                  ~₹{approxInr} INR · {formatInrReferenceLabel(inrRate, inrAsOf, lang)}
+                </div>
+              )}
             </div>
           </div>
         </div>
