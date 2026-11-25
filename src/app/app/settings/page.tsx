@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useLanguage } from "@/lib/i18n";
 import { useAccount, useDisconnect } from "wagmi";
 import { useAuth } from "@/lib/auth/useAuth";
+import { useInrRate } from "@/hooks/useInrRate";
 import { Download, Trash2 } from "lucide-react";
 
 interface MerchantProfile {
@@ -23,6 +24,7 @@ export default function MerchantSettingsPage() {
   const { address } = useAccount();
   const { disconnect, disconnectAsync } = useDisconnect();
   const { logout } = useAuth();
+  const { rate: inrRate } = useInrRate();
 
   const [profile, setProfile] = useState<MerchantProfile | null>(null);
   const [displayName, setDisplayName] = useState("");
@@ -259,7 +261,11 @@ export default function MerchantSettingsPage() {
                   className="clay-input cursor-pointer"
                 >
                   <option value="USD">USD ($), indicative reference</option>
-                  <option value="INR">INR (₹) - Indicative (1 USDC ≈ ₹85)</option>
+                  <option value="INR">
+                    {inrRate !== null
+                      ? `INR (₹) - Indicative (1 USDC ≈ ₹${inrRate.toFixed(2)})`
+                      : "INR (₹) - Indicative reference"}
+                  </option>
                 </select>
               </div>
 
