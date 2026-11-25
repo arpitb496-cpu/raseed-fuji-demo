@@ -6,92 +6,143 @@ import { usePathname } from "next/navigation";
 import { BRANDING } from "@/config/branding";
 import { CURRENT_NETWORK, isConfiguredAddress } from "@/config/network";
 import { useI18n } from "@/lib/i18n";
-import { ExternalLink, Shield } from "lucide-react";
+import { Receipt, ExternalLink, Shield } from "lucide-react";
 
 export function Footer() {
   const pathname = usePathname();
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
 
   if (pathname.startsWith("/app") || pathname.startsWith("/pay")) {
     return null;
   }
 
   return (
-    <footer className="w-full border-t border-[#E6E9F5] bg-white/50 text-xs text-[#5B6190] mt-auto">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Brand & Value Prop */}
-          <div className="md:col-span-2 space-y-3">
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-base text-[#161A3A]">
-                {BRANDING.name}
+    <footer className="bg-[#faf5e8] text-[#3a3a3a] border-t border-[#e5e5e5] pt-12 sm:pt-14 pb-8 sm:pb-10 overflow-hidden mt-auto">
+      <div className="page-container">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-8 pb-10 border-b border-[#e5e5e5]">
+          {/* Brand Column (5 cols) */}
+          <div className="sm:col-span-2 lg:col-span-5 space-y-3">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-3 text-xl font-display font-medium tracking-[-0.03em] text-[#0a0a0a]"
+            >
+              <span className="w-9 h-9 rounded-xl border border-[#e5e5e5] bg-white flex items-center justify-center shrink-0">
+                <Receipt className="w-4 h-4 text-[#0a0a0a]" />
               </span>
-              <span className="bg-[#E8E9FB] text-[#4338CA] text-[10px] px-2 py-0.5 rounded-full font-medium">
+              <span>{BRANDING.name}</span>
+              <span className="px-2.5 py-0.5 rounded-full bg-[#f5f0e0] border border-[#e5e5e5] text-[11px] font-medium text-[#3a3a3a]">
                 {CURRENT_NETWORK.name}
               </span>
-            </div>
-            <p className="max-w-md leading-relaxed text-[#4B517D]">
+            </Link>
+            <p className="text-sm text-[#3a3a3a] max-w-sm leading-relaxed">
               {t("footer.tagline")}
             </p>
-            <div className="flex items-center gap-2 text-[11px] text-[#4B517D] font-medium">
-              <Shield className="w-3.5 h-3.5 text-[#4338CA]" />
+            <div className="inline-flex items-center gap-2 text-xs text-[#6a6a6a]">
+              <Shield className="w-3.5 h-3.5 text-[#173f32]" />
               <span>{t("footer.smartContractsLabel")}</span>
             </div>
           </div>
 
-          {/* Protocol Links */}
-          <div className="space-y-3">
-            <h3 className="font-semibold text-[#161A3A] uppercase tracking-wider text-[11px]">
-              {t("footer.protocol")}
+          {/* Explore Column (2 cols) */}
+          <div className="lg:col-span-2 space-y-3">
+            <h3 className="nyc-kicker !text-[#0a0a0a]">
+              {lang === "hi" ? "एक्सप्लोर करें" : "Explore"}
             </h3>
-            <ul className="space-y-1">
+            <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/about/how-it-works" className="inline-flex items-center min-h-[32px] py-1 text-[#4B517D] hover:text-[#4338CA] transition-colors">
+                <Link
+                  href="/demo"
+                  className="hover:text-[#0a0a0a] hover:underline underline-offset-4 transition-colors"
+                >
+                  {lang === "hi" ? "नमूना चालान" : "Sample Invoice"}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/app"
+                  prefetch={false}
+                  className="hover:text-[#0a0a0a] hover:underline underline-offset-4 transition-colors"
+                >
+                  {t("nav.dashboard")}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/about/how-it-works"
+                  className="hover:text-[#0a0a0a] hover:underline underline-offset-4 transition-colors"
+                >
                   {t("nav.howItWorks")}
                 </Link>
               </li>
               <li>
-                <Link href="/security" className="inline-flex items-center min-h-[32px] py-1 text-[#4B517D] hover:text-[#4338CA] transition-colors">
+                <Link
+                  href="/security"
+                  className="hover:text-[#0a0a0a] hover:underline underline-offset-4 transition-colors"
+                >
                   {t("nav.security")}
                 </Link>
               </li>
+            </ul>
+          </div>
+
+          {/* Resources Column (2 cols) */}
+          <div className="lg:col-span-2 space-y-3">
+            <h3 className="nyc-kicker !text-[#0a0a0a]">
+              {t("footer.protocol")}
+            </h3>
+            <ul className="space-y-2 text-sm">
               <li>
                 {isConfiguredAddress(CURRENT_NETWORK.routerAddress) ? (
                   <a
                     href={`${CURRENT_NETWORK.explorerUrl}/address/${CURRENT_NETWORK.routerAddress}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 min-h-[32px] py-1 text-[#4B517D] hover:text-[#4338CA] transition-colors"
+                    className="inline-flex items-center gap-1 hover:text-[#0a0a0a] hover:underline underline-offset-4 transition-colors"
                   >
-                    {t("common.viewOnExplorer")} <ExternalLink className="w-3 h-3" />
+                    <span>{t("common.viewOnExplorer")}</span>
+                    <ExternalLink className="w-3 h-3" />
                   </a>
                 ) : (
-                  <span className="inline-flex items-center min-h-[32px] py-1 text-[#5B6190] italic">
+                  <span className="text-[#6a6a6a] italic text-xs">
                     {t("common.contractNotConfigured")}
                   </span>
                 )}
               </li>
+              <li>
+                <span className="text-xs text-[#6a6a6a] font-mono">
+                  Chain ID: {CURRENT_NETWORK.chain.id}
+                </span>
+              </li>
             </ul>
           </div>
 
-          {/* Legal Disclaimers (Drafts pending lawyer review) */}
-          <div className="space-y-3">
-            <h3 className="font-semibold text-[#161A3A] uppercase tracking-wider text-[11px]">
+          {/* Legal Column (3 cols) */}
+          <div className="lg:col-span-3 space-y-3">
+            <h3 className="nyc-kicker !text-[#0a0a0a]">
               {t("footer.legal")}
             </h3>
-            <ul className="space-y-1">
+            <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/legal/terms" className="inline-flex items-center min-h-[32px] py-1 text-[#4B517D] hover:text-[#4338CA] transition-colors">
+                <Link
+                  href="/legal/terms"
+                  className="hover:text-[#0a0a0a] hover:underline underline-offset-4 transition-colors"
+                >
                   {t("footer.terms")}
                 </Link>
               </li>
               <li>
-                <Link href="/legal/privacy" className="inline-flex items-center min-h-[32px] py-1 text-[#4B517D] hover:text-[#4338CA] transition-colors">
+                <Link
+                  href="/legal/privacy"
+                  className="hover:text-[#0a0a0a] hover:underline underline-offset-4 transition-colors"
+                >
                   {t("footer.privacy")}
                 </Link>
               </li>
               <li>
-                <Link href="/legal/risks" className="inline-flex items-center min-h-[32px] py-1 text-[#4B517D] hover:text-[#4338CA] transition-colors">
+                <Link
+                  href="/legal/risks"
+                  className="hover:text-[#0a0a0a] hover:underline underline-offset-4 transition-colors"
+                >
                   {t("footer.risks")}
                 </Link>
               </li>
@@ -99,13 +150,19 @@ export function Footer() {
           </div>
         </div>
 
-        {/* Disclaimer Notice */}
-        <div className="pt-6 border-t border-[#E6E9F5] flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
-          <p className="text-[11px] max-w-2xl text-[#5B6190]">
-            {t("footer.disclaimer")}
-          </p>
-          <div className="text-[11px] text-[#5B6190]">
-            {t("footer.copyright")}
+        {/* Bottom Legal Notice & Copyright */}
+        <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#6a6a6a] text-center sm:text-left">
+          <p className="max-w-2xl leading-relaxed">{t("footer.disclaimer")}</p>
+          <div className="shrink-0 flex flex-wrap items-center justify-center gap-3">
+            <span>{t("footer.copyright")}</span>
+            <span aria-hidden="true">·</span>
+            <Link href="/legal/privacy" className="hover:text-[#0a0a0a] hover:underline">
+              {t("footer.privacy")}
+            </Link>
+            <span aria-hidden="true">·</span>
+            <Link href="/legal/terms" className="hover:text-[#0a0a0a] hover:underline">
+              {t("footer.terms")}
+            </Link>
           </div>
         </div>
       </div>

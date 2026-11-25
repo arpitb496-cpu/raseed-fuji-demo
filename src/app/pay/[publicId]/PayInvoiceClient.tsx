@@ -148,20 +148,17 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
   const hasInsufficientBalance = isConnected && !isWrongChain && userBalance < remainingUsdc;
   const effectivePaymentStep = (pendingTxHash && !isAlreadyPaid) ? "waiting_confirmation" : paymentStep;
 
-  // Terminal / non-payable state flags
   const isPaid = isAlreadyPaid || invoice?.status === "PAID" || effectivePaymentStep === "confirmed";
   const isCancelled = invoice?.status === "CANCELLED";
   const isExpired = invoice?.status === "EXPIRED" || (isCancelledOrExpired && !isCancelled);
   const isTerminalOrDraft = isPaid || isCancelled || isExpired || isDraft;
 
-  // Status chip styling: green for PAID, red for CANCELLED/EXPIRED, orange for DRAFT/PENDING
   const statusChipStyle = isPaid
-    ? { background: "#D9F5E6", color: "#0B6B3A" }
+    ? { background: "#a4d4c5", color: "#0a0a0a" }
     : (isCancelledOrExpired || isCancelled || isExpired)
-    ? { background: "#FEE2E2", color: "#991B1B" }
-    : { background: "#FFE9D1", color: "#9A4B00" };
+    ? { background: "#fee2e2", color: "#991b1b" }
+    : { background: "#ffb084", color: "#0a0a0a" };
 
-  // 3-step indicator derived flags
   const step1Done = isConnected && !isWrongChain;
   const step1Active = !isConnected || isWrongChain;
   const step2Done = step1Done && currentAllowance >= remainingUsdc && remainingUsdc > 0n;
@@ -195,14 +192,13 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
     }
   }, [pendingTxStorageKey]);
 
-  // Persistent Polling & Verification Effect
   useEffect(() => {
     const activeTx = txHash || pendingTxHash;
     if (paymentStep !== "waiting_confirmation" || !activeTx) return;
 
     let cancelled = false;
     let attempts = 0;
-    const maxAttempts = 36; // 3 minutes at 5s interval
+    const maxAttempts = 36;
 
     if (publicClient && activeTx.startsWith("0x")) {
       publicClient
@@ -354,14 +350,13 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
     try {
       const neededAmount = remainingUsdc;
 
-      // 1. Approve exact amount if allowance is insufficient
       if (currentAllowance < neededAmount) {
         setPaymentStep("approving");
         const approveTx = await writeContractAsync({
           address: invoice.network.usdcAddress,
           abi: ERC20_ABI,
           functionName: "approve",
-          args: [invoice.network.routerAddress, neededAmount], // EXACT amount, never infinite
+          args: [invoice.network.routerAddress, neededAmount],
         });
 
         if (!publicClient) {
@@ -383,7 +378,6 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
         await refetchAllowance();
       }
 
-      // 2. Execute PaymentRouter.pay
       setPaymentStep("paying");
       const payTx = await writeContractAsync({
         address: invoice.network.routerAddress,
@@ -402,10 +396,8 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
         localStorage.setItem(pendingTxStorageKey, payTx);
       }
 
-      // Transition immediately to "Submitted, waiting for confirmations" state
       setPaymentStep("waiting_confirmation");
 
-      // Concurrently monitor tx receipt to detect reverted transactions
       if (publicClient) {
         publicClient
           .waitForTransactionReceipt({ hash: payTx })
@@ -438,10 +430,10 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
 
   if (loading) {
     return (
-      <div className="w-full max-w-[480px] mx-auto min-h-screen bg-[#F2F4FB] text-[#161A3A] flex items-center justify-center p-6">
+      <div className="w-full min-h-screen bg-[#fffaf0] text-[#0a0a0a] flex items-center justify-center p-6">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-8 h-8 text-[#4338CA] animate-spin" />
-          <p className="text-xs text-[#5B6190]">Loading invoice...</p>
+          <Loader2 className="w-7 h-7 text-[#0a0a0a] animate-spin" />
+          <p className="text-xs text-[#6a6a6a]">Loading invoice...</p>
         </div>
       </div>
     );
@@ -449,31 +441,35 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
 
   if (notFound || !invoice) {
     return (
-      <div className="w-full max-w-[480px] mx-auto min-h-screen bg-[#F2F4FB] text-[#161A3A] flex flex-col items-center justify-center p-6 text-center">
-        <div style={{ width: 64, height: 64, borderRadius: 20, background: "#FEE2E2", color: "#991B1B", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, fontWeight: 700, marginBottom: 16 }}>
-          404
+      <div className="w-full min-h-screen bg-[#fffaf0] text-[#0a0a0a] flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-full max-w-md bg-[#faf5e8] border border-[#0a0a0a] rounded-[24px] p-8 flex flex-col items-center">
+          <div className="w-16 h-16 rounded-[18px] bg-[#fee2e2] text-[#991b1b] flex items-center justify-center text-2xl font-medium mb-4">
+            404
+          </div>
+          <h1 className="text-2xl font-display font-medium text-[#0a0a0a] mb-2">
+            {lang === "en" ? "Invoice Not Found" : "चालान नहीं मिला"}
+          </h1>
+          <p className="text-sm text-[#3a3a3a] mb-6">
+            {lang === "en"
+              ? "The requested payment link is invalid or has been deleted."
+              : "अनुरोधित भुगतान लिंक अमान्य है या हटा दिया गया है।"}
+          </p>
+          <Link href="/" className="clay-btn-primary">
+            {lang === "en" ? "Return home" : "होम पेज पर लौटें"}
+          </Link>
         </div>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: "#161A3A", marginBottom: 8 }}>
-          {lang === "en" ? "Invoice Not Found" : "चालान नहीं मिला"}
-        </h1>
-        <p style={{ fontSize: 13, color: "#4B517D", marginBottom: 20 }}>
-          {lang === "en" ? "The requested payment link is invalid or has been deleted." : "अनुरोधित भुगतान लिंक अमान्य है या हटा दिया गया है।"}
-        </p>
-        <Link
-          href="/"
-          style={{ minHeight: 44, padding: "0 20px", display: "inline-flex", alignItems: "center", borderRadius: 16, background: "#4338CA", color: "#FFFFFF", fontWeight: 600, fontSize: 14, textDecoration: "none" }}
-        >
-          {lang === "en" ? "Return home" : "होम पेज पर लौटें"}
-        </Link>
       </div>
     );
   }
 
   return (
-    <div className="w-full max-w-[480px] mx-auto min-h-screen bg-[#F2F4FB] text-[#161A3A] relative flex flex-col box-border">
-      <div style={{ display: "flex", flexDirection: "column", gap: 16, padding: "28px 20px 0 20px", flex: 1, paddingBottom: isTerminalOrDraft ? 32 : 130 }}>
-        {/* Header row: Back button 44px + "Pay invoice" title + Orange testnet pill */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+    <div className="w-full min-h-screen bg-[#fffaf0] text-[#0a0a0a] relative flex flex-col box-border">
+      <div
+        className="w-full max-w-[520px] mx-auto flex-1 flex flex-col gap-4 px-5 pt-7"
+        style={{ paddingBottom: isTerminalOrDraft ? 36 : 136 }}
+      >
+        {/* Header Row */}
+        <div className="flex items-center gap-2.5">
           <button
             type="button"
             onClick={() => {
@@ -484,170 +480,140 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
               }
             }}
             aria-label="Back"
-            style={{ width: 44, height: 44, borderRadius: 16, background: "#FFFFFF", boxShadow: "0 2px 8px rgba(40,50,120,0.10)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer", flexShrink: 0 }}
+            className="w-11 h-11 rounded-[14px] bg-[#faf5e8] border border-[#e5e5e5] hover:border-[#0a0a0a] flex items-center justify-center cursor-pointer shrink-0 transition-colors"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#161A3A" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M15 5l-7 7 7 7" />
             </svg>
           </button>
-          <div style={{ fontWeight: 700, fontSize: 20, flexGrow: 1, color: "#161A3A" }}>
+          <div className="font-display font-medium text-xl flex-1 text-[#0a0a0a]">
             {lang === "en" ? "Pay invoice" : "चालान का भुगतान करें"}
           </div>
           <div
             data-testid="pay-testnet-notice"
-            style={{ fontSize: 12, fontWeight: 500, padding: "7px 12px", borderRadius: 999, background: "#FFE9D1", color: "#9A4B00", whiteSpace: "nowrap" }}
+            className="text-xs font-medium px-3 py-1.5 rounded-full bg-[#ffb084] text-[#0a0a0a] border border-[#0a0a0a]/10 whitespace-nowrap"
           >
             {lang === "en" ? "Testnet · no real money" : "टेस्टनेट · वास्तविक धन नहीं"}
           </div>
         </div>
 
-        {/* 3-Step Indicator (Connect / Approve / Pay) - Hidden for paid, cancelled, expired, or draft invoices */}
+        {/* 3-Step Indicator */}
         {!isTerminalOrDraft && (
-          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}>
-            {/* Step 1: Connect */}
-            <div style={{ display: "flex", alignItems: "center", gap: 6, color: step1Done ? "#0B6B3A" : step1Active ? "#4338CA" : "#5B6190", fontWeight: step1Done ? 500 : step1Active ? 700 : 500 }}>
-              <span style={{ width: 24, height: 24, borderRadius: "50%", background: step1Done ? "#D9F5E6" : step1Active ? "#4338CA" : "transparent", color: step1Active ? "#FFFFFF" : undefined, border: !step1Done && !step1Active ? "1.5px solid #B9BEDD" : "none", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 12 }}>
-                {step1Done ? (
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0B6B3A" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d="M5 12l5 5L20 7" />
-                  </svg>
-                ) : "1"}
+          <div className="flex items-center gap-2 text-xs py-1">
+            <div
+              className="flex items-center gap-1.5"
+              style={{
+                color: step1Done ? "#173f32" : step1Active ? "#0a0a0a" : "#6a6a6a",
+                fontWeight: step1Active ? 600 : 500,
+              }}
+            >
+              <span
+                className="w-6 h-6 rounded-full inline-flex items-center justify-center text-xs"
+                style={{
+                  background: step1Done ? "#a4d4c5" : step1Active ? "#0a0a0a" : "transparent",
+                  color: step1Active ? "#fffaf0" : "#0a0a0a",
+                  border: !step1Done && !step1Active ? "1px solid #9a9a9a" : "none",
+                }}
+              >
+                {step1Done ? "✓" : "1"}
               </span>
               {lang === "en" ? "Connect" : "कनेक्ट"}
             </div>
 
-            <div style={{ flexGrow: 1, height: 2, background: step1Done ? "#0B6B3A" : "#D6DAEE" }} />
+            <div className="flex-1 h-[1.5px]" style={{ background: step1Done ? "#173f32" : "#e5e5e5" }} />
 
-            {/* Step 2: Approve */}
-            <div style={{ display: "flex", alignItems: "center", gap: 6, color: step2Done ? "#0B6B3A" : step2Active ? "#4338CA" : "#5B6190", fontWeight: step2Done ? 500 : step2Active ? 700 : 500 }}>
-              <span style={{ width: 24, height: 24, borderRadius: "50%", background: step2Done ? "#D9F5E6" : step2Active ? "#4338CA" : "transparent", color: step2Active ? "#FFFFFF" : undefined, border: !step2Done && !step2Active ? "1.5px solid #B9BEDD" : "none", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 12 }}>
-                {step2Done ? (
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0B6B3A" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d="M5 12l5 5L20 7" />
-                  </svg>
-                ) : "2"}
+            <div
+              className="flex items-center gap-1.5"
+              style={{
+                color: step2Done ? "#173f32" : step2Active ? "#0a0a0a" : "#6a6a6a",
+                fontWeight: step2Active ? 600 : 500,
+              }}
+            >
+              <span
+                className="w-6 h-6 rounded-full inline-flex items-center justify-center text-xs"
+                style={{
+                  background: step2Done ? "#a4d4c5" : step2Active ? "#0a0a0a" : "transparent",
+                  color: step2Active ? "#fffaf0" : "#0a0a0a",
+                  border: !step2Done && !step2Active ? "1px solid #9a9a9a" : "none",
+                }}
+              >
+                {step2Done ? "✓" : "2"}
               </span>
               {lang === "en" ? "Approve" : "स्वीकृति"}
             </div>
 
-            <div style={{ flexGrow: 1, height: 2, background: step2Done ? "#0B6B3A" : "#D6DAEE" }} />
+            <div className="flex-1 h-[1.5px]" style={{ background: step2Done ? "#173f32" : "#e5e5e5" }} />
 
-            {/* Step 3: Pay */}
-            <div style={{ display: "flex", alignItems: "center", gap: 6, color: step3Done ? "#0B6B3A" : step3Active ? "#4338CA" : "#5B6190", fontWeight: step3Done ? 500 : step3Active ? 700 : 500 }}>
-              <span style={{ width: 24, height: 24, borderRadius: "50%", background: step3Done ? "#D9F5E6" : step3Active ? "#4338CA" : "transparent", color: step3Active ? "#FFFFFF" : undefined, border: !step3Done && !step3Active ? "1.5px solid #B9BEDD" : "none", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 12 }}>
-                {step3Done ? (
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0B6B3A" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d="M5 12l5 5L20 7" />
-                  </svg>
-                ) : "3"}
+            <div
+              className="flex items-center gap-1.5"
+              style={{
+                color: step3Done ? "#173f32" : step3Active ? "#0a0a0a" : "#6a6a6a",
+                fontWeight: step3Active ? 600 : 500,
+              }}
+            >
+              <span
+                className="w-6 h-6 rounded-full inline-flex items-center justify-center text-xs"
+                style={{
+                  background: step3Done ? "#a4d4c5" : step3Active ? "#0a0a0a" : "transparent",
+                  color: step3Active ? "#fffaf0" : "#0a0a0a",
+                  border: !step3Done && !step3Active ? "1px solid #9a9a9a" : "none",
+                }}
+              >
+                {step3Done ? "✓" : "3"}
               </span>
               {lang === "en" ? "Pay" : "भुगतान"}
             </div>
           </div>
         )}
 
-        {/* State Banners: Calm status panel for Paid / Cancelled / Expired / Draft / Waiting / Error */}
+        {/* State Banners */}
         {isPaid ? (
           <div
             data-testid="payment-confirmed-notice"
-            style={{
-              padding: "20px 22px",
-              borderRadius: 24,
-              background: "#D9F5E6",
-              border: "1px solid #B4EACD",
-              color: "#0B6B3A",
-              textAlign: "center",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 8,
-            }}
+            className="p-6 rounded-[22px] bg-[#1a3a3a] text-[#fffaf0] text-center flex flex-col items-center gap-2.5"
           >
-            <div
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: "50%",
-                background: "#0B6B3A",
-                color: "#FFFFFF",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M5 12l5 5L20 7" />
-              </svg>
+            <div className="w-11 h-11 rounded-full bg-[#a4d4c5] text-[#0a0a0a] flex items-center justify-center font-bold">
+              ✓
             </div>
-            <div style={{ fontWeight: 700, fontSize: 17, color: "#0B6B3A" }}>
+            <div className="font-display font-medium text-lg text-white">
               {lang === "en" ? "This invoice has been paid" : "इस चालान का भुगतान हो चुका है"}
             </div>
-            <p style={{ fontSize: 13, lineHeight: 1.4, margin: 0, color: "#0F4F2D" }}>
+            <p className="text-xs text-[#f0f0f0] m-0">
               {lang === "en"
                 ? "Payment has been confirmed on Avalanche Fuji."
                 : "Avalanche Fuji पर भुगतान की पुष्टि हो चुकी है।"}
             </p>
             {txHash ? (
-              <div style={{ marginTop: 4 }}>
-                <a
-                  href={`${invoice.network.explorerUrl}/tx/${txHash}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  style={{ fontSize: 13, fontWeight: 700, color: "#0B6B3A", textDecoration: "underline" }}
-                >
-                  {lang === "en" ? "View Transaction on Snowtrace ↗" : "Snowtrace पर लेनदेन देखें ↗"}
-                </a>
-              </div>
+              <a
+                href={`${invoice.network.explorerUrl}/tx/${txHash}`}
+                target="_blank"
+                rel="noreferrer"
+                className="text-xs font-medium text-[#a4d4c5] underline mt-1"
+              >
+                {lang === "en" ? "View Transaction on Snowtrace ↗" : "Snowtrace पर लेनदेन देखें ↗"}
+              </a>
             ) : isConfiguredAddress(invoice.network?.routerAddress) ? (
-              <div style={{ marginTop: 4 }}>
-                <a
-                  href={`${invoice.network.explorerUrl}/address/${invoice.network.routerAddress}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  style={{ fontSize: 13, fontWeight: 600, color: "#0B6B3A", textDecoration: "underline" }}
-                >
-                  {lang === "en" ? "View PaymentRouter on Snowtrace ↗" : "Snowtrace पर PaymentRouter देखें ↗"}
-                </a>
-              </div>
+              <a
+                href={`${invoice.network.explorerUrl}/address/${invoice.network.routerAddress}`}
+                target="_blank"
+                rel="noreferrer"
+                className="text-xs font-medium text-[#a4d4c5] underline mt-1"
+              >
+                {lang === "en" ? "View PaymentRouter on Snowtrace ↗" : "Snowtrace पर PaymentRouter देखें ↗"}
+              </a>
             ) : null}
           </div>
         ) : isCancelledOrExpired ? (
-          <div
-            style={{
-              padding: "20px 22px",
-              borderRadius: 24,
-              background: "#FEE2E2",
-              border: "1px solid #FECACA",
-              color: "#991B1B",
-              textAlign: "center",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 8,
-            }}
-          >
-            <div
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: "50%",
-                background: "#991B1B",
-                color: "#FFFFFF",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 20,
-                fontWeight: 700,
-              }}
-            >
+          <div className="p-6 rounded-[22px] bg-[#fee2e2] border border-[#fecaca] text-[#991b1b] text-center flex flex-col items-center gap-2">
+            <div className="w-11 h-11 rounded-full bg-[#991b1b] text-white flex items-center justify-center text-lg font-bold">
               ✕
             </div>
-            <div style={{ fontWeight: 700, fontSize: 17, color: "#991B1B" }}>
+            <div className="font-display font-medium text-lg">
               {isCancelled
                 ? (lang === "en" ? "This invoice has been cancelled" : "यह चालान रद्द कर दिया गया है")
                 : (lang === "en" ? "This invoice has expired" : "यह चालान समाप्त हो चुका है")}
             </div>
-            <p style={{ fontSize: 13, lineHeight: 1.4, margin: 0, color: "#7F1D1D" }}>
+            <p className="text-xs m-0">
               {lang === "en"
                 ? "This invoice is no longer active and cannot accept new payments."
                 : "यह चालान अब सक्रिय नहीं है और नया भुगतान स्वीकार नहीं कर सकता।"}
@@ -656,51 +622,30 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
         ) : isDraft ? (
           <div
             data-testid="draft-blocked-notice"
-            style={{
-              padding: "18px 20px",
-              borderRadius: 24,
-              background: "#FFE9D1",
-              border: "1px solid #FED7AA",
-              color: "#9A4B00",
-              textAlign: "center",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 8,
-            }}
+            className="p-5 rounded-[22px] bg-[#ffb084] border border-[#0a0a0a]/15 text-[#0a0a0a] text-center flex flex-col items-center gap-2"
           >
-            <div
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: "50%",
-                background: "#FFE4C4",
-                color: "#9A4B00",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 18,
-                fontWeight: 700,
-              }}
-            >
+            <div className="w-10 h-10 rounded-full bg-[#0a0a0a] text-[#fffaf0] flex items-center justify-center text-base font-bold">
               !
             </div>
-            <div style={{ fontWeight: 700, fontSize: 16 }}>
+            <div className="font-display font-medium text-base">
               {lang === "en" ? "Invoice Not Yet Issued" : "चालान अभी जारी नहीं किया गया है"}
             </div>
-            <p style={{ fontSize: 12, lineHeight: 1.4, margin: 0, color: "#7C3800" }}>
+            <p className="text-xs m-0 text-[#1a1a1a]">
               {lang === "en"
                 ? "This invoice is in draft status and has not yet been issued by the merchant. Payments cannot be accepted until issued."
                 : "यह चालान अभी ड्राफ्ट स्थिति में है और जारी नहीं किया गया है। जारी होने तक भुगतान स्वीकार नहीं किया जा सकता।"}
             </p>
           </div>
         ) : effectivePaymentStep === "waiting_confirmation" ? (
-          <div data-testid="payment-waiting-notice" style={{ padding: "18px 20px", borderRadius: 20, background: "#FFE9D1", border: "1px solid #FED7AA", color: "#9A4B00", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
-            <div className="animate-spin" style={{ width: 28, height: 28, border: "3px solid #9A4B00", borderTopColor: "transparent", borderRadius: "50%" }} />
-            <div style={{ fontWeight: 700, fontSize: 15 }}>
+          <div
+            data-testid="payment-waiting-notice"
+            className="p-5 rounded-[20px] bg-[#f5f0e0] border border-[#0a0a0a] text-[#0a0a0a] text-center flex flex-col items-center gap-2"
+          >
+            <div className="animate-spin w-7 h-7 border-[3px] border-[#0a0a0a] border-t-transparent rounded-full" />
+            <div className="font-medium text-sm">
               {lang === "en" ? "Submitted, waiting for confirmations..." : "प्रस्तुत किया गया, पुष्टि की प्रतीक्षा की जा रही है..."}
             </div>
-            <div data-testid="report-status-message" style={{ fontSize: 12, lineHeight: 1.4 }}>
+            <div data-testid="report-status-message" className="text-xs text-[#3a3a3a]">
               {reportStatusMessage || (lang === "en" ? "Waiting for blockchain confirmations. This can take a minute." : "ब्लॉकचेन पुष्टि की प्रतीक्षा की जा रही है। इसमें एक मिनट लग सकता है।")}
             </div>
             {(txHash || pendingTxHash) && (
@@ -708,7 +653,7 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
                 href={`${invoice.network.explorerUrl}/tx/${txHash || pendingTxHash}`}
                 target="_blank"
                 rel="noreferrer"
-                style={{ fontSize: 12, fontWeight: 700, color: "#9A4B00", textDecoration: "underline" }}
+                className="text-xs font-medium text-[#0a0a0a] underline"
               >
                 {lang === "en" ? "View Transaction on Snowtrace ↗" : "Snowtrace पर लेनदेन देखें ↗"}
               </a>
@@ -722,7 +667,7 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
                     : "लंबित लेनदेन स्थिति हटा दी गई। आप पुनः भुगतान का प्रयास कर सकते हैं।"
                 )
               }
-              style={{ fontSize: 12, fontWeight: 600, color: "#9A4B00", textDecoration: "underline", background: "none", border: "none", cursor: "pointer", padding: "4px 0", minHeight: 44, display: "inline-flex", alignItems: "center" }}
+              className="text-xs font-medium text-[#b64d31] underline bg-transparent border-0 cursor-pointer min-h-[44px]"
               data-testid="clear-pending-tx-btn"
             >
               {lang === "en"
@@ -733,67 +678,72 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
         ) : null}
 
         {errorMessage && (
-          <div style={{ padding: "12px 14px", borderRadius: 16, background: "#FEE2E2", border: "1px solid #FECACA", color: "#991B1B", fontSize: 13 }}>
+          <div className="p-3.5 rounded-[14px] bg-[#fee2e2] border border-[#fecaca] text-[#991b1b] text-xs">
             {errorMessage}
           </div>
         )}
 
-        {/* White Payment Card (Radius 28) */}
-        <div style={{ padding: "22px 20px", borderRadius: 28, background: "#FFFFFF", boxShadow: "0 10px 28px rgba(40,50,120,0.10)", display: "flex", flexDirection: "column", gap: 12 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div style={{ fontSize: 13, color: "#5B6190" }}>
+        {/* Payment Card */}
+        <div className="p-6 rounded-[24px] bg-[#faf5e8] border border-[#0a0a0a] flex flex-col gap-3.5">
+          <div className="flex justify-between items-center">
+            <div className="nyc-kicker">
               {lang === "en" ? "Payment to" : "भुगतान प्राप्तकर्ता"}
             </div>
-            <div style={{ fontSize: 12, fontWeight: 700, padding: "5px 12px", borderRadius: 999, ...statusChipStyle }}>
+            <div
+              className="text-xs font-medium px-3 py-1 rounded-[9px]"
+              style={statusChipStyle}
+            >
               {invoice.status}
             </div>
           </div>
-          <div style={{ fontSize: 20, fontWeight: 700, color: "#161A3A" }}>
+          <div className="text-lg font-mono font-medium text-[#0a0a0a]">
             {formatAddress(invoice.merchant.walletAddress)}
           </div>
-          <div style={{ height: 1, background: "#E6E9F5" }} />
+          <div className="h-[1px] bg-[#e5e5e5]" />
           {invoice.items && invoice.items.length > 0 ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <div className="flex flex-col gap-2">
               {invoice.items.map((it, idx) => (
-                <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 15 }}>
-                  <span style={{ color: "#3A4070" }}>
+                <div key={idx} className="flex justify-between items-center text-sm">
+                  <span className="text-[#3a3a3a]">
                     {it.description}{it.quantity > 1 ? ` × ${it.quantity}` : ""}
                   </span>
-                  <span style={{ fontWeight: 700, color: "#161A3A" }}>
+                  <span className="font-mono font-medium text-[#0a0a0a]">
                     {formatUsdc(BigInt(it.unitAmountUsdc) * BigInt(it.quantity))} USDC
                   </span>
                 </div>
               ))}
             </div>
           ) : (
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 15 }}>
-              <span style={{ color: "#3A4070" }}>{invoice.title}</span>
-              <span style={{ fontWeight: 700, color: "#161A3A" }}>{formatUsdc(invoice.amountUsdc)} USDC</span>
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-[#3a3a3a]">{invoice.title}</span>
+              <span className="font-mono font-medium text-[#0a0a0a]">
+                {formatUsdc(invoice.amountUsdc)} USDC
+              </span>
             </div>
           )}
-          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
-            <span style={{ fontSize: 14, color: "#5B6190" }}>
+          <div className="flex items-baseline justify-between pt-3 border-t border-[#e5e5e5]">
+            <span className="text-sm text-[#3a3a3a]">
               {isPaid
                 ? (lang === "en" ? "Total paid" : "कुल भुगतान")
                 : (lang === "en" ? "Total due" : "कुल देय राशि")}
             </span>
             <span>
-              <span style={{ fontSize: 44, fontWeight: 700, letterSpacing: "-1.5px", color: "#161A3A" }}>
+              <span className="text-4xl font-light font-mono tabular-nums tracking-[-0.04em] text-[#0a0a0a]">
                 {isPaid ? formatUsdc(invoice.amountUsdc) : formatUsdc(remainingUsdc)}
               </span>{" "}
-              <span style={{ fontSize: 16, fontWeight: 500, color: "#4338CA" }}>USDC</span>
+              <span className="text-sm font-medium text-[#b64d31]">USDC</span>
             </span>
           </div>
         </div>
 
-        {/* Green Approval Guarantee Box - Hidden for paid, cancelled, expired, or draft invoices */}
+        {/* Mint Approval Box */}
         {!isTerminalOrDraft && (
-          <div style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "14px 16px", borderRadius: 20, background: "#E3F7EC" }}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0B6B3A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flexShrink: 0, marginTop: 1 }}>
+          <div className="flex gap-3 items-start p-4 rounded-[18px] bg-[#a4d4c5]/45 border border-[#173f32]/20">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#173f32" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0 mt-0.5">
               <path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z" />
               <path d="M9 12l2 2 4-4" />
             </svg>
-            <div style={{ fontSize: 14, lineHeight: 1.5, color: "#0F4F2D" }}>
+            <div className="text-xs leading-relaxed text-[#173f32]">
               {lang === "en" ? (
                 <>You approve exactly <b>{formatUsdc(remainingUsdc)} USDC</b>, never unlimited. Funds go straight to the merchant.</>
               ) : (
@@ -804,7 +754,7 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
         )}
 
         {/* Protocol Verification Note */}
-        <div style={{ fontSize: 13, lineHeight: 1.5, color: "#4B517D", padding: "0 4px" }}>
+        <div className="text-xs leading-relaxed text-[#6a6a6a] px-1">
           {isConfiguredAddress(invoice.network?.routerAddress) ? (
             lang === "en"
               ? `Routed by PaymentRouter ${formatAddress(invoice.network.routerAddress)}. Source code published on Snowtrace (similar-match verification). It never holds funds. Protocol fee: 0%. Not audited.`
@@ -816,20 +766,20 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
           )}
         </div>
 
-        {/* Small Muted Legal Links at Bottom of Scroll Area */}
-        <div style={{ paddingTop: 20, paddingBottom: 16, textAlign: "center", fontSize: 12, color: "#5B6190", display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
-          <Link href="/legal/privacy" style={{ color: "#5B6190", textDecoration: "none" }}>Privacy</Link>
+        {/* Bottom Legal & Language Links */}
+        <div className="py-4 text-center text-xs text-[#6a6a6a] flex items-center justify-center gap-2.5">
+          <Link href="/legal/privacy" className="hover:text-[#0a0a0a] hover:underline">Privacy</Link>
           <span>·</span>
-          <Link href="/legal/terms" style={{ color: "#5B6190", textDecoration: "none" }}>Terms</Link>
+          <Link href="/legal/terms" className="hover:text-[#0a0a0a] hover:underline">Terms</Link>
           <span>·</span>
-          <Link href="/security" style={{ color: "#5B6190", textDecoration: "none" }}>Security</Link>
+          <Link href="/security" className="hover:text-[#0a0a0a] hover:underline">Security</Link>
           <span>·</span>
-          <Link href="/about/how-it-works" style={{ color: "#5B6190", textDecoration: "none" }}>Docs</Link>
+          <Link href="/about/how-it-works" className="hover:text-[#0a0a0a] hover:underline">Docs</Link>
           <span>·</span>
           <button
             type="button"
             onClick={() => setLang(l => (l === "en" ? "hi" : "en"))}
-            style={{ color: "#4338CA", background: "none", border: "none", cursor: "pointer", padding: 0, fontSize: 12, fontWeight: 600 }}
+            className="text-[#0a0a0a] font-medium underline bg-transparent border-0 cursor-pointer p-0 text-xs"
             aria-label="Toggle language"
           >
             {lang === "en" ? "हिन्दी" : "English"}
@@ -837,17 +787,17 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
         </div>
       </div>
 
-      {/* Sticky Bottom Indigo Payment Button (58px) + Chain Info - Hidden for paid, cancelled, expired, or draft invoices */}
+      {/* Sticky Bottom Black Payment Button */}
       {!isTerminalOrDraft && (
-        <div style={{ position: "fixed", left: 0, right: 0, bottom: 20, maxWidth: 480, margin: "0 auto", padding: "0 20px", display: "flex", flexDirection: "column", gap: 8, zIndex: 40, pointerEvents: "none" }}>
-          <div style={{ pointerEvents: "auto" }}>
+        <div className="fixed left-0 right-0 bottom-5 max-w-[520px] mx-auto px-5 flex flex-col gap-2 z-40 pointer-events-none">
+          <div className="pointer-events-auto">
             {!isConnected ? (
               <ConnectButton.Custom>
                 {({ openConnectModal }) => (
                   <button
                     type="button"
                     onClick={openConnectModal}
-                    style={{ width: "100%", minHeight: 58, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 20, background: "#4338CA", color: "#FFFFFF", fontWeight: 700, fontSize: 17, boxShadow: "0 14px 28px rgba(67,56,202,0.30)", border: "none", cursor: "pointer" }}
+                    className="w-full min-h-[56px] flex items-center justify-center rounded-full bg-[#0a0a0a] hover:bg-[#1f1f1f] text-[#fffaf0] font-medium text-base shadow-[0_14px_28px_rgba(10,10,10,0.3)] cursor-pointer transition-all"
                   >
                     {lang === "en" ? "Connect wallet to pay" : "भुगतान के लिए वॉलेट कनेक्ट करें"}
                   </button>
@@ -857,7 +807,7 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
               <button
                 type="button"
                 onClick={() => switchChain({ chainId: avalancheFuji.id })}
-                style={{ width: "100%", minHeight: 58, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 20, background: "#4338CA", color: "#FFFFFF", fontWeight: 700, fontSize: 17, boxShadow: "0 14px 28px rgba(67,56,202,0.30)", border: "none", cursor: "pointer" }}
+                className="w-full min-h-[56px] flex items-center justify-center rounded-full bg-[#0a0a0a] hover:bg-[#1f1f1f] text-[#fffaf0] font-medium text-base shadow-[0_14px_28px_rgba(10,10,10,0.3)] cursor-pointer transition-all"
               >
                 {lang === "en" ? "Switch to Avalanche Fuji" : "Avalanche Fuji पर स्विच करें"}
               </button>
@@ -866,22 +816,7 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
                 type="button"
                 onClick={handlePay}
                 disabled={effectivePaymentStep !== "idle" || !!pendingTxHash || !isConfiguredAddress(invoice?.network?.routerAddress)}
-                style={{
-                  width: "100%",
-                  minHeight: 58,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  borderRadius: 20,
-                  background: "#4338CA",
-                  color: "#FFFFFF",
-                  fontWeight: 700,
-                  fontSize: 17,
-                  boxShadow: "0 14px 28px rgba(67,56,202,0.30)",
-                  border: "none",
-                  cursor: (effectivePaymentStep !== "idle" || !!pendingTxHash || !isConfiguredAddress(invoice?.network?.routerAddress)) ? "not-allowed" : "pointer",
-                  opacity: (effectivePaymentStep !== "idle" || !!pendingTxHash || !isConfiguredAddress(invoice?.network?.routerAddress)) ? 0.55 : 1,
-                }}
+                className="w-full min-h-[56px] flex items-center justify-center rounded-full bg-[#0a0a0a] hover:bg-[#1f1f1f] text-[#fffaf0] font-medium text-base shadow-[0_14px_28px_rgba(10,10,10,0.3)] cursor-pointer disabled:opacity-55 disabled:cursor-not-allowed transition-all"
               >
                 {effectivePaymentStep === "approving"
                   ? (lang === "en" ? "Approving USDC..." : "स्वीकृत किया जा रहा है...")
@@ -903,14 +838,14 @@ export default function PayInvoiceClient({ publicId }: { publicId: string }) {
               </button>
             )}
             {!isConfiguredAddress(invoice?.network?.routerAddress) && (
-              <div style={{ textAlign: "center", fontSize: 12, color: "#991B1B", fontWeight: 500, marginTop: 6 }}>
+              <div className="text-center text-xs text-[#991b1b] font-medium mt-1.5">
                 {lang === "en"
                   ? "Contract address not configured in this environment. Payment is disabled."
                   : "इस परिवेश में अनुबंध पता कॉन्फ़िगर नहीं है। भुगतान अक्षम है।"}
               </div>
             )}
           </div>
-          <div style={{ textAlign: "center", fontSize: 12, color: "#5B6190" }}>
+          <div className="text-center text-xs text-[#6a6a6a]">
             Avalanche Fuji · chain 43113
           </div>
         </div>

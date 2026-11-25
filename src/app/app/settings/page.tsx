@@ -84,7 +84,10 @@ export default function MerchantSettingsPage() {
 
       const data = await res.json();
       setProfile(data.merchant);
-      setStatusMessage({ type: "success", text: locale === "hi" ? "प्रोफ़ाइल सफलतापूर्वक अपडेट हो गई।" : "Profile updated successfully." });
+      setStatusMessage({
+        type: "success",
+        text: locale === "hi" ? "प्रोफ़ाइल सफलतापूर्वक अपडेट हो गई।" : "Profile updated successfully.",
+      });
     } catch (err: unknown) {
       setStatusMessage({
         type: "error",
@@ -133,119 +136,64 @@ export default function MerchantSettingsPage() {
   };
 
   return (
-    <div style={{ maxWidth: 720, margin: "0 auto", padding: "1.5rem 0" }}>
-      <div style={{ marginBottom: "2rem" }}>
-        <h1 style={{ fontSize: "1.75rem", fontWeight: 700, margin: 0, color: "var(--foreground)" }}>
+    <div className="max-w-[740px] mx-auto py-4 space-y-8">
+      <div className="pb-4 border-b border-[#e5e5e5]">
+        <div className="nyc-kicker mb-1.5">Account &amp; Privacy</div>
+        <h1 className="text-3xl sm:text-4xl font-display font-medium tracking-[-0.04em] text-[#0a0a0a]">
           {t("settings.title")}
         </h1>
-        <p style={{ color: "var(--muted-foreground)", fontSize: "0.9375rem", marginTop: "0.25rem" }}>
+        <p className="text-sm text-[#3a3a3a] mt-1">
           {t("settings.subtitle")}
         </p>
       </div>
 
       {statusMessage && (
         <div
-          style={{
-            padding: "0.875rem 1.25rem",
-            borderRadius: 8,
-            marginBottom: "1.5rem",
-            fontSize: "0.875rem",
-            background: statusMessage.type === "success" ? "rgba(16, 185, 129, 0.12)" : "rgba(239, 68, 68, 0.12)",
-            border: `1px solid ${statusMessage.type === "success" ? "rgba(16, 185, 129, 0.3)" : "rgba(239, 68, 68, 0.3)"}`,
-            color: statusMessage.type === "success" ? "#10b981" : "#ef4444",
-          }}
+          className={`p-4 rounded-[14px] border text-sm ${
+            statusMessage.type === "success"
+              ? "bg-[#a4d4c5]/40 border-[#173f32]/30 text-[#173f32]"
+              : "bg-[#fee2e2] border-[#fecaca] text-[#991b1b]"
+          }`}
         >
           {statusMessage.text}
         </div>
       )}
 
       {isLoading ? (
-        <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
-          {/* Skeleton Card 1: Merchant Profile */}
-          <section
-            style={{
-              background: "white",
-              border: "1px solid #E6E9F5",
-              borderRadius: 16,
-              padding: "1.75rem",
-              boxShadow: "0 2px 8px rgba(40,50,120,0.06)",
-            }}
-          >
-            <div className="h-5 w-36 bg-[#E6E9F5] rounded-md animate-pulse mb-6" />
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "1.25rem" }}>
-              <div>
-                <div className="h-3 w-28 bg-[#E6E9F5] rounded animate-pulse mb-2" />
-                <div className="h-10 w-full bg-[#F2F4FB] rounded-lg border border-[#E6E9F5] animate-pulse" />
-              </div>
-              <div>
-                <div className="h-3 w-24 bg-[#E6E9F5] rounded animate-pulse mb-2" />
-                <div className="h-10 w-full bg-[#F2F4FB] rounded-lg border border-[#E6E9F5] animate-pulse" />
-              </div>
-              <div>
-                <div className="h-3 w-32 bg-[#E6E9F5] rounded animate-pulse mb-2" />
-                <div className="h-10 w-full bg-[#F2F4FB] rounded-lg border border-[#E6E9F5] animate-pulse" />
-              </div>
-              <div>
-                <div className="h-3 w-20 bg-[#E6E9F5] rounded animate-pulse mb-2" />
-                <div className="h-10 w-full bg-[#F2F4FB] rounded-lg border border-[#E6E9F5] animate-pulse" />
-              </div>
+        <div className="space-y-6">
+          <section className="bg-[#faf5e8] border border-[#e5e5e5] rounded-[24px] p-7">
+            <div className="h-5 w-36 bg-[#ebe6d6] rounded-md animate-pulse mb-6" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div className="h-11 bg-[#f5f0e0] rounded-[12px] animate-pulse" />
+              <div className="h-11 bg-[#f5f0e0] rounded-[12px] animate-pulse" />
+              <div className="h-11 bg-[#f5f0e0] rounded-[12px] animate-pulse" />
+              <div className="h-11 bg-[#f5f0e0] rounded-[12px] animate-pulse" />
             </div>
-          </section>
-
-          {/* Skeleton Card 2: Currency Preferences */}
-          <section
-            style={{
-              background: "white",
-              border: "1px solid #E6E9F5",
-              borderRadius: 16,
-              padding: "1.75rem",
-              boxShadow: "0 2px 8px rgba(40,50,120,0.06)",
-            }}
-          >
-            <div className="h-5 w-48 bg-[#E6E9F5] rounded-md animate-pulse mb-2" />
-            <div className="h-3 w-72 max-w-full bg-[#E6E9F5] rounded animate-pulse mb-5" />
-            <div className="h-10 w-full max-w-md bg-[#F2F4FB] rounded-lg border border-[#E6E9F5] animate-pulse" />
           </section>
         </div>
       ) : (
-        <form onSubmit={handleSave} style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+        <form onSubmit={handleSave} className="space-y-6">
           {/* Section: Profile */}
-          <section
-            style={{
-              background: "var(--card-bg)",
-              border: "1px solid var(--border)",
-              borderRadius: 12,
-              padding: "1.75rem",
-            }}
-          >
-            <h2 style={{ fontSize: "1.125rem", fontWeight: 600, margin: "0 0 1rem 0" }}>
+          <section className="bg-[#faf5e8] border border-[#0a0a0a] rounded-[24px] p-6 sm:p-8 space-y-5">
+            <h2 className="text-xl font-display font-medium text-[#0a0a0a] pb-2 border-b border-[#e5e5e5]">
               {t("settings.profileHeading")}
             </h2>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "1.25rem" }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label style={{ display: "block", fontSize: "0.8125rem", fontWeight: 500, color: "var(--muted-foreground)", marginBottom: "0.375rem" }}>
+                <label className="block text-xs font-medium text-[#0a0a0a] mb-1.5">
                   {locale === "hi" ? "वॉलेट पता (केवल पठन)" : "Connected Wallet (Read-only)"}
                 </label>
                 <input
                   type="text"
                   readOnly
                   value={address || profile?.walletAddress || ""}
-                  style={{
-                    width: "100%",
-                    padding: "0.625rem 0.875rem",
-                    borderRadius: 8,
-                    border: "1px solid var(--border)",
-                    background: "rgba(255,255,255,0.03)",
-                    color: "var(--muted-foreground)",
-                    fontSize: "0.875rem",
-                    fontFamily: "monospace",
-                  }}
+                  className="clay-input font-mono !text-xs !bg-[#f5f0e0] !text-[#3a3a3a]"
                 />
               </div>
 
               <div>
-                <label htmlFor="settings-display-name" style={{ display: "block", fontSize: "0.8125rem", fontWeight: 500, color: "var(--muted-foreground)", marginBottom: "0.375rem" }}>
+                <label htmlFor="settings-display-name" className="block text-xs font-medium text-[#0a0a0a] mb-1.5">
                   {t("settings.displayName")}
                 </label>
                 <input
@@ -254,20 +202,12 @@ export default function MerchantSettingsPage() {
                   placeholder="e.g. Satoshi Nakamoto"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "0.625rem 0.875rem",
-                    borderRadius: 8,
-                    border: "1px solid var(--border)",
-                    background: "var(--background)",
-                    color: "var(--foreground)",
-                    fontSize: "0.875rem",
-                  }}
+                  className="clay-input"
                 />
               </div>
 
               <div>
-                <label htmlFor="settings-business-name" style={{ display: "block", fontSize: "0.8125rem", fontWeight: 500, color: "var(--muted-foreground)", marginBottom: "0.375rem" }}>
+                <label htmlFor="settings-business-name" className="block text-xs font-medium text-[#0a0a0a] mb-1.5">
                   {t("settings.businessName")}
                 </label>
                 <input
@@ -276,20 +216,12 @@ export default function MerchantSettingsPage() {
                   placeholder="e.g. Acme Studio LLC"
                   value={businessName}
                   onChange={(e) => setBusinessName(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "0.625rem 0.875rem",
-                    borderRadius: 8,
-                    border: "1px solid var(--border)",
-                    background: "var(--background)",
-                    color: "var(--foreground)",
-                    fontSize: "0.875rem",
-                  }}
+                  className="clay-input"
                 />
               </div>
 
               <div>
-                <label htmlFor="settings-country" style={{ display: "block", fontSize: "0.8125rem", fontWeight: 500, color: "var(--muted-foreground)", marginBottom: "0.375rem" }}>
+                <label htmlFor="settings-country" className="block text-xs font-medium text-[#0a0a0a] mb-1.5">
                   {t("settings.country")}
                 </label>
                 <input
@@ -298,77 +230,48 @@ export default function MerchantSettingsPage() {
                   placeholder="e.g. India, United States"
                   value={country}
                   onChange={(e) => setCountry(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "0.625rem 0.875rem",
-                    borderRadius: 8,
-                    border: "1px solid var(--border)",
-                    background: "var(--background)",
-                    color: "var(--foreground)",
-                    fontSize: "0.875rem",
-                  }}
+                  className="clay-input"
                 />
               </div>
             </div>
           </section>
 
           {/* Section: Currency & Language */}
-          <section
-            style={{
-              background: "var(--card-bg)",
-              border: "1px solid var(--border)",
-              borderRadius: 12,
-              padding: "1.75rem",
-            }}
-          >
-            <h2 style={{ fontSize: "1.125rem", fontWeight: 600, margin: "0 0 0.5rem 0" }}>
-              {t("settings.currencyHeading")}
-            </h2>
-            <p style={{ color: "var(--muted-foreground)", fontSize: "0.875rem", margin: "0 0 1.25rem 0" }}>
-              {t("settings.currencyDesc")}
-            </p>
+          <section className="bg-[#f5f0e0] border border-[#e5e5e5] rounded-[24px] p-6 sm:p-8 space-y-4">
+            <div>
+              <h2 className="text-xl font-display font-medium text-[#0a0a0a]">
+                {t("settings.currencyHeading")}
+              </h2>
+              <p className="text-xs text-[#3a3a3a] mt-1">
+                {t("settings.currencyDesc")}
+              </p>
+            </div>
 
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "1.5rem" }}>
-              <div style={{ minWidth: 200, flex: 1 }}>
-                <label htmlFor="settings-currency-select" style={{ display: "block", fontSize: "0.8125rem", fontWeight: 500, color: "var(--muted-foreground)", marginBottom: "0.375rem" }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="settings-currency-select" className="block text-xs font-medium text-[#0a0a0a] mb-1.5">
                   {locale === "hi" ? "सांकेतिक मुद्रा (Indicative Display)" : "Indicative Reference Currency"}
                 </label>
                 <select
                   id="settings-currency-select"
                   value={currency}
                   onChange={(e) => setCurrency(e.target.value as "USD" | "INR")}
-                  style={{
-                    width: "100%",
-                    padding: "0.625rem 0.875rem",
-                    borderRadius: 8,
-                    border: "1px solid var(--border)",
-                    background: "var(--background)",
-                    color: "var(--foreground)",
-                    fontSize: "0.875rem",
-                  }}
+                  className="clay-input cursor-pointer"
                 >
                   <option value="USD">USD ($), indicative reference</option>
                   <option value="INR">INR (₹) - Indicative (1 USDC ≈ ₹85)</option>
                 </select>
               </div>
 
-              <div style={{ minWidth: 200, flex: 1 }}>
-                <label htmlFor="settings-language-select" style={{ display: "block", fontSize: "0.8125rem", fontWeight: 500, color: "var(--muted-foreground)", marginBottom: "0.375rem" }}>
+              <div>
+                <label htmlFor="settings-language-select" className="block text-xs font-medium text-[#0a0a0a] mb-1.5">
                   {locale === "hi" ? "भाषा प्राथमिकता (Language Preference)" : "Interface Language"}
                 </label>
                 <select
                   id="settings-language-select"
                   value={locale}
                   onChange={(e) => setLocale(e.target.value as "en" | "hi")}
-                  style={{
-                    width: "100%",
-                    padding: "0.625rem 0.875rem",
-                    borderRadius: 8,
-                    border: "1px solid var(--border)",
-                    background: "var(--background)",
-                    color: "var(--foreground)",
-                    fontSize: "0.875rem",
-                  }}
+                  className="clay-input cursor-pointer"
                 >
                   <option value="en">English (US/Global)</option>
                   <option value="hi">हिन्दी (Hindi)</option>
@@ -378,44 +281,26 @@ export default function MerchantSettingsPage() {
           </section>
 
           {/* Section: Data Privacy & Export */}
-          <section
-            style={{
-              background: "var(--card-bg)",
-              border: "1px solid var(--border)",
-              borderRadius: 12,
-              padding: "1.75rem",
-              marginTop: "1rem",
-            }}
-          >
-            <h2 style={{ fontSize: "1.125rem", fontWeight: 600, margin: "0 0 0.5rem 0" }}>
-              {t("settings.dataPrivacy")}
-            </h2>
-            <p style={{ color: "var(--muted-foreground)", fontSize: "0.875rem", margin: "0 0 1.25rem 0" }}>
-              {locale === "hi"
-                ? "आप किसी भी समय अपने सभी इनवॉइस, ऑडिट रिकॉर्ड और प्रोफ़ाइल डेटा का पूरा बैकअप डाउनलोड कर सकते हैं या व्यक्तिगत डेटा को अज्ञात कर ड्राफ्ट इनवॉइस हटा सकते हैं।"
-                : "Download a portable backup of your complete invoice history, audit logs, and account records, or anonymize your personal data and delete draft invoices."}
-            </p>
+          <section className="bg-[#faf5e8] border border-[#e5e5e5] rounded-[24px] p-6 sm:p-8 space-y-4">
+            <div>
+              <h2 className="text-xl font-display font-medium text-[#0a0a0a]">
+                {t("settings.dataPrivacy")}
+              </h2>
+              <p className="text-xs text-[#3a3a3a] mt-1 leading-relaxed">
+                {locale === "hi"
+                  ? "आप किसी भी समय अपने सभी इनवॉइस, ऑडिट रिकॉर्ड और प्रोफ़ाइल डेटा का पूरा बैकअप डाउनलोड कर सकते हैं या व्यक्तिगत डेटा को अज्ञात कर ड्राफ्ट इनवॉइस हटा सकते हैं।"
+                  : "Download a portable backup of your complete invoice history, audit logs, and account records, or anonymize your personal data and delete draft invoices."}
+              </p>
+            </div>
 
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
+            <div className="flex flex-wrap gap-3">
               <a
                 id="settings-export-data-btn"
                 href="/api/merchant/export"
                 download
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "0.5rem",
-                  padding: "0.625rem 1.25rem",
-                  borderRadius: 8,
-                  border: "1px solid var(--border)",
-                  background: "rgba(255, 255, 255, 0.05)",
-                  color: "var(--foreground)",
-                  fontSize: "0.875rem",
-                  fontWeight: 500,
-                  textDecoration: "none",
-                }}
+                className="clay-btn-secondary"
               >
-                <Download className="w-4 h-4 text-[#4338CA]" />
+                <Download className="w-4 h-4 text-[#0a0a0a]" />
                 <span>{t("settings.exportData")}</span>
               </a>
 
@@ -423,45 +308,21 @@ export default function MerchantSettingsPage() {
                 id="settings-delete-data-btn"
                 type="button"
                 onClick={() => setShowDeleteModal(true)}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "0.5rem",
-                  padding: "0.625rem 1.25rem",
-                  borderRadius: 8,
-                  border: "1px solid rgba(185, 28, 28, 0.35)",
-                  background: "rgba(254, 226, 226, 0.5)",
-                  color: "#991B1B",
-                  fontSize: "0.875rem",
-                  fontWeight: 600,
-                  cursor: "pointer",
-                }}
+                className="inline-flex items-center gap-2 px-5 py-3 min-h-[44px] rounded-[12px] border border-[#fecaca] bg-[#fee2e2] text-[#991b1b] text-sm font-medium cursor-pointer hover:bg-rose-100 transition-colors"
               >
-                <Trash2 className="w-4 h-4 text-[#991B1B]" />
+                <Trash2 className="w-4 h-4 text-[#991b1b]" />
                 <span>{t("settings.deleteData")}</span>
               </button>
             </div>
           </section>
 
           {/* Action: Save Profile */}
-          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "1rem" }}>
+          <div className="flex justify-end">
             <button
               id="settings-save-button"
               type="submit"
               disabled={isSaving}
-              style={{
-                padding: "0.75rem 1.75rem",
-                minHeight: 48,
-                borderRadius: 14,
-                background: "#4338CA",
-                color: "#fff",
-                fontWeight: 600,
-                fontSize: "0.9375rem",
-                border: "none",
-                cursor: isSaving ? "not-allowed" : "pointer",
-                opacity: isSaving ? 0.7 : 1,
-                boxShadow: "0 2px 8px rgba(67,56,202,0.25)",
-              }}
+              className="clay-btn-primary"
             >
               {isSaving ? t("settings.saving") : t("settings.saveProfile")}
             </button>
@@ -469,17 +330,10 @@ export default function MerchantSettingsPage() {
         </form>
       )}
 
-      {/* Section: Sign Out (clearly visible at the bottom after Save Changes, with bottom padding) */}
-      <div style={{ marginTop: "2rem", paddingBottom: "6rem" }}>
+      {/* Section: Sign Out */}
+      <div className="pt-4 pb-20 space-y-2">
         {shortAddress && (
-          <div
-            style={{
-              fontSize: "0.8125rem",
-              color: "#5B6190",
-              marginBottom: "0.5rem",
-              fontFamily: "monospace",
-            }}
-          >
+          <div className="text-xs text-[#6a6a6a] font-mono">
             {shortAddress}
           </div>
         )}
@@ -487,22 +341,7 @@ export default function MerchantSettingsPage() {
           id="settings-sign-out-btn"
           type="button"
           onClick={handleSignOut}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: "100%",
-            height: 48,
-            minHeight: 48,
-            background: "#FFFFFF",
-            border: "1px solid #E6E9F5",
-            borderRadius: 18,
-            color: "#A11A1A",
-            fontSize: "0.9375rem",
-            fontWeight: 600,
-            cursor: "pointer",
-            boxShadow: "0 2px 8px rgba(40,50,120,0.06)",
-          }}
+          className="w-full h-12 min-h-[48px] bg-[#faf5e8] border border-[#e5e5e5] hover:border-[#991b1b] rounded-[14px] text-[#991b1b] text-sm font-medium cursor-pointer transition-colors"
         >
           {t("auth.signOut")}
         </button>
@@ -510,83 +349,41 @@ export default function MerchantSettingsPage() {
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(0, 0, 0, 0.7)",
-            backdropFilter: "blur(4px)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 100,
-            padding: "1rem",
-          }}
-        >
-          <div
-            style={{
-              background: "var(--background)",
-              border: "1px solid var(--border)",
-              borderRadius: 16,
-              padding: "1.75rem",
-              maxWidth: 480,
-              width: "100%",
-              boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.5)",
-            }}
-          >
-            <h3 style={{ margin: "0 0 0.75rem 0", color: "#ef4444", fontSize: "1.25rem" }}>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-[#fffaf0] border border-[#0a0a0a] rounded-[24px] p-6 sm:p-8 max-w-md w-full shadow-2xl space-y-4">
+            <h3 className="text-xl font-display font-medium text-[#991b1b]">
               ⚠️ {t("settings.deleteData")}
             </h3>
-            <p style={{ color: "var(--muted-foreground)", fontSize: "0.875rem", lineHeight: 1.5, marginBottom: "1rem" }}>
+            <p className="text-xs text-[#3a3a3a] leading-relaxed">
               {t("settings.deleteConfirm")}
             </p>
 
-            <div
-              style={{
-                background: "rgba(239, 68, 68, 0.08)",
-                border: "1px solid rgba(239, 68, 68, 0.25)",
-                borderRadius: 8,
-                padding: "0.875rem",
-                marginBottom: "1.25rem",
-                fontSize: "0.8125rem",
-                color: "var(--foreground)",
-                lineHeight: 1.5,
-              }}
-            >
+            <div className="bg-[#fee2e2] border border-[#fecaca] rounded-[14px] p-4 text-xs text-[#0a0a0a] leading-relaxed space-y-1.5">
               {locale === "hi" ? (
                 <>
-                  <p style={{ margin: "0 0 0.5rem 0", fontWeight: 600, color: "#ef4444" }}>
+                  <p className="font-semibold text-[#991b1b]">
                     चेतावनी (डेटा प्रतिधारण एवं गुमनामी):
                   </p>
-                  <p style={{ margin: 0 }}>
+                  <p>
                     व्यक्तिगत डेटा (नाम, संपर्क, व्यवसाय विवरण) स्थायी रूप से अज्ञात (anonymized) कर दिया जाएगा और ड्राफ्ट इनवॉइस हटा दिए जाएंगे। वित्तीय लेखांकन एवं कानूनी अनुपालन के लिए भुगतान किए गए रिकॉर्ड और लेनदेन इतिहास सुरक्षित रखे जाएंगे।
                   </p>
                 </>
               ) : (
                 <>
-                  <p style={{ margin: "0 0 0.5rem 0", fontWeight: 600, color: "#ef4444" }}>
+                  <p className="font-semibold text-[#991b1b]">
                     Notice (Data Retention &amp; Anonymization):
                   </p>
-                  <p style={{ margin: 0 }}>
+                  <p>
                     Personal data (merchant name, client contacts, business info) will be permanently anonymized and draft invoices deleted. Settled payment events and invoice records are preserved for accounting and tax compliance.
                   </p>
                 </>
               )}
             </div>
 
-            <div style={{ marginBottom: "1.5rem" }}>
+            <div>
               <label
                 htmlFor="delete-confirm-input"
-                style={{
-                  display: "block",
-                  fontSize: "0.8125rem",
-                  fontWeight: 500,
-                  marginBottom: "0.5rem",
-                  color: "var(--foreground)",
-                }}
+                className="block text-xs font-medium mb-1.5 text-[#0a0a0a]"
               >
                 {locale === "hi"
                   ? "पुष्टि करने के लिए नीचे DELETE टाइप करें:"
@@ -599,20 +396,11 @@ export default function MerchantSettingsPage() {
                 onChange={(e) => setDeleteConfirmInput(e.target.value)}
                 placeholder="DELETE"
                 autoComplete="off"
-                style={{
-                  width: "100%",
-                  padding: "0.625rem 0.875rem",
-                  borderRadius: 8,
-                  border: "1px solid var(--border)",
-                  background: "var(--input-bg, transparent)",
-                  color: "var(--foreground)",
-                  fontSize: "0.875rem",
-                  outline: "none",
-                }}
+                className="clay-input"
               />
             </div>
 
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem" }}>
+            <div className="flex justify-end gap-3 pt-2">
               <button
                 type="button"
                 onClick={() => {
@@ -620,14 +408,7 @@ export default function MerchantSettingsPage() {
                   setDeleteConfirmInput("");
                 }}
                 disabled={isDeleting}
-                style={{
-                  padding: "0.5rem 1.25rem",
-                  borderRadius: 8,
-                  border: "1px solid var(--border)",
-                  background: "transparent",
-                  color: "var(--foreground)",
-                  cursor: "pointer",
-                }}
+                className="clay-btn-secondary"
               >
                 {locale === "hi" ? "रद्द करें" : "Cancel"}
               </button>
@@ -636,16 +417,7 @@ export default function MerchantSettingsPage() {
                 type="button"
                 onClick={handleDeleteData}
                 disabled={isDeleting || deleteConfirmInput.trim() !== "DELETE"}
-                style={{
-                  padding: "0.5rem 1.25rem",
-                  borderRadius: 8,
-                  border: "none",
-                  background: "#ef4444",
-                  color: "#fff",
-                  fontWeight: 600,
-                  cursor: isDeleting || deleteConfirmInput.trim() !== "DELETE" ? "not-allowed" : "pointer",
-                  opacity: isDeleting || deleteConfirmInput.trim() !== "DELETE" ? 0.5 : 1,
-                }}
+                className="px-5 py-2.5 min-h-[44px] rounded-[12px] bg-[#ef4444] text-white text-sm font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isDeleting
                   ? locale === "hi"
